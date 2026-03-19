@@ -182,7 +182,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         />
 
         {open && (
-          <div className="absolute top-full left-0 z-50 mt-1.5 w-72 rounded-xl border border-border bg-popover shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150">
+          <div className="absolute top-full left-0 z-50 mt-1.5 w-72 rounded-xl border border-border bg-zinc-900 shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150">
             <div className="p-2 border-b border-border">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />

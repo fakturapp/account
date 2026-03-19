@@ -65,12 +65,17 @@ const legalForms = [
 ]
 
 const countries = [
-  'France',
-  'Belgique',
-  'Suisse',
-  'Luxembourg',
-  'Canada',
-  'Autre',
+  { code: 'FR', label: 'France' },
+  { code: 'BE', label: 'Belgique' },
+  { code: 'CH', label: 'Suisse' },
+  { code: 'LU', label: 'Luxembourg' },
+  { code: 'CA', label: 'Canada' },
+  { code: 'DE', label: 'Allemagne' },
+  { code: 'ES', label: 'Espagne' },
+  { code: 'IT', label: 'Italie' },
+  { code: 'GB', label: 'Royaume-Uni' },
+  { code: 'NL', label: 'Pays-Bas' },
+  { code: 'PT', label: 'Portugal' },
 ]
 
 export default function OnboardingCompanyPage() {
@@ -95,7 +100,7 @@ export default function OnboardingCompanyPage() {
     addressLine2: '',
     city: '',
     postalCode: '',
-    country: 'France',
+    country: 'FR',
     phone: '',
     email: '',
     website: '',
@@ -403,7 +408,7 @@ export default function OnboardingCompanyPage() {
                           className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                         >
                           {countries.map((c) => (
-                            <option key={c} value={c}>{c}</option>
+                            <option key={c.code} value={c.code}>{c.label}</option>
                           ))}
                         </select>
                       </Field>
