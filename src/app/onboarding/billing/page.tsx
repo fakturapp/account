@@ -250,7 +250,9 @@ export default function OnboardingBillingPage() {
                   onChange={(e) => setInvoicePrefix(e.target.value)}
                   placeholder="FAC-"
                 />
-                <FieldDescription>Ex : FAC-2026-001</FieldDescription>
+                <FieldDescription>
+                  Aperçu : <span className="font-mono text-foreground/80">{invoicePrefix}{new Date().getFullYear()}-001</span>
+                </FieldDescription>
               </Field>
               <Field>
                 <FieldLabel htmlFor="quotePrefix">Préfixe devis</FieldLabel>
@@ -260,7 +262,9 @@ export default function OnboardingBillingPage() {
                   onChange={(e) => setQuotePrefix(e.target.value)}
                   placeholder="DEV-"
                 />
-                <FieldDescription>Ex : DEV-2026-001</FieldDescription>
+                <FieldDescription>
+                  Aperçu : <span className="font-mono text-foreground/80">{quotePrefix}{new Date().getFullYear()}-001</span>
+                </FieldDescription>
               </Field>
             </div>
           </motion.div>
