@@ -197,7 +197,7 @@ export default function NewQuotePage() {
         }))
       )
       if (aiDoc.clientId) {
-        api.get<{ clients: Array<{ id: string; displayName: string; type: 'company' | 'individual'; siren?: string; vatNumber?: string; address?: string; addressComplement?: string; postalCode?: string; city?: string }> }>(
+        api.get<{ clients: ClientInfo[] }>(
           `/clients?search=`
         ).then(({ data }) => {
           const client = data?.clients?.find((c) => c.id === aiDoc.clientId)
