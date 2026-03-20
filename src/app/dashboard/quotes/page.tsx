@@ -25,6 +25,8 @@ import {
 } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { QuoteDetailOverlay } from '@/components/quotes/quote-detail-overlay'
+import { useInvoiceSettings } from '@/lib/invoice-settings-context'
+import { CreateQuoteModal } from '@/components/quotes/create-quote-modal'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -59,6 +61,8 @@ interface PaginationMeta {
 
 export default function QuotesPage() {
   const { toast } = useToast()
+  const { settings } = useInvoiceSettings()
+  const [createModalOpen, setCreateModalOpen] = useState(false)
   const [loading, setLoading] = useState(true)
   const [quotes, setQuotes] = useState<QuoteListItem[]>([])
   const [search, setSearch] = useState('')
@@ -182,11 +186,17 @@ export default function QuotesPage() {
             {meta?.total ?? 0} devis au total
           </p>
         </div>
-        <Link href="/dashboard/quotes/new">
-          <Button>
+        {settings.aiEnabled ? (
+          <Button onClick={() => setCreateModalOpen(true)}>
             <Plus className="h-4 w-4 mr-1.5" /> Créer un devis
           </Button>
-        </Link>
+        ) : (
+          <Link href="/dashboard/quotes/new">
+            <Button>
+              <Plus className="h-4 w-4 mr-1.5" /> Créer un devis
+            </Button>
+          </Link>
+        )}
       </motion.div>
 
       {/* Monthly summary */}
@@ -397,6 +407,13 @@ export default function QuotesPage() {
         onStatusChange={handleStatusChange}
         onDelete={handleDeleteFromOverlay}
       />
+
+      {settings.aiEnabled && (
+        <CreateQuoteModal
+          open={createModalOpen}
+          onClose={() => setCreateModalOpen(false)}
+        />
+      )}
     </motion.div>
   )
 }
