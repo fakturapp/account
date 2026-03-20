@@ -580,6 +580,8 @@ export default function NewQuotePage() {
                   total={total}
                   tvaBreakdown={tvaBreakdown}
                   documentType="quote"
+                  notes={notes}
+                  onNotesChange={setNotes}
                 />
               </div>
             </motion.div>

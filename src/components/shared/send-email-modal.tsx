@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/toast'
 import { useEmail } from '@/lib/email-context'
 import { api } from '@/lib/api'
 import { Send, Paperclip, ChevronDown, Plus, X, Trash2, CheckCircle2 } from 'lucide-react'
+import { AiGenerateButton } from '@/components/ai/ai-generate-button'
 
 interface Attachment {
   id: string
@@ -248,9 +249,18 @@ export function SendEmailModal({
 
           {/* Subject */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1.5">
-              Objet
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Objet
+              </label>
+              <AiGenerateButton
+                type="email_subject"
+                context={`${docLabelCap} ${documentNumber} pour ${clientName || 'client'}, montant ${formattedTotal}`}
+                onGenerated={setSubject}
+                size="sm"
+                label="Générer"
+              />
+            </div>
             <input
               type="text"
               value={subject}
@@ -262,9 +272,18 @@ export function SendEmailModal({
 
           {/* Body */}
           <div>
-            <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block mb-1.5">
-              Message
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Message
+              </label>
+              <AiGenerateButton
+                type="email_body"
+                context={`${docLabelCap} ${documentNumber} pour ${clientName || 'client'}, montant ${formattedTotal}. Type: ${emailType === 'reminder' ? 'relance' : 'envoi'}`}
+                onGenerated={setBody}
+                size="sm"
+                label="Générer"
+              />
+            </div>
             <textarea
               rows={5}
               value={body}

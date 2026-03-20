@@ -613,6 +613,8 @@ function EditInvoiceContent() {
                   onBankAccountChange={handleBankAccountChange}
                   loadingBankAccount={loadingBankAccount}
                   eInvoicingEnabled={invoiceSettings.eInvoicingEnabled}
+                  notes={notes}
+                  onNotesChange={setNotes}
                 />
               </div>
             </motion.div>

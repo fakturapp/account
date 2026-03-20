@@ -38,6 +38,9 @@ export interface InvoiceSettings {
   invoiceFilenamePattern: string
   footerMode: 'company_info' | 'custom'
   logoBorderRadius: number
+  aiEnabled: boolean
+  aiModel: string
+  aiCustomApiKey: string | null
 }
 
 interface InvoiceSettingsContextType {
@@ -78,6 +81,9 @@ const defaultSettings: InvoiceSettings = {
   invoiceFilenamePattern: 'FAC-{numéro}',
   footerMode: 'company_info',
   logoBorderRadius: 0,
+  aiEnabled: false,
+  aiModel: 'claude-sonnet-4-5-20250929',
+  aiCustomApiKey: null,
 }
 
 const InvoiceSettingsContext = createContext<InvoiceSettingsContextType>({

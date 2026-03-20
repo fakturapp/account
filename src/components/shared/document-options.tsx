@@ -10,6 +10,7 @@ import {
   Palette, Pen, Info, Landmark, Banknote, MoreHorizontal, Shield,
 } from 'lucide-react'
 import { Tooltip } from '@/components/ui/tooltip'
+import { AiGenerateButton } from '@/components/ai/ai-generate-button'
 import type { ClientInfo } from './a4-sheet'
 
 /* ═══════════════════════════════════════════════════════════
@@ -62,6 +63,8 @@ interface DocumentOptionsProps {
   onBankAccountChange?: (id: string) => void
   loadingBankAccount?: boolean
   eInvoicingEnabled?: boolean
+  notes?: string
+  onNotesChange?: (notes: string) => void
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -170,6 +173,7 @@ export function DocumentOptionsPanel({
   paymentMethod = '', onPaymentMethodChange,
   bankAccounts = [], bankAccountId = '', onBankAccountChange, loadingBankAccount = false,
   eInvoicingEnabled = false,
+  notes, onNotesChange,
 }: DocumentOptionsProps) {
   const [showSiren, setShowSiren] = useState(!!options.clientSiren || eInvoicingEnabled)
   const [showVat, setShowVat] = useState(!!options.clientVatNumber || eInvoicingEnabled)
@@ -447,7 +451,16 @@ export function DocumentOptionsPanel({
               checked={options.showSubject}
               onToggle={() => onChange({ showSubject: !options.showSubject })}
               label="Objet"
-            />
+            >
+              <AiGenerateButton
+                type="invoice_subject"
+                context={selectedClient?.displayName || ''}
+                language={options.language}
+                onGenerated={(text) => onChange({ subject: text })}
+                size="sm"
+                label="Générer"
+              />
+            </OptionCheckbox>
 
             <OptionCheckbox
               checked={options.showAcceptanceConditions}
@@ -458,7 +471,15 @@ export function DocumentOptionsPanel({
                 })
               }}
               label="Conditions d'acceptation"
-            />
+            >
+              <AiGenerateButton
+                type="acceptance_conditions"
+                language={options.language}
+                onGenerated={(text) => onChange({ acceptanceConditions: text })}
+                size="sm"
+                label="Générer"
+              />
+            </OptionCheckbox>
 
             <OptionCheckbox
               checked={options.signatureField}
@@ -475,7 +496,16 @@ export function DocumentOptionsPanel({
                 })
               }}
               label="Champ libre"
-            />
+            >
+              <AiGenerateButton
+                type="free_text"
+                context={`${documentType === 'invoice' ? 'Facture' : documentType === 'quote' ? 'Devis' : 'Avoir'} pour ${selectedClient?.displayName || 'client'}`}
+                language={options.language}
+                onGenerated={(text) => onChange({ freeField: text })}
+                size="sm"
+                label="Générer"
+              />
+            </OptionCheckbox>
 
             <OptionCheckbox
               checked={showDiscount}
@@ -522,7 +552,18 @@ export function DocumentOptionsPanel({
               checked={options.showNotes}
               onToggle={() => onChange({ showNotes: !options.showNotes })}
               label="Notes et conditions"
-            />
+            >
+              {onNotesChange && (
+                <AiGenerateButton
+                  type="invoice_notes"
+                  context={`${documentType === 'invoice' ? 'Facture' : documentType === 'quote' ? 'Devis' : 'Avoir'}`}
+                  language={options.language}
+                  onGenerated={onNotesChange}
+                  size="sm"
+                  label="Générer"
+                />
+              )}
+            </OptionCheckbox>
 
             <OptionCheckbox
               checked={options.showFooterText}

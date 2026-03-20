@@ -10,6 +10,7 @@ import { RecentActivity } from '@/components/dashboard/recent-activity'
 import { Skeleton } from '@/components/ui/skeleton'
 import { api } from '@/lib/api'
 import { Plus, X } from 'lucide-react'
+import { AiDashboardSummary } from '@/components/ai/ai-dashboard-summary'
 
 interface DashboardStats {
   totalInvoiced: { value: number; trend: number; previousValue: number }
@@ -248,6 +249,11 @@ export default function DashboardPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Voici un apercu de votre activite.
         </p>
+      </div>
+
+      {/* AI Summary */}
+      <div className="px-4 lg:px-6">
+        <AiDashboardSummary />
       </div>
 
       <SectionCards cards={statCards} />

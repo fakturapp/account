@@ -42,6 +42,9 @@ import {
   FileText,
   Building2,
   FlaskConical,
+  Sparkles,
+  Bot,
+  Key,
 } from 'lucide-react'
 
 const fadeUp = {
@@ -71,6 +74,7 @@ const settingsTabs = [
   { id: 'options', label: 'Options', icon: <Settings2 className="h-4 w-4" /> },
   { id: 'defauts', label: 'Valeurs par defaut', icon: <ClipboardList className="h-4 w-4" /> },
   { id: 'efacturation', label: 'E-Facturation', icon: <FileCheck className="h-4 w-4" />, badge: 'Bêta' },
+  { id: 'ia', label: 'Intelligence artificielle', icon: <Sparkles className="h-4 w-4" /> },
 ]
 
 /* ═══════════════════════════════════════════════════════════
@@ -856,6 +860,119 @@ export default function InvoiceSettingsPage() {
               {/* ═══════════════════════════════════════
                    TAB: E-FACTURATION
                    ═══════════════════════════════════════ */}
+              {/* ═══════════════════════════════════════
+                   TAB: INTELLIGENCE ARTIFICIELLE
+                   ═══════════════════════════════════════ */}
+              {activeTab === 'ia' && (<>
+                <Card className="overflow-hidden border-border/50">
+                  <CardContent className="p-6">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                        <Sparkles className="h-4.5 w-4.5 text-primary" />
+                      </div>
+                      <div>
+                        <h2 className="text-base font-semibold text-foreground">Intelligence artificielle</h2>
+                        <p className="text-xs text-muted-foreground">Powered by Claude — génération de texte, suggestions et résumés</p>
+                      </div>
+                    </div>
+
+                    {/* Info banner */}
+                    <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 mb-4">
+                      <Bot className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+                      <p className="text-xs text-foreground leading-relaxed">
+                        L&apos;IA vous aide à rédiger des emails, pré-remplir des factures depuis l&apos;historique client, générer des relances personnalisées et obtenir un résumé de votre activité sur le tableau de bord.
+                      </p>
+                    </div>
+
+                    {/* Toggle activation */}
+                    <div className="flex items-center justify-between rounded-xl border-2 border-border p-4 mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${settings.aiEnabled ? 'bg-primary/10' : 'bg-muted'}`}>
+                          <Sparkles className={`h-5 w-5 ${settings.aiEnabled ? 'text-primary' : 'text-muted-foreground'}`} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-foreground">Activer l&apos;assistant IA</p>
+                          <p className="text-xs text-muted-foreground">Active les fonctionnalités d&apos;IA dans toute l&apos;application</p>
+                        </div>
+                      </div>
+                      <button type="button"
+                        onClick={() => updateSettings({ aiEnabled: !settings.aiEnabled })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                          settings.aiEnabled ? 'bg-primary' : 'bg-muted-foreground/30'
+                        }`}>
+                        <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${
+                          settings.aiEnabled ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </button>
+                    </div>
+
+                    {/* Configuration (visible when enabled) */}
+                    <AnimatePresence>
+                      {settings.aiEnabled && (
+                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                          <div className="space-y-4 pt-2">
+                            <Separator />
+
+                            {/* Model selector */}
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 block">Modèle IA</label>
+                              <div className="grid grid-cols-2 gap-2">
+                                {[
+                                  { id: 'claude-sonnet-4-5-20250929', name: 'Claude Sonnet', desc: 'Rapide et économique' },
+                                  { id: 'claude-opus-4-6', name: 'Claude Opus', desc: 'Plus puissant, plus lent' },
+                                ].map((model) => (
+                                  <button key={model.id} onClick={() => updateSettings({ aiModel: model.id })}
+                                    className={`rounded-xl border-2 p-3 text-left transition-all ${
+                                      settings.aiModel === model.id ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'
+                                    }`}>
+                                    <p className="text-xs font-medium text-foreground">{model.name}</p>
+                                    <p className="text-[10px] text-muted-foreground">{model.desc}</p>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Custom API key */}
+                            <div>
+                              <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                <Key className="h-3 w-3" />
+                                Clé API personnalisée (optionnel)
+                              </label>
+                              <Input type="password" placeholder="Laissez vide pour utiliser la clé par défaut..."
+                                value={settings.aiCustomApiKey === '••••••••' ? '' : (settings.aiCustomApiKey || '')}
+                                onChange={(e) => updateSettings({ aiCustomApiKey: e.target.value || null })}
+                                className="text-sm" />
+                              <p className="text-[10px] text-muted-foreground mt-1">
+                                {settings.aiCustomApiKey && settings.aiCustomApiKey !== '••••••••'
+                                  ? 'Votre clé personnalisée sera utilisée — les tokens sont facturés sur votre propre compte Anthropic'
+                                  : 'La clé par défaut du serveur sera utilisée'}
+                              </p>
+                            </div>
+
+                            {/* Features list */}
+                            <div className="rounded-lg border border-border p-3 space-y-2">
+                              <p className="text-xs font-medium text-foreground mb-2">Fonctionnalités disponibles</p>
+                              {[
+                                'Rédaction assistée des sujets et corps d\'email',
+                                'Pré-remplissage intelligent des lignes de facture',
+                                'Résumé financier IA sur le tableau de bord',
+                                'Relances de paiement personnalisées',
+                                'Génération de descriptions et notes',
+                              ].map((feature) => (
+                                <div key={feature} className="flex items-center gap-2">
+                                  <Check className="h-3.5 w-3.5 text-primary shrink-0" />
+                                  <span className="text-[11px] text-muted-foreground">{feature}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </CardContent>
+                </Card>
+              </>)}
+
               {activeTab === 'efacturation' && (<>
                 <Card className="overflow-hidden border-border/50">
                   <CardContent className="p-6">

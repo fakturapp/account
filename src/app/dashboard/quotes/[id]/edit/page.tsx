@@ -569,6 +569,8 @@ function EditQuoteContent() {
                   total={total}
                   tvaBreakdown={tvaBreakdown}
                   documentType="quote"
+                  notes={notes}
+                  onNotesChange={setNotes}
                 />
               </div>
             </motion.div>
