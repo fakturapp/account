@@ -1,7 +1,8 @@
 'use client'
 
 import * as React from 'react'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useLayoutEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 
@@ -15,11 +16,17 @@ interface DropdownProps {
 
 export function Dropdown({ trigger, children, align = 'right', position = 'below', className }: DropdownProps) {
   const [open, setOpen] = React.useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLDivElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0 })
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
+      const target = e.target as Node
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        popupRef.current && !popupRef.current.contains(target)
+      ) {
         setOpen(false)
       }
     }
@@ -34,30 +41,65 @@ export function Dropdown({ trigger, children, align = 'right', position = 'below
     }
   }, [])
 
+  // Calculate position when open
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    const popupW = 220 // min-width
+    let top: number
+    let left: number
+
+    if (position === 'above') {
+      top = rect.top - 8
+    } else {
+      top = rect.bottom + 8
+    }
+
+    if (align === 'right') {
+      left = rect.right - popupW
+      if (left < 8) left = 8
+    } else {
+      left = rect.left
+      if (left + popupW > window.innerWidth - 8) {
+        left = window.innerWidth - popupW - 8
+      }
+    }
+
+    setPos({ top, left })
+  }, [open, align, position])
+
+  const popup = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={popupRef}
+          initial={{ opacity: 0, y: position === 'above' ? 6 : -6, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: position === 'above' ? 6 : -6, scale: 0.96 }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          className={cn(
+            'fixed z-[9999] min-w-[220px] rounded-xl border border-border/80 bg-card p-1.5 shadow-xl shadow-black/10 backdrop-blur-xl',
+            className
+          )}
+          style={{
+            top: position === 'above' ? undefined : pos.top,
+            bottom: position === 'above' ? `${window.innerHeight - pos.top}px` : undefined,
+            left: pos.left,
+          }}
+          onClick={() => setOpen(false)}
+        >
+          {children}
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
   return (
-    <div ref={ref} className="relative">
+    <div ref={triggerRef} className="relative">
       <div onClick={() => setOpen(!open)} className="cursor-pointer">
         {trigger}
       </div>
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: position === 'above' ? 6 : -6, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: position === 'above' ? 6 : -6, scale: 0.96 }}
-            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            className={cn(
-              'absolute z-50 min-w-[220px] rounded-xl border border-border/80 bg-card p-1.5 shadow-xl shadow-black/10 backdrop-blur-xl',
-              position === 'above' ? 'bottom-full mb-2' : 'mt-2',
-              align === 'right' ? 'right-0' : 'left-0',
-              className
-            )}
-            onClick={() => setOpen(false)}
-          >
-            {children}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {typeof document !== 'undefined' && createPortal(popup, document.body)}
     </div>
   )
 }
