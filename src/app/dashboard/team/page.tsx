@@ -83,7 +83,7 @@ const roleColors: Record<string, string> = {
   super_admin: 'text-amber-400 bg-amber-400/10 border-amber-400/20',
   admin: 'text-indigo-400 bg-indigo-400/10 border-indigo-400/20',
   member: 'text-muted-foreground bg-muted-foreground/10 border-muted-foreground/20',
-  viewer: 'text-zinc-500 bg-zinc-500/10 border-zinc-500/20',
+  viewer: 'text-muted-foreground bg-muted-foreground/10 border-muted-foreground/20',
 }
 
 export default function TeamPage() {
@@ -354,7 +354,7 @@ export default function TeamPage() {
                 <button
                   type="button"
                   onClick={() => isAdmin && setLogoOpen(true)}
-                  className={`relative group flex h-16 w-16 items-center justify-center rounded-xl border-2 border-background shadow-lg overflow-hidden ${isAdmin ? 'cursor-pointer' : 'cursor-default'} ${team?.iconUrl ? 'bg-white' : 'bg-zinc-800'}`}
+                  className={`relative group flex h-16 w-16 items-center justify-center rounded-xl border-2 border-background shadow-lg overflow-hidden ${isAdmin ? 'cursor-pointer' : 'cursor-default'} ${team?.iconUrl ? 'bg-white' : 'bg-muted'}`}
                 >
                   {team?.iconUrl ? (
                     <img
