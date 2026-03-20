@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { ArrowRight, UserPlus, Check, Eye, EyeOff } from 'lucide-react'
 
 const fadeUp = {
@@ -45,6 +46,12 @@ function RegisterContent() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const turnstileRef = useRef<TurnstileInstance>(null)
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken('')
+    turnstileRef.current?.reset()
+  }, [])
 
   // Google mode
   const [googleMode, setGoogleMode] = useState(false)
@@ -120,10 +127,14 @@ function RegisterContent() {
       email,
       password,
       password_confirmation: passwordConfirmation,
+      turnstileToken,
     })
     setLoading(false)
 
-    if (err) return setError(err)
+    if (err) {
+      resetTurnstile()
+      return setError(err)
+    }
     router.push(`/verify-email?email=${encodeURIComponent(email)}`)
   }
 
@@ -335,11 +346,24 @@ function RegisterContent() {
                 </label>
               </motion.div>
 
-              <motion.div variants={fadeUp} custom={7}>
+              {process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && (
+                <motion.div variants={fadeUp} custom={7} className="flex justify-center">
+                  <Turnstile
+                    ref={turnstileRef}
+                    siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+                    onSuccess={setTurnstileToken}
+                    onError={resetTurnstile}
+                    onExpire={resetTurnstile}
+                    options={{ theme: 'dark', language: 'fr' }}
+                  />
+                </motion.div>
+              )}
+
+              <motion.div variants={fadeUp} custom={8}>
                 <Button
                   type="submit"
                   className="w-full h-11 text-sm font-semibold gap-2"
-                  disabled={loading || !acceptTerms || !acceptPrivacy}
+                  disabled={loading || !acceptTerms || !acceptPrivacy || (!!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
                 >
                   {loading ? (
                     <><Spinner /> {googleMode ? 'Inscription...' : 'Création...'}</>
@@ -349,7 +373,7 @@ function RegisterContent() {
                 </Button>
               </motion.div>
 
-              <motion.div variants={fadeUp} custom={8}>
+              <motion.div variants={fadeUp} custom={9}>
                 <p className="text-center text-sm text-muted-foreground">
                   Déjà un compte ?{' '}
                   <Link href="/login" className="text-primary font-medium underline-offset-2 hover:underline">

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -12,6 +12,7 @@ import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
+import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff } from 'lucide-react'
 
 const fadeIn = {
@@ -44,6 +45,12 @@ function LoginContent() {
   const [requires2FA, setRequires2FA] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [turnstileToken, setTurnstileToken] = useState('')
+  const turnstileRef = useRef<TurnstileInstance>(null)
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken('')
+    turnstileRef.current?.reset()
+  }, [])
 
   // Handle ?token= from Google OAuth callback
   useEffect(() => {
@@ -115,10 +122,13 @@ function LoginContent() {
       email?: string
       userId?: string
       user?: any
-    }>('/auth/login', { email, password })
+    }>('/auth/login', { email, password, turnstileToken })
     setLoading(false)
 
-    if (err) return setError(err)
+    if (err) {
+      resetTurnstile()
+      return setError(err)
+    }
 
     if (data?.requiresEmailVerification) {
       router.push(`/verify-email?email=${encodeURIComponent(data.email || email)}`)
@@ -374,8 +384,25 @@ function LoginContent() {
                     </Field>
                   </motion.div>
 
-                  <motion.div variants={fadeIn} custom={5}>
-                    <Button type="submit" className="w-full h-11 font-semibold gap-2" disabled={loading}>
+                  {process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && (
+                    <motion.div variants={fadeIn} custom={5} className="flex justify-center">
+                      <Turnstile
+                        ref={turnstileRef}
+                        siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+                        onSuccess={setTurnstileToken}
+                        onError={resetTurnstile}
+                        onExpire={resetTurnstile}
+                        options={{ theme: 'dark', language: 'fr' }}
+                      />
+                    </motion.div>
+                  )}
+
+                  <motion.div variants={fadeIn} custom={6}>
+                    <Button
+                      type="submit"
+                      className="w-full h-11 font-semibold gap-2"
+                      disabled={loading || (!!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
+                    >
                       {loading ? (
                         <><Spinner /> Connexion...</>
                       ) : (
@@ -384,7 +411,7 @@ function LoginContent() {
                     </Button>
                   </motion.div>
 
-                  <motion.div variants={fadeIn} custom={6}>
+                  <motion.div variants={fadeIn} custom={7}>
                     <p className="text-center text-sm text-muted-foreground">
                       Pas encore de compte ?{' '}
                       <Link href="/register" className="text-primary font-medium hover:text-primary/80 transition-colors">
@@ -402,7 +429,7 @@ function LoginContent() {
       {/* Legal footer */}
       <motion.p
         variants={fadeIn}
-        custom={7}
+        custom={8}
         initial="hidden"
         animate="visible"
         className="text-center mt-8 text-[11px] text-muted-foreground/60"
