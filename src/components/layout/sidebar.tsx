@@ -40,6 +40,7 @@ import {
   Package,
   FileMinus2,
   RefreshCw,
+  Bell,
 } from 'lucide-react'
 
 interface TeamListItem {
@@ -118,6 +119,7 @@ const settingsNav: NavItem = {
     { href: '/dashboard/team', label: 'Équipe', icon: UsersRound },
     { href: '/dashboard/settings/invoices', label: 'Facturation', icon: CreditCard },
     { href: '/dashboard/settings/email', label: 'Email', icon: Mail },
+    { href: '/dashboard/settings/reminders', label: 'Relances', icon: Bell },
   ],
 }
 
