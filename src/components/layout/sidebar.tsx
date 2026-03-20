@@ -221,8 +221,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col bg-sidebar text-sidebar-foreground transition-[width] duration-200 ease-linear overflow-hidden',
-        collapsed ? 'w-0' : 'w-(--sidebar-width)'
+        'flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-[width] duration-200 ease-linear overflow-hidden',
+        collapsed ? 'w-0 border-r-0' : 'w-(--sidebar-width)'
       )}
     >
       {/* Team header */}

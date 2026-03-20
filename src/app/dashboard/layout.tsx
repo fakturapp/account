@@ -96,7 +96,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (loading) {
     return (
       <div className="flex h-screen overflow-hidden bg-sidebar">
-        <div className="w-(--sidebar-width) bg-sidebar flex flex-col">
+        <div className="w-(--sidebar-width) bg-sidebar border-r border-sidebar-border flex flex-col">
           <div className="px-3 py-3">
             <div className="flex items-center gap-2.5 px-3 py-2">
               <Skeleton className="h-8 w-8 rounded-lg" />
@@ -127,7 +127,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </div>
-        <div className="flex-1 flex flex-col overflow-hidden md:m-2 md:ml-0 md:rounded-xl md:shadow-sm bg-background">
+        <div className="flex-1 flex flex-col overflow-hidden dark:md:m-2 dark:md:ml-0 dark:md:rounded-xl dark:md:shadow-sm bg-background">
           <div className="h-(--header-height) border-b border-border shrink-0" />
           <div className="flex-1 p-6 space-y-6">
             <div className="grid gap-4 grid-cols-4">
@@ -183,8 +183,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <div
         className={cn(
           'relative flex min-h-0 flex-1 flex-col bg-background transition-all duration-200 ease-linear overflow-hidden',
-          'md:m-2 md:ml-0 md:rounded-xl md:shadow-sm',
-          sidebarCollapsed && 'md:ml-2',
+          'dark:md:m-2 dark:md:ml-0 dark:md:rounded-xl dark:md:shadow-sm',
+          sidebarCollapsed && 'dark:md:ml-2',
           switching && 'blur-sm pointer-events-none'
         )}
       >

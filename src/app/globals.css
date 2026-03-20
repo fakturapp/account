@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 @theme {
-  --color-background: #ffffff;
+  --color-background: #f8fafc;
   --color-foreground: #1e293b;
   --color-card: #ffffff;
   --color-card-foreground: #1e293b;
@@ -36,7 +36,7 @@
 }
 
 :root, .light {
-  --color-background: #ffffff;
+  --color-background: #f8fafc;
   --color-foreground: #1e293b;
   --color-card: #ffffff;
   --color-card-foreground: #1e293b;
