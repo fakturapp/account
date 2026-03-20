@@ -38,6 +38,7 @@ import {
   Info,
   Scale,
   Package,
+  FileMinus2,
 } from 'lucide-react'
 
 interface TeamListItem {
@@ -101,6 +102,7 @@ const mainNav: NavItem[] = [
       { href: '/dashboard/quotes/drafts', label: 'Brouillons' },
     ],
   },
+  { href: '/dashboard/credit-notes', label: 'Avoirs', icon: FileMinus2 },
   { href: '/dashboard/clients', label: 'Clients', icon: Users },
   { href: '/dashboard/products', label: 'Catalogue', icon: Package },
 ]

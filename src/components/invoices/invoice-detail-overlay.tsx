@@ -27,6 +27,7 @@ import {
   AlertTriangle,
   MessageSquare,
   History,
+  FileMinus2,
 } from 'lucide-react'
 
 interface InvoiceDetail {
@@ -93,6 +94,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
   const [comment, setComment] = useState('')
   const [savingComment, setSavingComment] = useState(false)
   const [duplicating, setDuplicating] = useState(false)
+  const [creatingCreditNote, setCreatingCreditNote] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [printing, setPrinting] = useState(false)
@@ -223,6 +225,18 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
       toast(`Facture ${data.invoice.invoiceNumber} créée`, 'success')
       onClose()
       router.push(`/dashboard/invoices/${data.invoice.id}/edit`)
+    }
+  }
+
+  async function handleCreateCreditNote() {
+    setCreatingCreditNote(true)
+    const { data, error } = await api.post<{ creditNote: { id: string; creditNoteNumber: string } }>(`/credit-notes/convert-invoice/${invoiceId}`, {})
+    setCreatingCreditNote(false)
+    if (error) { toast(error, 'error'); return }
+    if (data?.creditNote) {
+      toast(`Avoir ${data.creditNote.creditNoteNumber} créé`, 'success')
+      onClose()
+      router.push(`/dashboard/credit-notes/${data.creditNote.id}/edit`)
     }
   }
 
@@ -544,6 +558,9 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                     >
                       <DropdownItem onClick={handleDuplicate}>
                         {duplicating ? <Spinner /> : <Copy className="h-4 w-4" />} Dupliquer
+                      </DropdownItem>
+                      <DropdownItem onClick={handleCreateCreditNote}>
+                        {creatingCreditNote ? <Spinner /> : <FileMinus2 className="h-4 w-4" />} Créer un avoir
                       </DropdownItem>
                       <DropdownSeparator />
                       <DropdownItem destructive onClick={() => setShowDeleteConfirm(true)}>

@@ -543,7 +543,7 @@ interface A4SheetProps {
   showFreeField?: boolean
   showFooterText?: boolean
   footerMode?: 'company_info' | 'custom'
-  documentType?: 'quote' | 'invoice'
+  documentType?: 'quote' | 'invoice' | 'credit_note'
   bankAccountInfo?: { bankName: string | null; iban: string | null; bic: string | null } | null
   paymentMethod?: string | null
   logoBorderRadius?: number
@@ -583,7 +583,8 @@ export function A4Sheet({
   const t = getTranslations(lang)
   const isClassique = T.id === 'classique'
   const isInvoice = documentType === 'invoice'
-  const defaultTitle = isInvoice ? t.invoice : t.quote
+  const isCreditNote = documentType === 'credit_note'
+  const defaultTitle = isCreditNote ? 'Avoir' : isInvoice ? t.invoice : t.quote
   const validityLabel = isInvoice ? t.dueDate : t.validity
   // Template font override takes precedence
   const effectiveFont = T.font || documentFont

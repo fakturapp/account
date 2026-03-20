@@ -29,7 +29,7 @@ interface StatusDropdownProps {
   id: string
   currentStatus: string
   options: StatusOption[]
-  endpoint: 'quotes' | 'invoices'
+  endpoint: 'quotes' | 'invoices' | 'credit-notes'
   onStatusChange: (id: string, newStatus: string) => void
   fullWidth?: boolean
 }
@@ -104,4 +104,10 @@ export const invoiceStatusOptions: StatusOption[] = [
   { value: 'paid', label: 'Payée', color: 'text-green-400', bgColor: 'bg-green-400/10', icon: <CreditCard className="h-3.5 w-3.5" /> },
   { value: 'overdue', label: 'En retard', color: 'text-red-400', bgColor: 'bg-red-400/10', icon: <AlertTriangle className="h-3.5 w-3.5" /> },
   { value: 'cancelled', label: 'Annulée', color: 'text-orange-400', bgColor: 'bg-orange-400/10', icon: <Ban className="h-3.5 w-3.5" /> },
+]
+
+export const creditNoteStatusOptions: StatusOption[] = [
+  { value: 'draft', label: 'Brouillon', color: 'text-muted-foreground', bgColor: 'bg-muted-foreground/10', icon: <FileEdit className="h-3.5 w-3.5" /> },
+  { value: 'sent', label: 'Envoyé', color: 'text-blue-400', bgColor: 'bg-blue-400/10', icon: <Send className="h-3.5 w-3.5" /> },
+  { value: 'finalized', label: 'Finalisé', color: 'text-green-400', bgColor: 'bg-green-400/10', icon: <CheckCircle className="h-3.5 w-3.5" /> },
 ]
