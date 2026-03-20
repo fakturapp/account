@@ -54,7 +54,7 @@ interface DocumentOptionsProps {
   discountAmount: number
   total: number
   tvaBreakdown: { rate: number; base: number; amount: number }[]
-  documentType?: 'invoice' | 'quote'
+  documentType?: 'invoice' | 'quote' | 'credit_note'
   paymentMethod?: string
   onPaymentMethodChange?: (value: string) => void
   bankAccounts?: { id: string; label: string; bankName: string | null; isDefault: boolean }[]
