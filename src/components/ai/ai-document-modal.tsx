@@ -22,6 +22,14 @@ import {
   FileText,
   Wand2,
   ChevronDown,
+  Settings2,
+  ChevronUp,
+  Zap,
+  ClipboardList,
+  Landmark,
+  Banknote,
+  CreditCard,
+  Check,
 } from 'lucide-react'
 import { ShinyText } from '@/components/ui/shiny-text'
 import { AnthropicIcon } from '@/components/icons/anthropic-icon'
@@ -89,6 +97,15 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
   const [selectedProvider, setSelectedProvider] = useState(settings.aiProvider)
   const [selectedModel, setSelectedModel] = useState(settings.aiModel)
   const [showModelDropdown, setShowModelDropdown] = useState(false)
+  const [billingType, setBillingType] = useState<'quick' | 'detailed'>('detailed')
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash' | 'other'>('bank_transfer')
+  const [showOptions, setShowOptions] = useState(false)
+  const [aiOptions, setAiOptions] = useState({
+    includeSubject: true,
+    includeAcceptanceConditions: false,
+    vatExempt: false,
+    vatExemptReason: 'not_subject' as 'not_subject' | 'france_no_vat' | 'outside_france',
+  })
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   useEffect(() => {
@@ -99,6 +116,10 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
       setClientSearch('')
       setClients([])
       setShowModelDropdown(false)
+      setBillingType('detailed')
+      setPaymentMethod('bank_transfer')
+      setShowOptions(false)
+      setAiOptions({ includeSubject: true, includeAcceptanceConditions: false, vatExempt: false, vatExemptReason: 'not_subject' })
     } else {
       // Restore saved model preference or use settings
       const pref = loadModelPref()
@@ -142,21 +163,37 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
 
     saveModelPref(selectedProvider, selectedModel)
 
-    const { data, error } = await api.post<{
-      document: {
-        subject: string
-        lines: { description: string; quantity: number; unitPrice: number; vatRate: number }[]
-        notes?: string
-        acceptanceConditions?: string
-      }
-    }>('/ai/generate-document', {
-      type,
-      prompt: prompt.trim(),
-      clientId: selectedClient?.id,
-      provider: selectedProvider,
-      model: selectedModel,
-    })
+    // Build enriched prompt with options
+    let enrichedPrompt = prompt.trim()
+    const instructions: string[] = []
+    if (billingType === 'quick') instructions.push('Génère UNE SEULE ligne avec le montant total global (facturation rapide, pas de détail)')
+    else instructions.push('Génère plusieurs lignes détaillées avec quantités et prix unitaires')
+    if (!aiOptions.includeSubject) instructions.push('Ne génère PAS de champ "subject" (laisse une chaîne vide)')
+    if (aiOptions.includeAcceptanceConditions) instructions.push('Inclus des conditions d\'acceptation professionnelles dans "acceptanceConditions"')
+    else instructions.push('Ne génère PAS de conditions d\'acceptation (laisse acceptanceConditions vide)')
+    if (aiOptions.vatExempt) instructions.push('Le client est exonéré de TVA, utilise un taux de TVA à 0% pour toutes les lignes')
+    if (instructions.length > 0) enrichedPrompt += '\n\nInstructions supplémentaires:\n- ' + instructions.join('\n- ')
 
+    // Run API call + min 1s delay in parallel so animation is always visible
+    const [apiResult] = await Promise.all([
+      api.post<{
+        document: {
+          subject: string
+          lines: { description: string; quantity: number; unitPrice: number; vatRate: number }[]
+          notes?: string
+          acceptanceConditions?: string
+        }
+      }>('/ai/generate-document', {
+        type,
+        prompt: enrichedPrompt,
+        clientId: selectedClient?.id,
+        provider: selectedProvider,
+        model: selectedModel,
+      }),
+      new Promise((r) => setTimeout(r, 1500)),
+    ])
+
+    const { data, error } = apiResult
     setGenerating(false)
 
     if (error || !data?.document) {
@@ -172,6 +209,8 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
       notes: data.document.notes || '',
       acceptanceConditions: data.document.acceptanceConditions || '',
       clientId: selectedClient?.id,
+      billingType,
+      paymentMethod,
     }
 
     storeAiDocument(aiDoc)
@@ -362,6 +401,191 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
                   </button>
                 ))
               )}
+            </div>
+
+            {/* Billing type */}
+            <div className="mt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Type de facturation</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setBillingType('quick')}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl border p-3 text-left transition-all',
+                    billingType === 'quick'
+                      ? 'border-primary/40 bg-primary/5'
+                      : 'border-border bg-card/50 hover:bg-card/80 hover:border-primary/20'
+                  )}
+                >
+                  <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', billingType === 'quick' ? 'bg-amber-500/15' : 'bg-amber-500/10')}>
+                    <Zap className="h-4 w-4 text-amber-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground">Rapide</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Montant global</p>
+                  </div>
+                  {billingType === 'quick' && <Check className="h-3.5 w-3.5 text-primary shrink-0 ml-auto" />}
+                </button>
+                <button
+                  onClick={() => setBillingType('detailed')}
+                  className={cn(
+                    'flex items-center gap-2 rounded-xl border p-3 text-left transition-all',
+                    billingType === 'detailed'
+                      ? 'border-primary/40 bg-primary/5'
+                      : 'border-border bg-card/50 hover:bg-card/80 hover:border-primary/20'
+                  )}
+                >
+                  <div className={cn('flex h-8 w-8 shrink-0 items-center justify-center rounded-lg', billingType === 'detailed' ? 'bg-indigo-500/15' : 'bg-indigo-500/10')}>
+                    <ClipboardList className="h-4 w-4 text-indigo-500" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold text-foreground">Complet</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Lignes détaillées</p>
+                  </div>
+                  {billingType === 'detailed' && <Check className="h-3.5 w-3.5 text-primary shrink-0 ml-auto" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Payment method */}
+            <div className="mt-3">
+              <p className="text-xs font-medium text-muted-foreground mb-2">Mode de paiement</p>
+              <div className="flex gap-1.5">
+                {([
+                  { id: 'bank_transfer' as const, label: 'Virement', Icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                  { id: 'cash' as const, label: 'Espèces', Icon: Banknote, color: 'text-green-500', bg: 'bg-green-500/10' },
+                  { id: 'other' as const, label: 'Carte', Icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                ]).map((pm) => (
+                  <button
+                    key={pm.id}
+                    onClick={() => setPaymentMethod(pm.id)}
+                    className={cn(
+                      'flex-1 flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all',
+                      paymentMethod === pm.id
+                        ? 'border-primary/40 bg-primary/5'
+                        : 'border-border hover:bg-muted/50 hover:border-primary/20'
+                    )}
+                  >
+                    <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg', pm.bg)}>
+                      <pm.Icon className={cn('h-3.5 w-3.5', pm.color)} />
+                    </div>
+                    <span className="text-[10px] font-medium text-foreground">{pm.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Options (collapsible) */}
+            <div className="mt-3 rounded-xl border border-border overflow-hidden">
+              <button
+                onClick={() => setShowOptions(!showOptions)}
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-left hover:bg-muted/30 transition-colors"
+              >
+                <Settings2 className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground flex-1">Options avancées</span>
+                {showOptions
+                  ? <ChevronUp className="h-3.5 w-3.5 text-muted-foreground" />
+                  : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+                }
+              </button>
+
+              <AnimatePresence>
+                {showOptions && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-3 pb-3 space-y-2 border-t border-border/50 pt-2">
+                      {/* Include subject */}
+                      <label
+                        className="flex items-center gap-2.5 cursor-pointer group"
+                        onClick={() => setAiOptions(p => ({ ...p, includeSubject: !p.includeSubject }))}
+                      >
+                        <div className={cn(
+                          'h-4 w-4 rounded border flex items-center justify-center transition-all shrink-0',
+                          aiOptions.includeSubject ? 'bg-primary border-primary' : 'border-border group-hover:border-primary/40'
+                        )}>
+                          {aiOptions.includeSubject && <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-foreground">Objet du document</p>
+                          <p className="text-[10px] text-muted-foreground">Générer un objet descriptif</p>
+                        </div>
+                      </label>
+
+                      {/* Acceptance conditions */}
+                      <label
+                        className="flex items-center gap-2.5 cursor-pointer group"
+                        onClick={() => setAiOptions(p => ({ ...p, includeAcceptanceConditions: !p.includeAcceptanceConditions }))}
+                      >
+                        <div className={cn(
+                          'h-4 w-4 rounded border flex items-center justify-center transition-all shrink-0',
+                          aiOptions.includeAcceptanceConditions ? 'bg-primary border-primary' : 'border-border group-hover:border-primary/40'
+                        )}>
+                          {aiOptions.includeAcceptanceConditions && <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-foreground">Conditions d&apos;acceptation</p>
+                          <p className="text-[10px] text-muted-foreground">Générer des conditions contractuelles</p>
+                        </div>
+                      </label>
+
+                      {/* VAT exempt */}
+                      <label
+                        className="flex items-center gap-2.5 cursor-pointer group"
+                        onClick={() => setAiOptions(p => ({ ...p, vatExempt: !p.vatExempt }))}
+                      >
+                        <div className={cn(
+                          'h-4 w-4 rounded border flex items-center justify-center transition-all shrink-0',
+                          aiOptions.vatExempt ? 'bg-primary border-primary' : 'border-border group-hover:border-primary/40'
+                        )}>
+                          {aiOptions.vatExempt && <svg className="h-2.5 w-2.5 text-white" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                        </div>
+                        <div>
+                          <p className="text-xs font-medium text-foreground">Exonéré de TVA</p>
+                          <p className="text-[10px] text-muted-foreground">TVA à 0% sur toutes les lignes</p>
+                        </div>
+                      </label>
+
+                      {/* VAT exempt reason */}
+                      <AnimatePresence>
+                        {aiOptions.vatExempt && (
+                          <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.15 }}
+                            className="overflow-hidden"
+                          >
+                            <div className="pl-6.5 space-y-1 pt-1">
+                              {([
+                                { id: 'not_subject' as const, label: 'Non assujetti (Art. 293 B CGI)' },
+                                { id: 'france_no_vat' as const, label: 'Exonéré (Art. 261 CGI)' },
+                                { id: 'outside_france' as const, label: 'Hors France (Art. 259-1 CGI)' },
+                              ]).map((r) => (
+                                <button
+                                  key={r.id}
+                                  onClick={() => setAiOptions(p => ({ ...p, vatExemptReason: r.id }))}
+                                  className={cn(
+                                    'w-full text-left px-2.5 py-1.5 rounded-lg text-[10px] transition-all',
+                                    aiOptions.vatExemptReason === r.id
+                                      ? 'bg-primary/10 text-primary font-medium'
+                                      : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                                  )}
+                                >
+                                  {r.label}
+                                </button>
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             <div className="flex gap-3 mt-4">
