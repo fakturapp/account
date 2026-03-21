@@ -36,19 +36,19 @@ const AI_PROVIDERS = [
   { id: 'claude' as const, name: 'Claude', icon: AnthropicIcon, iconClass: 'text-violet-500', iconBg: 'bg-violet-500/10' },
 ] as const
 
-const AI_MODELS: Record<string, { id: string; name: string; badge: string }[]> = {
+const AI_MODELS: Record<string, { id: string; name: string }[]> = {
   gemini: [
-    { id: 'gemini-2.5-flash-lite', name: 'Flash Lite', badge: 'Rapide' },
-    { id: 'gemini-2.5-flash', name: 'Flash', badge: 'Intelligent' },
-    { id: 'gemini-2.5-pro', name: 'Pro', badge: 'Intelligent' },
+    { id: 'gemini-2.5-flash-lite', name: 'Flash Lite' },
+    { id: 'gemini-2.5-flash', name: 'Flash' },
+    { id: 'gemini-2.5-pro', name: 'Pro' },
   ],
   groq: [
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B', badge: 'Intelligent' },
-    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B', badge: 'Rapide' },
+    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
+    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
   ],
   claude: [
-    { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet', badge: 'Rapide' },
-    { id: 'claude-opus-4-6', name: 'Opus', badge: 'Intelligent' },
+    { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet' },
+    { id: 'claude-opus-4-6', name: 'Opus' },
   ],
 }
 
@@ -227,11 +227,6 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
                 <span className="text-xs text-foreground font-medium flex-1">
                   {AI_PROVIDERS.find((x) => x.id === selectedProvider)?.name} — {AI_MODELS[selectedProvider]?.find((m) => m.id === selectedModel)?.name || selectedModel}
                 </span>
-                <span className={cn(
-                  'text-[8px] font-medium px-1.5 py-0.5 rounded-full bg-primary/10 text-primary',
-                )}>
-                  {AI_MODELS[selectedProvider]?.find((m) => m.id === selectedModel)?.badge}
-                </span>
                 <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', showModelDropdown && 'rotate-180')} />
               </button>
 
@@ -273,7 +268,6 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
                               )}
                             >
                               <span className="flex-1 font-medium">{m.name}</span>
-                              <span className="text-[8px] px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{m.badge}</span>
                             </button>
                           ))}
                         </div>

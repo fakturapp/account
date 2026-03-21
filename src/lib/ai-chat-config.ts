@@ -54,8 +54,6 @@ export interface ProviderConfig {
 export interface ModelConfig {
   id: string
   name: string
-  badge?: 'Rapide' | 'Intelligent' | 'Équilibré'
-  badgeColor?: string
 }
 
 export const CHAT_PROVIDERS: ProviderConfig[] = [
