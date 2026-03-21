@@ -239,6 +239,7 @@ export function AiChatSidebar({
       provider: chatProvider,
       model: chatModel,
       mode: chatMode,
+      source: aiSource,
     })
 
     setLoading(false)
