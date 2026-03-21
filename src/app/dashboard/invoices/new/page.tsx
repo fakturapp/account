@@ -655,6 +655,11 @@ export default function NewInvoicePage() {
                     }))}
                     notes={notes}
                     acceptanceConditions={options.acceptanceConditions}
+                    clientName={selectedClient?.displayName}
+                    clientSiren={selectedClient?.siren || undefined}
+                    clientVatNumber={selectedClient?.vatNumber || undefined}
+                    clientAddress={selectedClient ? [selectedClient.address, selectedClient.postalCode, selectedClient.city].filter(Boolean).join(', ') : undefined}
+                    clientEmail={selectedClient?.email || undefined}
                     onProcessingChange={setAiProcessing}
                     onDocumentUpdate={(doc) => {
                       if (doc.subject) handleOptionsChange({ subject: doc.subject })

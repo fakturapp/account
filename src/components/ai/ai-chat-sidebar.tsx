@@ -13,7 +13,6 @@ import {
   Send,
   Sparkles,
   User,
-  ChevronDown,
   Settings2,
   Pencil,
   HelpCircle,
@@ -21,6 +20,8 @@ import {
   Check,
   Server,
   Key,
+  Zap,
+  FileText,
 } from 'lucide-react'
 import { AnthropicIcon } from '@/components/icons/anthropic-icon'
 import { GoogleIcon } from '@/components/icons/google-icon'
@@ -57,6 +58,30 @@ function nextMsgId() {
   return `msg_${Date.now()}_${++messageIdCounter}`
 }
 
+// ─── Thinking steps per mode ────────────────────────────────────────
+const THINKING_STEPS: Record<ChatMode, string[]> = {
+  edition: [
+    'Analyse de votre demande...',
+    'Lecture du document actuel...',
+    'Application des modifications...',
+    'Vérification de la cohérence...',
+    'Finalisation du document...',
+  ],
+  question: [
+    'Analyse de votre question...',
+    'Vérification des règles légales...',
+    'Consultation du Code de commerce...',
+    'Rédaction de la réponse...',
+  ],
+  libre: [
+    'Analyse de votre instruction...',
+    'Création des éléments...',
+    'Ajout des lignes de facturation...',
+    'Calcul des montants...',
+    'Finalisation des modifications...',
+  ],
+}
+
 // ─── Props ───────────────────────────────────────────────────────────────
 
 interface AiChatSidebarProps {
@@ -65,6 +90,12 @@ interface AiChatSidebarProps {
   lines: DocumentLine[]
   notes: string
   acceptanceConditions: string
+  clientName?: string
+  clientSiren?: string
+  clientSiret?: string
+  clientVatNumber?: string
+  clientAddress?: string
+  clientEmail?: string
   onDocumentUpdate: (doc: {
     subject?: string
     lines?: DocumentLine[]
@@ -80,6 +111,12 @@ export function AiChatSidebar({
   lines,
   notes,
   acceptanceConditions,
+  clientName,
+  clientSiren,
+  clientSiret,
+  clientVatNumber,
+  clientAddress,
+  clientEmail,
   onDocumentUpdate,
   onProcessingChange,
 }: AiChatSidebarProps) {
@@ -90,17 +127,19 @@ export function AiChatSidebar({
     {
       id: nextMsgId(),
       role: 'assistant',
-      content: `Bonjour ! Je suis votre assistant IA. Choisissez un **mode** dans les paramètres pour commencer :\n\n- **Édition** : Modifier le contenu du document\n- **Question** : Poser des questions de conformité\n- **Libre** : Instructions libres avec suggestions`,
+      content: `Bonjour ! Je suis **Faktur AI**. Choisissez un **mode** pour commencer :\n\n- **Édition** : Modifier le contenu du document\n- **Question** : Poser des questions de conformité\n- **Libre** : Instructions libres avec suggestions`,
       mode: 'edition',
       timestamp: Date.now(),
     },
   ])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
+  const [thinkingStep, setThinkingStep] = useState(0)
   const [chatProvider, setChatProvider] = useState<ProviderId>(settings.aiProvider)
   const [chatModel, setChatModel] = useState(settings.aiModel)
   const [chatMode, setChatMode] = useState<ChatMode>('edition')
   const [aiSource, setAiSource] = useState<AiSourceMode>('faktur')
+  const [detailLevel, setDetailLevel] = useState<'rapide' | 'complet'>('complet')
   const [showSettings, setShowSettings] = useState(false)
   const [settingsTab, setSettingsTab] = useState<'source' | 'provider' | 'model' | 'mode'>('source')
   const [documentHistory, setDocumentHistory] = useState<DocumentSnapshot[]>([])
@@ -109,6 +148,7 @@ export function AiChatSidebar({
   const settingsBtnRef = useRef<HTMLButtonElement>(null)
   const dropdownRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const thinkingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // ─── Restore preferences ────────────────────────────────────────────
   useEffect(() => {
@@ -125,7 +165,29 @@ export function AiChatSidebar({
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [messages, loading])
+  }, [messages, loading, thinkingStep])
+
+  // ─── Thinking step cycling ──────────────────────────────────────────
+  useEffect(() => {
+    if (loading) {
+      setThinkingStep(0)
+      thinkingTimerRef.current = setInterval(() => {
+        setThinkingStep((prev) => {
+          const steps = THINKING_STEPS[chatMode]
+          return prev < steps.length - 1 ? prev + 1 : prev
+        })
+      }, 2200)
+    } else {
+      if (thinkingTimerRef.current) {
+        clearInterval(thinkingTimerRef.current)
+        thinkingTimerRef.current = null
+      }
+      setThinkingStep(0)
+    }
+    return () => {
+      if (thinkingTimerRef.current) clearInterval(thinkingTimerRef.current)
+    }
+  }, [loading, chatMode])
 
   // ─── Position dropdown above the button, smart overflow ─────────────
   useLayoutEffect(() => {
@@ -135,11 +197,9 @@ export function AiChatSidebar({
     const bottom = window.innerHeight - rect.top + 6
 
     let left = rect.left + rect.width / 2 - dropdownW / 2
-    // Overflow right
     if (left + dropdownW > window.innerWidth - 8) {
       left = window.innerWidth - dropdownW - 8
     }
-    // Overflow left
     if (left < 8) {
       left = 8
     }
@@ -195,6 +255,18 @@ export function AiChatSidebar({
     )
   }
 
+  // ─── Build client context for API ───────────────────────────────────
+  function buildClientContext() {
+    const ctx: Record<string, string> = {}
+    if (clientName) ctx.name = clientName
+    if (clientSiren) ctx.siren = clientSiren
+    if (clientSiret) ctx.siret = clientSiret
+    if (clientVatNumber) ctx.vatNumber = clientVatNumber
+    if (clientAddress) ctx.address = clientAddress
+    if (clientEmail) ctx.email = clientEmail
+    return Object.keys(ctx).length > 0 ? ctx : undefined
+  }
+
   // ─── Send message ───────────────────────────────────────────────────
   async function handleSend() {
     const message = input.trim()
@@ -235,7 +307,9 @@ export function AiChatSidebar({
     }>('/ai/chat-document', {
       message,
       currentDocument: { subject, lines, notes, acceptanceConditions },
+      clientContext: buildClientContext(),
       type: documentType,
+      detailLevel,
       provider: chatProvider,
       model: chatModel,
       mode: chatMode,
@@ -246,9 +320,10 @@ export function AiChatSidebar({
     onProcessingChange?.(false)
 
     if (error || !data) {
+      const errMsg = (error as any)?.message || 'Désolé, une erreur est survenue. Réessayez.'
       setMessages((prev) => [
         ...prev,
-        { id: nextMsgId(), role: 'assistant', content: 'Désolé, une erreur est survenue. Réessayez.', mode: chatMode, timestamp: Date.now() },
+        { id: nextMsgId(), role: 'assistant', content: `**Erreur** : ${errMsg}`, mode: chatMode, timestamp: Date.now() },
       ])
       return
     }
@@ -320,9 +395,10 @@ export function AiChatSidebar({
   // ─── Derived ───────────────────────────────────────────────────────
   const currentMode = CHAT_MODES.find((m) => m.id === chatMode)!
   const currentProvider = CHAT_PROVIDERS.find((p) => p.id === chatProvider)!
-  const currentModelName = CHAT_MODELS[chatProvider]?.find((m) => m.id === chatModel)?.name || 'Modèle'
-  const CurrentModeIcon = MODE_ICONS[chatMode]
   const ProviderIcon = PROVIDER_ICONS[chatProvider]
+  const CurrentModeIcon = MODE_ICONS[chatMode]
+  const thinkingText = THINKING_STEPS[chatMode][thinkingStep] || 'Réflexion...'
+  const hasClient = !!clientName
 
   // ─── Settings dropdown rendered via portal ─────────────────────────
   const settingsDropdown = (
@@ -575,6 +651,40 @@ export function AiChatSidebar({
         </div>
       </div>
 
+      {/* ─── Context bar (client + options) ──────────────────────── */}
+      <div className="px-3 py-2 border-b border-border/50 flex items-center gap-2 flex-wrap">
+        {/* Client indicator */}
+        <div className={cn(
+          'flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px]',
+          hasClient ? 'bg-emerald-500/10 text-emerald-400' : 'bg-muted/50 text-muted-foreground/50'
+        )}>
+          <User className="h-2.5 w-2.5" />
+          <span className="font-medium truncate max-w-[100px]">{clientName || 'Aucun client'}</span>
+        </div>
+
+        {/* SIREN indicator */}
+        {clientSiren && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-500/10 text-blue-400 text-[10px]">
+            <FileText className="h-2.5 w-2.5" />
+            <span className="font-mono">{clientSiren}</span>
+          </div>
+        )}
+
+        {/* Detail level toggle */}
+        <button
+          onClick={() => setDetailLevel((p) => p === 'rapide' ? 'complet' : 'rapide')}
+          className={cn(
+            'flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium ml-auto transition-colors',
+            detailLevel === 'rapide'
+              ? 'bg-amber-500/10 text-amber-400'
+              : 'bg-indigo-500/10 text-indigo-400'
+          )}
+        >
+          <Zap className="h-2.5 w-2.5" />
+          {detailLevel === 'rapide' ? 'Rapide' : 'Complet'}
+        </button>
+      </div>
+
       {/* ─── Messages ───────────────────────────────────────────── */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 py-3 space-y-3">
         <AnimatePresence initial={false}>
@@ -638,24 +748,48 @@ export function AiChatSidebar({
           ))}
         </AnimatePresence>
 
+        {/* ─── Thinking animation ─────────────────────────────── */}
         {loading && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex gap-2 items-center"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex gap-2 items-start"
           >
-            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-500/10">
-              <Sparkles className="h-3 w-3 text-purple-500" />
+            <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-purple-500/10 mt-0.5">
+              <Sparkles className="h-3 w-3 text-purple-500 animate-pulse" />
             </div>
-            <div className="bg-muted/50 rounded-xl px-3 py-2 flex items-center gap-2">
-              <Spinner className="h-3.5 w-3.5" />
-              <ShinyText
-                text={chatMode === 'question' ? 'Analyse...' : chatMode === 'libre' ? 'Création...' : 'Modification...'}
-                className="text-xs font-medium"
-                color="#a78bfa"
-                shineColor="#e0e7ff"
-                speed={1.5}
-              />
+            <div className="bg-muted/50 rounded-xl px-3 py-2.5 space-y-1.5 min-w-[180px]">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={thinkingStep}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex items-center gap-2"
+                >
+                  <Spinner className="h-3 w-3 shrink-0" />
+                  <ShinyText
+                    text={thinkingText}
+                    className="text-xs font-medium"
+                    color="#a78bfa"
+                    shineColor="#e0e7ff"
+                    speed={1.5}
+                  />
+                </motion.div>
+              </AnimatePresence>
+              {/* Progress dots */}
+              <div className="flex items-center gap-1 pl-5">
+                {THINKING_STEPS[chatMode].map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      'h-1 w-1 rounded-full transition-all duration-300',
+                      i <= thinkingStep ? 'bg-purple-400' : 'bg-muted-foreground/20'
+                    )}
+                  />
+                ))}
+              </div>
             </div>
           </motion.div>
         )}
