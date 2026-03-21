@@ -635,7 +635,7 @@ function RegisterContent() {
                       </label>
                     </div>
 
-                    {process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !googleMode && (
+                    {process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !googleMode && (
                       <div className="flex justify-center">
                         <Turnstile
                           ref={turnstileRef}
@@ -655,7 +655,7 @@ function RegisterContent() {
                       <Button
                         type="submit"
                         className="h-11 flex-1 font-semibold gap-2"
-                        disabled={loading || !acceptTerms || !acceptPrivacy || (!googleMode && !!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
+                        disabled={loading || !acceptTerms || !acceptPrivacy || (!googleMode && process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && !!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
                       >
                         {loading ? (
                           <><Spinner /> Création...</>
