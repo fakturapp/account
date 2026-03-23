@@ -126,7 +126,7 @@ function EditQuoteContent() {
           documentTitle: q.documentTitle || '',
           freeField: q.freeField || '',
           globalDiscountType: q.globalDiscountType || 'none',
-          globalDiscountValue: q.globalDiscountValue || 0,
+          globalDiscountValue: Number(q.globalDiscountValue) || 0,
           showNotes: q.showNotes !== false,
           vatExemptReason: q.vatExemptReason || 'not_subject',
           footerText: q.footerText || '',
@@ -148,10 +148,10 @@ function EditQuoteContent() {
               type: l.saleType === 'section' ? 'section' as const : 'standard' as const,
               description: l.description || '',
               saleType: l.saleType === 'section' ? '' : l.saleType || '',
-              quantity: l.quantity || 1,
+              quantity: Number(l.quantity) || 1,
               unit: l.unit || '',
-              unitPrice: l.unitPrice || 0,
-              vatRate: l.vatRate || 0,
+              unitPrice: Number(l.unitPrice) || 0,
+              vatRate: Number(l.vatRate) || 0,
             })),
           )
         } else {

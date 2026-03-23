@@ -119,7 +119,7 @@ function EditCreditNoteContent() {
           documentTitle: cn.documentTitle || 'Avoir',
           freeField: cn.freeField || '',
           globalDiscountType: cn.globalDiscountType || 'none',
-          globalDiscountValue: cn.globalDiscountValue || 0,
+          globalDiscountValue: Number(cn.globalDiscountValue) || 0,
           showNotes: cn.showNotes !== false,
           vatExemptReason: cn.vatExemptReason || 'not_subject',
           footerText: cn.footerText || '',
@@ -142,10 +142,10 @@ function EditCreditNoteContent() {
               type: l.saleType === 'section' ? 'section' as const : 'standard' as const,
               description: l.description || '',
               saleType: l.saleType === 'section' ? '' : l.saleType || '',
-              quantity: l.quantity || 1,
+              quantity: Number(l.quantity) || 1,
               unit: l.unit || '',
-              unitPrice: l.unitPrice || 0,
-              vatRate: l.vatRate || 0,
+              unitPrice: Number(l.unitPrice) || 0,
+              vatRate: Number(l.vatRate) || 0,
             })),
           )
         } else {

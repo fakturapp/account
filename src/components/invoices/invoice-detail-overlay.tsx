@@ -140,10 +140,10 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
       type: (l.saleType === 'section' ? 'section' : 'standard') as 'standard' | 'section',
       description: l.description || '',
       saleType: l.saleType === 'section' ? '' : l.saleType || '',
-      quantity: l.quantity || 1,
+      quantity: Number(l.quantity) || 1,
       unit: l.unit || '',
-      unitPrice: l.unitPrice || 0,
-      vatRate: l.vatRate || 0,
+      unitPrice: Number(l.unitPrice) || 0,
+      vatRate: Number(l.vatRate) || 0,
     }))
   }, [invoice?.lines])
 
@@ -167,7 +167,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
 
     let disc = 0
     const discType = invoice.globalDiscountType || 'none'
-    const discVal = invoice.globalDiscountValue || 0
+    const discVal = Number(invoice.globalDiscountValue) || 0
     if (discType === 'percentage' && discVal > 0) disc = sub * (discVal / 100)
     else if (discType === 'fixed' && discVal > 0) disc = discVal
 
@@ -320,14 +320,14 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-            className="flex-1 flex items-center justify-center overflow-auto py-6 px-4"
+            className="flex-1 flex justify-center overflow-auto py-6 px-4"
           >
             {loading ? (
-              <div className="w-[600px] aspect-[210/297] bg-white rounded-xl shadow-xl flex items-center justify-center">
+              <div className="w-full max-w-[700px] aspect-[210/297] bg-white rounded-xl shadow-xl flex items-center justify-center my-auto">
                 <Spinner size="lg" />
               </div>
             ) : invoice ? (
-              <div className="w-full max-w-[700px] shrink-0">
+              <div className="w-full max-w-[700px] my-auto">
                 <A4Sheet
                   mode="preview"
                   logoUrl={effectiveLogoUrl}

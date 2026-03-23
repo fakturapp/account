@@ -146,7 +146,7 @@ function EditInvoiceContent() {
           documentTitle: inv.documentTitle || 'Facture',
           freeField: inv.freeField || '',
           globalDiscountType: inv.globalDiscountType || 'none',
-          globalDiscountValue: inv.globalDiscountValue || 0,
+          globalDiscountValue: Number(inv.globalDiscountValue) || 0,
           showNotes: inv.showNotes !== false,
           vatExemptReason: inv.vatExemptReason || 'not_subject',
           footerText: inv.footerText || '',
@@ -183,10 +183,10 @@ function EditInvoiceContent() {
               type: l.saleType === 'section' ? 'section' as const : 'standard' as const,
               description: l.description || '',
               saleType: l.saleType === 'section' ? '' : l.saleType || '',
-              quantity: l.quantity || 1,
+              quantity: Number(l.quantity) || 1,
               unit: l.unit || '',
-              unitPrice: l.unitPrice || 0,
-              vatRate: l.vatRate || 0,
+              unitPrice: Number(l.unitPrice) || 0,
+              vatRate: Number(l.vatRate) || 0,
             })),
           )
         } else {
