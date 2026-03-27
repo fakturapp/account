@@ -6,7 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Bold, Italic, Underline, Strikethrough,
   Palette, Highlighter, ALargeSmall, Type,
-  Link, List, Heading2, X,
+  Link, List, Heading2, X, Check, ChevronDown,
+  Unlink,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -237,6 +238,55 @@ export function htmlToMd(html: string): string {
 }
 
 /* ═══════════════════════════════════════════════════════════
+   Toolbar helpers
+   ═══════════════════════════════════════════════════════════ */
+
+function getFontLabel(fontName: string): string {
+  if (!fontName || fontName === 'inherit') return 'Default'
+  const match = FONTS.find(f => f.value.toLowerCase() === fontName.toLowerCase())
+  if (match) return match.label
+  return fontName.split(',')[0].replace(/['"]/g, '').trim()
+}
+
+function getSizeLabel(fontSize: string): string {
+  const match = SIZES.find(s => s.value === fontSize)
+  if (match) return match.label
+  return 'Normal'
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Animated Tooltip
+   ═══════════════════════════════════════════════════════════ */
+
+function Tip({ label, children }: { label: string; children: React.ReactNode }) {
+  const [show, setShow] = useState(false)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined)
+
+  return (
+    <div
+      className="relative flex"
+      onMouseEnter={() => { timeoutRef.current = setTimeout(() => setShow(true), 500) }}
+      onMouseLeave={() => { clearTimeout(timeoutRef.current); setShow(false) }}
+    >
+      {children}
+      <AnimatePresence>
+        {show && (
+          <motion.div
+            initial={{ opacity: 0, y: 3, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 3, scale: 0.95 }}
+            transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-700/80 text-[10px] text-zinc-300 whitespace-nowrap pointer-events-none z-10 shadow-lg"
+          >
+            {label}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
    FloatingToolbar
    ═══════════════════════════════════════════════════════════ */
 
@@ -252,9 +302,12 @@ interface ToolbarState {
   bgColor: string
   inList: boolean
   inHeading: boolean
+  fontSize: string
+  fontName: string
+  inLink: boolean
 }
 
-type Panel = 'color' | 'highlight' | 'size' | 'font' | null
+type Panel = 'color' | 'highlight' | 'size' | 'font' | 'link' | null
 
 function FloatingToolbar({
   state,
@@ -265,6 +318,7 @@ function FloatingToolbar({
   onSize,
   onFont,
   onLink,
+  onUnlink,
   onList,
   onHeading,
 }: {
@@ -275,20 +329,71 @@ function FloatingToolbar({
   onHighlight: (color: string) => void
   onSize: (size: string) => void
   onFont: (font: string) => void
-  onLink: () => void
+  onLink: (url: string) => void
+  onUnlink: () => void
   onList: () => void
   onHeading: () => void
 }) {
   const [panel, setPanel] = useState<Panel>(null)
+  const [linkUrl, setLinkUrl] = useState('')
+  const savedRangeRef = useRef<Range | null>(null)
+  const linkInputRef = useRef<HTMLInputElement>(null)
 
   // Close panel when toolbar hides
   useEffect(() => {
-    if (!state.visible) setPanel(null)
+    if (!state.visible) {
+      setPanel(null)
+      setLinkUrl('')
+      savedRangeRef.current = null
+    }
   }, [state.visible])
 
-  const Btn = ({ active, onClick, children, title }: { active?: boolean; onClick: () => void; children: React.ReactNode; title?: string }) => (
+  // Auto-focus link input when panel opens
+  useEffect(() => {
+    if (panel === 'link') {
+      setTimeout(() => linkInputRef.current?.focus(), 50)
+    }
+  }, [panel])
+
+  const handleLinkOpen = () => {
+    if (state.inLink) {
+      onUnlink()
+    } else {
+      const sel = window.getSelection()
+      if (sel && sel.rangeCount > 0) {
+        savedRangeRef.current = sel.getRangeAt(0).cloneRange()
+      }
+      setLinkUrl('')
+      setPanel('link')
+    }
+  }
+
+  const handleLinkConfirm = () => {
+    const url = linkUrl.trim()
+    if (url && savedRangeRef.current) {
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(savedRangeRef.current)
+      onLink(url)
+    }
+    setPanel(null)
+    setLinkUrl('')
+    savedRangeRef.current = null
+  }
+
+  const handleLinkCancel = () => {
+    if (savedRangeRef.current) {
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(savedRangeRef.current)
+    }
+    setPanel(null)
+    setLinkUrl('')
+    savedRangeRef.current = null
+  }
+
+  const Btn = ({ active, onClick, children }: { active?: boolean; onClick: () => void; children: React.ReactNode }) => (
     <button
-      title={title}
       onMouseDown={(e) => { e.preventDefault(); onClick() }}
       className={cn(
         'flex items-center justify-center h-7 w-7 rounded-md transition-colors',
@@ -311,47 +416,91 @@ function FloatingToolbar({
           transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
           className="fixed z-[9999] flex flex-col rounded-lg border border-border/80 bg-card shadow-xl shadow-black/10 backdrop-blur-xl"
           style={{ top: state.y, left: state.x }}
-          onMouseDown={(e) => e.preventDefault()}
+          onMouseDown={(e) => {
+            // Allow clicks on link input
+            if ((e.target as HTMLElement).tagName === 'INPUT') return
+            e.preventDefault()
+          }}
         >
           {/* ── Main buttons row ── */}
           <div className="flex items-center gap-0.5 p-1">
             {/* Text style */}
-            <Btn active={state.bold} onClick={() => onFormat('bold')} title="Gras"><Bold className="h-3.5 w-3.5" /></Btn>
-            <Btn active={state.italic} onClick={() => onFormat('italic')} title="Italique"><Italic className="h-3.5 w-3.5" /></Btn>
-            <Btn active={state.underline} onClick={() => onFormat('underline')} title="Souligne"><Underline className="h-3.5 w-3.5" /></Btn>
-            <Btn active={state.strikethrough} onClick={() => onFormat('strikeThrough')} title="Barre"><Strikethrough className="h-3.5 w-3.5" /></Btn>
+            <Tip label="Gras">
+              <Btn active={state.bold} onClick={() => onFormat('bold')}><Bold className="h-3.5 w-3.5" /></Btn>
+            </Tip>
+            <Tip label="Italique">
+              <Btn active={state.italic} onClick={() => onFormat('italic')}><Italic className="h-3.5 w-3.5" /></Btn>
+            </Tip>
+            <Tip label="Souligné">
+              <Btn active={state.underline} onClick={() => onFormat('underline')}><Underline className="h-3.5 w-3.5" /></Btn>
+            </Tip>
+            <Tip label="Barré">
+              <Btn active={state.strikethrough} onClick={() => onFormat('strikeThrough')}><Strikethrough className="h-3.5 w-3.5" /></Btn>
+            </Tip>
 
             <Sep />
 
             {/* Color */}
-            <Btn active={panel === 'color'} onClick={() => setPanel(panel === 'color' ? null : 'color')} title="Couleur du texte">
-              <div className="flex flex-col items-center gap-0.5">
-                <Palette className="h-3 w-3" />
-                <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: state.color || '#000' }} />
-              </div>
-            </Btn>
-            <Btn active={panel === 'highlight'} onClick={() => setPanel(panel === 'highlight' ? null : 'highlight')} title="Surlignage">
-              <Highlighter className="h-3.5 w-3.5" />
-            </Btn>
+            <Tip label="Couleur du texte">
+              <Btn active={panel === 'color'} onClick={() => setPanel(panel === 'color' ? null : 'color')}>
+                <div className="flex flex-col items-center gap-0.5">
+                  <Palette className="h-3 w-3" />
+                  <div className="w-3 h-0.5 rounded-full" style={{ backgroundColor: state.color || '#000' }} />
+                </div>
+              </Btn>
+            </Tip>
+            <Tip label="Surlignage">
+              <Btn active={panel === 'highlight'} onClick={() => setPanel(panel === 'highlight' ? null : 'highlight')}>
+                <Highlighter className="h-3.5 w-3.5" />
+              </Btn>
+            </Tip>
 
             <Sep />
 
-            {/* Typography */}
-            <Btn active={panel === 'size'} onClick={() => setPanel(panel === 'size' ? null : 'size')} title="Taille">
-              <ALargeSmall className="h-3.5 w-3.5" />
-            </Btn>
-            <Btn active={panel === 'font'} onClick={() => setPanel(panel === 'font' ? null : 'font')} title="Police">
-              <Type className="h-3.5 w-3.5" />
-            </Btn>
+            {/* Typography — Word-style with current value label */}
+            <Tip label="Taille">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setPanel(panel === 'size' ? null : 'size') }}
+                className={cn(
+                  'flex items-center gap-1 h-7 px-1.5 rounded-md transition-colors text-[11px]',
+                  panel === 'size' ? 'bg-indigo-500/20 text-indigo-400' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <ALargeSmall className="h-3.5 w-3.5 shrink-0" />
+                <span className="max-w-[48px] truncate">{getSizeLabel(state.fontSize)}</span>
+                <ChevronDown className="h-2.5 w-2.5 shrink-0 opacity-50" />
+              </button>
+            </Tip>
+            <Tip label="Police">
+              <button
+                onMouseDown={(e) => { e.preventDefault(); setPanel(panel === 'font' ? null : 'font') }}
+                className={cn(
+                  'flex items-center gap-1 h-7 px-1.5 rounded-md transition-colors text-[11px]',
+                  panel === 'font' ? 'bg-indigo-500/20 text-indigo-400' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                )}
+              >
+                <Type className="h-3.5 w-3.5 shrink-0" />
+                <span className="max-w-[64px] truncate">{getFontLabel(state.fontName)}</span>
+                <ChevronDown className="h-2.5 w-2.5 shrink-0 opacity-50" />
+              </button>
+            </Tip>
 
             <Sep />
 
             {/* Structure */}
-            <Btn onClick={onLink} title="Lien"><Link className="h-3.5 w-3.5" /></Btn>
+            <Tip label={state.inLink ? 'Retirer le lien' : 'Lien'}>
+              <Btn active={state.inLink || panel === 'link'} onClick={handleLinkOpen}>
+                {state.inLink ? <Unlink className="h-3.5 w-3.5" /> : <Link className="h-3.5 w-3.5" />}
+              </Btn>
+            </Tip>
             {!singleLine && (
               <>
-                <Btn active={state.inList} onClick={onList} title="Liste"><List className="h-3.5 w-3.5" /></Btn>
-                <Btn active={state.inHeading} onClick={onHeading} title="Titre"><Heading2 className="h-3.5 w-3.5" /></Btn>
+                <Tip label="Liste">
+                  <Btn active={state.inList} onClick={onList}><List className="h-3.5 w-3.5" /></Btn>
+                </Tip>
+                <Tip label="Titre">
+                  <Btn active={state.inHeading} onClick={onHeading}><Heading2 className="h-3.5 w-3.5" /></Btn>
+                </Tip>
               </>
             )}
           </div>
@@ -428,7 +577,12 @@ function FloatingToolbar({
                     <button
                       key={s.value}
                       onMouseDown={(e) => { e.preventDefault(); onSize(s.value); setPanel(null) }}
-                      className="px-2.5 py-1 text-[11px] rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      className={cn(
+                        'px-2.5 py-1 text-[11px] rounded-md transition-colors',
+                        s.value === state.fontSize
+                          ? 'bg-indigo-500/20 text-indigo-400'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
                     >
                       {s.label}
                     </button>
@@ -450,12 +604,57 @@ function FloatingToolbar({
                     <button
                       key={f.value}
                       onMouseDown={(e) => { e.preventDefault(); onFont(f.value); setPanel(null) }}
-                      className="px-2.5 py-1.5 text-[11px] rounded-md text-left text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                      className={cn(
+                        'flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded-md text-left transition-colors',
+                        f.value === state.fontName || (f.value === 'inherit' && !state.fontName)
+                          ? 'bg-indigo-500/20 text-indigo-400'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                      )}
                       style={{ fontFamily: f.value === 'inherit' ? undefined : f.value }}
                     >
+                      {(f.value === state.fontName || (f.value === 'inherit' && !state.fontName)) && (
+                        <Check className="h-3 w-3 shrink-0" />
+                      )}
                       {f.label}
                     </button>
                   ))}
+                </div>
+              </motion.div>
+            )}
+
+            {panel === 'link' && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.12 }}
+                className="overflow-hidden border-t border-border/60"
+              >
+                <div className="flex items-center gap-1 p-1.5">
+                  <input
+                    ref={linkInputRef}
+                    type="url"
+                    value={linkUrl}
+                    onChange={(e) => setLinkUrl(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); handleLinkConfirm() }
+                      if (e.key === 'Escape') { e.preventDefault(); handleLinkCancel() }
+                    }}
+                    placeholder="https://..."
+                    className="flex-1 min-w-0 h-7 px-2 rounded-md bg-muted/50 border border-border/60 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500/50"
+                  />
+                  <button
+                    onMouseDown={(e) => { e.preventDefault(); handleLinkConfirm() }}
+                    className="flex items-center justify-center h-7 w-7 rounded-md text-emerald-400 hover:bg-emerald-500/15 transition-colors"
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                  </button>
+                  <button
+                    onMouseDown={(e) => { e.preventDefault(); handleLinkCancel() }}
+                    className="flex items-center justify-center h-7 w-7 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
                 </div>
               </motion.div>
             )}
@@ -497,6 +696,7 @@ export function RichTextarea({
     visible: false, x: 0, y: 0,
     bold: false, italic: false, underline: false, strikethrough: false,
     color: '', bgColor: '', inList: false, inHeading: false,
+    fontSize: '3', fontName: '', inLink: false,
   })
 
   // Sync external value → editor HTML
@@ -534,12 +734,36 @@ export function RichTextarea({
     }
 
     // Position above selection
-    const tw = singleLine ? 320 : 370
+    const tw = singleLine ? 380 : 430
     const x = Math.max(8, Math.min(rect.left + rect.width / 2 - tw / 2, window.innerWidth - tw - 8))
     const y = rect.top + window.scrollY - 44
 
     let fmtBlock = ''
     try { fmtBlock = document.queryCommandValue('formatBlock') } catch {}
+
+    // Check if selection is inside a link
+    let inLink = false
+    if (sel.anchorNode) {
+      let node: Node | null = sel.anchorNode
+      while (node && node !== editorRef.current) {
+        if ((node as Element).tagName === 'A') { inLink = true; break }
+        node = node.parentNode
+      }
+    }
+
+    // Get font size
+    let fontSize = '3'
+    try {
+      const fv = document.queryCommandValue('fontSize')
+      if (fv) fontSize = fv
+    } catch {}
+
+    // Get font name
+    let fontName = ''
+    try {
+      const fn = document.queryCommandValue('fontName')
+      if (fn) fontName = fn.replace(/['"]/g, '').split(',')[0].trim()
+    } catch {}
 
     setToolbar({
       visible: true, x, y,
@@ -551,6 +775,9 @@ export function RichTextarea({
       bgColor: normalizeColor(document.queryCommandValue('hiliteColor') || ''),
       inList: document.queryCommandState('insertUnorderedList'),
       inHeading: /^h[1-6]$/i.test(fmtBlock),
+      fontSize,
+      fontName,
+      inLink,
     })
   }, [singleLine])
 
@@ -584,7 +811,7 @@ export function RichTextarea({
     if (color) {
       document.execCommand('foreColor', false, color)
     } else {
-      document.execCommand('removeFormat', false) // reset
+      document.execCommand('removeFormat', false)
     }
     emitChange()
     setTimeout(updateToolbar, 10)
@@ -615,24 +842,16 @@ export function RichTextarea({
     setTimeout(updateToolbar, 10)
   }, [emitChange, updateToolbar])
 
-  const handleLink = useCallback(() => {
+  const handleLink = useCallback((url: string) => {
     editorRef.current?.focus()
-    // Check if already in link
-    let inLink = false
-    const sel = window.getSelection()
-    if (sel?.anchorNode) {
-      let node: Node | null = sel.anchorNode
-      while (node && node !== editorRef.current) {
-        if ((node as Element).tagName === 'A') { inLink = true; break }
-        node = node.parentNode
-      }
-    }
-    if (inLink) {
-      document.execCommand('unlink', false)
-    } else {
-      const url = window.prompt('URL du lien :')
-      if (url) document.execCommand('createLink', false, url)
-    }
+    document.execCommand('createLink', false, url)
+    emitChange()
+    setTimeout(updateToolbar, 10)
+  }, [emitChange, updateToolbar])
+
+  const handleUnlink = useCallback(() => {
+    editorRef.current?.focus()
+    document.execCommand('unlink', false)
     emitChange()
     setTimeout(updateToolbar, 10)
   }, [emitChange, updateToolbar])
@@ -703,6 +922,7 @@ export function RichTextarea({
         onSize={handleSize}
         onFont={handleFont}
         onLink={handleLink}
+        onUnlink={handleUnlink}
         onList={handleList}
         onHeading={handleHeading}
       />
