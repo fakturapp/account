@@ -8,6 +8,7 @@ import {
   RefreshCw, MousePointerClick, FileText, Plus, Type, ChevronDown, Package,
 } from 'lucide-react'
 import { api } from '@/lib/api'
+import { RichTextarea, mdToHtml } from '@/components/ui/rich-textarea'
 import { Dialog, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -864,16 +865,16 @@ export function A4Sheet({
                           {t.deliveryAddress}
                         </div>
                         {ed ? (
-                          <textarea
+                          <RichTextarea
                             value={deliveryAddress}
-                            onChange={(e) => onDeliveryAddressChange?.(e.target.value)}
+                            onChange={(v) => onDeliveryAddressChange?.(v)}
                             placeholder={lang === 'en' ? 'Delivery address...' : 'Adresse de livraison...'}
-                            className="w-full bg-transparent text-[12px] leading-[1.5] focus:outline-none resize-y min-h-[24px]"
+                            className="text-[12px] leading-[1.5]"
                             style={{ color: T.textMuted }}
                             rows={2}
                           />
                         ) : (
-                          deliveryAddress && <div className="text-[12px] whitespace-pre-line" style={{ color: T.textMuted }}>{deliveryAddress}</div>
+                          deliveryAddress && <div className="text-[12px]" style={{ color: T.textMuted }} dangerouslySetInnerHTML={{ __html: mdToHtml(deliveryAddress) }} />
                         )}
                       </div>
                     )}
@@ -1175,13 +1176,13 @@ export function A4Sheet({
                 <div className="pt-3" style={{ borderTop: `1px solid ${T.borderLight}` }}>
                   <div className="text-[9px] uppercase tracking-[1px] font-semibold mb-1" style={{ color: T.textMuted }}>{t.conditionsAndNotes}</div>
                   {isPreview ? (
-                    <p className="text-[11px] whitespace-pre-line leading-[1.6]" style={{ color: T.textMuted }}>
-                      {notes || <span className="italic" style={{ color: T.inputPlaceholder }}>{t.noNotes}</span>}
-                    </p>
+                    notes
+                      ? <div className="text-[11px] leading-[1.6]" style={{ color: T.textMuted }} dangerouslySetInnerHTML={{ __html: mdToHtml(notes) }} />
+                      : <p className="text-[11px] leading-[1.6] italic" style={{ color: T.inputPlaceholder }}>{t.noNotes}</p>
                   ) : (
-                    <textarea value={notes} onChange={(e) => onNotesChange(e.target.value)}
+                    <RichTextarea value={notes} onChange={onNotesChange}
                       placeholder={t.conditionsAndNotes}
-                      className="w-full bg-transparent text-[11px] leading-[1.6] focus:outline-none resize-y min-h-[30px]"
+                      className="text-[11px] leading-[1.6]"
                       style={{ color: T.textMuted }}
                       rows={2} />
                   )}
@@ -1192,16 +1193,16 @@ export function A4Sheet({
                 <div className="mt-2">
                   <div className="text-[9px] uppercase tracking-[1px] font-semibold mb-1" style={{ color: hasError("Conditions d'acceptation") ? errorBorder : T.textMuted }}>{t.acceptanceConditions}</div>
                   {ed ? (
-                    <textarea
+                    <RichTextarea
                       value={acceptanceConditions}
-                      onChange={(e) => onAcceptanceConditionsChange?.(e.target.value)}
+                      onChange={(v) => onAcceptanceConditionsChange?.(v)}
                       placeholder={lang === 'en' ? 'Acceptance conditions...' : "Conditions d'acceptation..."}
-                      className="w-full bg-transparent text-[11px] leading-[1.6] focus:outline-none resize-y min-h-[24px]"
+                      className="text-[11px] leading-[1.6]"
                       style={{ color: T.textMuted }}
                       rows={2}
                     />
                   ) : (
-                    acceptanceConditions && <p className="text-[11px] whitespace-pre-line" style={{ color: T.textMuted }}>{acceptanceConditions}</p>
+                    acceptanceConditions && <div className="text-[11px]" style={{ color: T.textMuted }} dangerouslySetInnerHTML={{ __html: mdToHtml(acceptanceConditions) }} />
                   )}
                 </div>
               )}
@@ -1210,16 +1211,16 @@ export function A4Sheet({
                 <div className="mt-2">
                   <div className="text-[9px] uppercase tracking-[1px] font-semibold mb-1" style={{ color: hasError('Champ libre') ? errorBorder : T.textMuted }}>{lang === 'en' ? 'Additional information' : 'Champ libre'}</div>
                   {ed ? (
-                    <textarea
+                    <RichTextarea
                       value={freeField}
-                      onChange={(e) => onFreeFieldChange?.(e.target.value)}
+                      onChange={(v) => onFreeFieldChange?.(v)}
                       placeholder={lang === 'en' ? 'Additional text...' : 'Texte supplementaire...'}
-                      className="w-full bg-transparent text-[11px] leading-[1.6] focus:outline-none resize-y min-h-[24px]"
+                      className="text-[11px] leading-[1.6]"
                       style={{ color: T.textMuted }}
                       rows={2}
                     />
                   ) : (
-                    freeField && <p className="text-[11px] whitespace-pre-line" style={{ color: T.textMuted }}>{freeField}</p>
+                    freeField && <div className="text-[11px]" style={{ color: T.textMuted }} dangerouslySetInnerHTML={{ __html: mdToHtml(freeField) }} />
                   )}
                 </div>
               )}
@@ -1276,19 +1277,16 @@ export function A4Sheet({
                   >
                     {footerMode === 'custom' ? (
                       ed ? (
-                        <textarea
+                        <RichTextarea
                           value={footerText || ''}
-                          onChange={(e) => onFooterTextChange?.(e.target.value.slice(0, 50))}
+                          onChange={(v) => onFooterTextChange?.(v.slice(0, 50))}
                           placeholder={lang === 'en' ? 'Legal information' : 'Informations légales de ma société'}
-                          className="w-full bg-transparent text-[11px] leading-[1.6] text-center focus:outline-none resize-y min-h-[20px]"
+                          className="text-[11px] leading-[1.6] text-center"
                           style={{ color: T.textFooter }}
                           rows={1}
-                          maxLength={50}
                         />
                       ) : (
-                        <div className="text-[11px] leading-[1.6] whitespace-pre-line" style={{ color: T.textFooter }}>
-                          {footerText || ''}
-                        </div>
+                        <div className="text-[11px] leading-[1.6]" style={{ color: T.textFooter }} dangerouslySetInnerHTML={{ __html: mdToHtml(footerText || '') }} />
                       )
                     ) : (
                       <div className="text-[11px] leading-[1.6]" style={{ color: T.textFooter }}>
@@ -1305,19 +1303,16 @@ export function A4Sheet({
                 <div className="mt-4 pt-3 text-center" style={{ borderTop: `2px solid ${T.footerBorder}` }}>
                   {footerMode === 'custom' ? (
                     ed ? (
-                      <textarea
+                      <RichTextarea
                         value={footerText || ''}
-                        onChange={(e) => onFooterTextChange?.(e.target.value.slice(0, 50))}
+                        onChange={(v) => onFooterTextChange?.(v.slice(0, 50))}
                         placeholder={lang === 'en' ? 'Custom footer text...' : 'Ex: Conditions générales de vente...'}
-                        className="w-full bg-transparent text-[9px] leading-[1.6] text-center focus:outline-none resize-y min-h-[30px]"
+                        className="text-[9px] leading-[1.6] text-center"
                         style={{ color: T.textFooter }}
                         rows={2}
-                        maxLength={50}
                       />
                     ) : (
-                      <div className="text-[9px] leading-[1.6] whitespace-pre-line" style={{ color: T.textFooter }}>
-                        {footerText || ''}
-                      </div>
+                      <div className="text-[9px] leading-[1.6]" style={{ color: T.textFooter }} dangerouslySetInnerHTML={{ __html: mdToHtml(footerText || '') }} />
                     )
                   ) : (
                     <div className="text-[9px] leading-[1.6]" style={{ color: T.textFooter }}>
