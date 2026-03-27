@@ -79,9 +79,9 @@ export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean })
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20">
           <Lock className="h-7 w-7 text-amber-500" />
         </div>
-        <DialogTitle className="text-center">Coffre-fort verrouille</DialogTitle>
+        <DialogTitle className="text-center">Coffre-fort verrouillé</DialogTitle>
         <DialogDescription className="text-center">
-          Suite a un redemarrage du serveur, votre coffre-fort de donnees est verrouille.
+          Suite à un redémarrage du serveur, votre coffre-fort de données est verrouillé.
         </DialogDescription>
       </div>
 
@@ -158,14 +158,14 @@ export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean })
               placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
             />
             <p className="text-xs text-muted-foreground mt-1">
-              La clef de secours envoyee par email lors de la creation de votre equipe.
+              La clef de secours envoyée par email lors de la création de votre équipe.
             </p>
           </Field>
         )}
 
         <DialogFooter>
           <Button type="submit" className="w-full" disabled={loading || !isValid}>
-            {loading ? <><Spinner /> Deverrouillage...</> : 'Deverrouiller'}
+            {loading ? <><Spinner /> Déverrouillage...</> : 'Déverrouiller'}
           </Button>
         </DialogFooter>
       </form>

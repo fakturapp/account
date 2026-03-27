@@ -49,14 +49,14 @@ export function RecoveryKeySetupModal({ open }: { open: boolean }) {
             </div>
             <DialogTitle className="text-center">Clef de secours</DialogTitle>
             <DialogDescription className="text-center">
-              Configurez une clef de secours pour proteger vos donnees chiffrees.
-              En cas de perte de mot de passe, cette clef vous permettra de recuperer vos donnees.
+              Configurez une clef de secours pour protéger vos données chiffrées.
+              En cas de perte de mot de passe, cette clef vous permettra de récupérer vos données.
             </DialogDescription>
           </div>
 
           <div className="rounded-lg bg-indigo-500/10 border border-indigo-500/20 p-3 mb-4">
             <p className="text-sm text-indigo-300">
-              Une clef unique sera generee et envoyee a votre adresse email. Conservez-la dans un endroit sur.
+              Une clef unique sera générée et envoyée à votre adresse email. Conservez-la dans un endroit sûr.
             </p>
           </div>
 
@@ -103,11 +103,11 @@ export function RecoveryKeySetupModal({ open }: { open: boolean }) {
           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10 border border-green-500/20">
             <CheckCircle2 className="h-8 w-8 text-green-500" />
           </div>
-          <DialogTitle className="text-center">Clef de secours configuree</DialogTitle>
+          <DialogTitle className="text-center">Clef de secours configurée</DialogTitle>
           <div className="flex items-start gap-2 rounded-lg bg-green-500/10 border border-green-500/20 p-3">
             <ShieldCheck className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />
             <p className="text-sm text-green-300">
-              Votre clef de secours a ete envoyee a votre adresse email. Conservez-la precieusement dans un endroit sur.
+              Votre clef de secours a été envoyée à votre adresse email. Conservez-la précieusement dans un endroit sûr.
             </p>
           </div>
         </div>
