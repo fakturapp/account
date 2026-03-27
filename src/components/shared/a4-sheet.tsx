@@ -999,13 +999,17 @@ export function A4Sheet({
                     >
                       <div className="px-3 py-2">
                         {isPreview ? (
-                          <span className={cn('text-[12px]', isSection ? 'font-bold' : '')}>{line.description || '-'}</span>
+                          line.description
+                            ? <span className={cn('text-[12px]', isSection ? 'font-bold' : '')} dangerouslySetInnerHTML={{ __html: mdToHtml(line.description) }} />
+                            : <span className="text-[12px]">-</span>
                         ) : (
-                          <input type="text" value={line.description}
-                            onChange={(e) => onUpdateLine(idx, { description: e.target.value })}
+                          <RichTextarea
+                            value={line.description}
+                            onChange={(v) => onUpdateLine(idx, { description: v })}
                             placeholder={isSection ? t.sectionTitle : t.description}
-                            className={cn('w-full bg-transparent text-[12px] focus:outline-none', isSection && 'font-bold')}
-                            style={{ color: T.text, '--tw-placeholder-color': T.inputPlaceholder } as React.CSSProperties}
+                            className={cn('text-[12px]', isSection && 'font-bold')}
+                            style={{ color: T.text }}
+                            singleLine
                           />
                         )}
                       </div>
