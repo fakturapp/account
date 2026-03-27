@@ -312,6 +312,7 @@ type Panel = 'color' | 'highlight' | 'size' | 'font' | 'link' | null
 function FloatingToolbar({
   state,
   singleLine,
+  containerRef,
   onFormat,
   onColor,
   onHighlight,
@@ -324,6 +325,7 @@ function FloatingToolbar({
 }: {
   state: ToolbarState
   singleLine: boolean
+  containerRef: React.RefObject<HTMLDivElement | null>
   onFormat: (cmd: 'bold' | 'italic' | 'underline' | 'strikeThrough') => void
   onColor: (color: string) => void
   onHighlight: (color: string) => void
@@ -410,6 +412,7 @@ function FloatingToolbar({
     <AnimatePresence>
       {state.visible && (
         <motion.div
+          ref={containerRef}
           initial={{ opacity: 0, y: 4, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 4, scale: 0.96 }}
@@ -690,6 +693,7 @@ export function RichTextarea({
   singleLine = false,
 }: RichTextareaProps) {
   const editorRef = useRef<HTMLDivElement>(null)
+  const toolbarRef = useRef<HTMLDivElement>(null)
   const lastValueRef = useRef(value)
   const isComposingRef = useRef(false)
   const [toolbar, setToolbar] = useState<ToolbarState>({
@@ -793,7 +797,11 @@ export function RichTextarea({
 
   const handleBlur = useCallback(() => {
     setTimeout(() => {
-      if (!editorRef.current?.contains(document.activeElement)) {
+      const active = document.activeElement
+      if (
+        !editorRef.current?.contains(active) &&
+        !toolbarRef.current?.contains(active)
+      ) {
         setToolbar(prev => prev.visible ? { ...prev, visible: false } : prev)
       }
     }, 200)
@@ -916,6 +924,7 @@ export function RichTextarea({
       <FloatingToolbar
         state={toolbar}
         singleLine={singleLine}
+        containerRef={toolbarRef}
         onFormat={handleFormat}
         onColor={handleColor}
         onHighlight={handleHighlight}
