@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation'
 import { api } from '@/lib/api'
 import { CryptoResetModal } from '@/components/modals/crypto-reset-modal'
 import { VaultUnlockModal } from '@/components/modals/vault-unlock-modal'
+import { RecoveryKeySetupModal } from '@/components/modals/recovery-key-setup-modal'
 
 interface User {
   id: string
@@ -18,6 +19,7 @@ interface User {
   lastLoginAt: string | null
   createdAt: string
   cryptoResetNeeded: boolean
+  hasRecoveryKey: boolean
   hasGoogleProvider: boolean
   vaultLocked: boolean
 }
@@ -142,6 +144,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onWiped={handleCryptoWiped}
       />
       <VaultUnlockModal forceOpen={!!user?.vaultLocked && !user?.cryptoResetNeeded} />
+      <RecoveryKeySetupModal
+        open={
+          !!user &&
+          !user.hasRecoveryKey &&
+          user.onboardingCompleted &&
+          !user.cryptoResetNeeded &&
+          !user.vaultLocked
+        }
+      />
     </AuthContext.Provider>
   )
 }

@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { api } from '@/lib/api'
-import { Shield, AlertTriangle, Trash2, KeyRound, Loader2, CheckCircle2, Lock } from 'lucide-react'
+import { Shield, AlertTriangle, Trash2, KeyRound, Loader2, CheckCircle2, Lock, Key } from 'lucide-react'
 
 interface CryptoResetModalProps {
   open: boolean
@@ -34,8 +34,9 @@ const contentVariants = {
 }
 
 export function CryptoResetModal({ open, onRecovered, onWiped }: CryptoResetModalProps) {
-  const [mode, setMode] = useState<'choose' | 'recover' | 'wipe'>('choose')
+  const [mode, setMode] = useState<'choose' | 'recover' | 'recover-key' | 'wipe'>('choose')
   const [oldPassword, setOldPassword] = useState('')
+  const [recoveryKey, setRecoveryKey] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [wipeStep, setWipeStep] = useState(0) // 0=warning, 1=confirm, 2=SUPPRIMER, 3=password
@@ -51,6 +52,24 @@ export function CryptoResetModal({ open, onRecovered, onWiped }: CryptoResetModa
     setLoading(true)
     setError('')
     const { error: apiError } = await api.post('/auth/crypto/recover', { oldPassword })
+    setLoading(false)
+    if (apiError) {
+      setError(apiError)
+    } else {
+      onRecovered()
+    }
+  }
+
+  async function handleRecoverWithKey() {
+    if (!recoveryKey.trim()) {
+      setError('Veuillez entrer votre clef de secours')
+      return
+    }
+    setLoading(true)
+    setError('')
+    const { error: apiError } = await api.post('/auth/crypto/recover', {
+      recoveryKey: recoveryKey.replace(/-/g, '').trim(),
+    })
     setLoading(false)
     if (apiError) {
       setError(apiError)
@@ -82,7 +101,7 @@ export function CryptoResetModal({ open, onRecovered, onWiped }: CryptoResetModa
     }
   }
 
-  const contentKey = mode === 'wipe' ? `wipe-${wipeStep}` : mode
+  const contentKey = mode === 'wipe' ? `wipe-${wipeStep}` : mode === 'recover-key' ? 'recover-key' : mode
 
   return (
     <AnimatePresence>
@@ -180,6 +199,21 @@ export function CryptoResetModal({ open, onRecovered, onWiped }: CryptoResetModa
                           <motion.button
                             whileHover={{ scale: 1.01 }}
                             whileTap={{ scale: 0.98 }}
+                            onClick={() => { setMode('recover-key'); setError('') }}
+                            className="w-full flex items-center gap-3 p-4 rounded-xl border border-border hover:bg-muted/50 transition-colors text-left"
+                          >
+                            <div className="flex items-center justify-center h-9 w-9 rounded-lg bg-indigo-500/10 shrink-0">
+                              <Key className="h-4 w-4 text-indigo-400" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-medium text-foreground">Utiliser ma clef de secours</p>
+                              <p className="text-xs text-muted-foreground">J&apos;ai ma clef de secours re&ccedil;ue par email</p>
+                            </div>
+                          </motion.button>
+
+                          <motion.button
+                            whileHover={{ scale: 1.01 }}
+                            whileTap={{ scale: 0.98 }}
                             onClick={() => { setMode('wipe'); setWipeStep(0); setError('') }}
                             className="w-full flex items-center gap-3 p-4 rounded-xl border border-destructive/30 hover:bg-destructive/5 transition-colors text-left"
                           >
@@ -188,7 +222,7 @@ export function CryptoResetModal({ open, onRecovered, onWiped }: CryptoResetModa
                             </div>
                             <div>
                               <p className="text-sm font-medium text-destructive">Recommencer de z&eacute;ro</p>
-                              <p className="text-xs text-muted-foreground">Je n&apos;ai plus mon ancien mot de passe</p>
+                              <p className="text-xs text-muted-foreground">Je n&apos;ai ni mon ancien mot de passe, ni ma clef</p>
                             </div>
                           </motion.button>
                         </div>
@@ -242,6 +276,63 @@ export function CryptoResetModal({ open, onRecovered, onWiped }: CryptoResetModa
                               whileTap={{ scale: 0.97 }}
                               onClick={handleRecover}
                               disabled={loading || !oldPassword.trim()}
+                              className="flex-1 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                            >
+                              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+                              R&eacute;cup&eacute;rer
+                            </motion.button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* ===== RECOVER WITH KEY MODE ===== */}
+                      {mode === 'recover-key' && (
+                        <div className="space-y-4">
+                          <p className="text-sm text-muted-foreground">
+                            Entrez la clef de secours re&ccedil;ue par email pour r&eacute;cup&eacute;rer vos donn&eacute;es.
+                          </p>
+
+                          <div>
+                            <label className="block text-sm font-medium text-foreground mb-1.5">Clef de secours</label>
+                            <input
+                              type="text"
+                              value={recoveryKey}
+                              onChange={(e) => setRecoveryKey(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleRecoverWithKey()}
+                              placeholder="XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX"
+                              className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 font-mono"
+                              autoFocus
+                            />
+                          </div>
+
+                          <AnimatePresence>
+                            {error && (
+                              <motion.div
+                                initial={{ opacity: 0, height: 0 }}
+                                animate={{ opacity: 1, height: 'auto' }}
+                                exit={{ opacity: 0, height: 0 }}
+                                transition={{ duration: 0.2 }}
+                                className="overflow-hidden"
+                              >
+                                <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3">
+                                  <p className="text-sm text-destructive">{error}</p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          <div className="flex gap-2">
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={() => { setMode('choose'); setError(''); setRecoveryKey('') }}
+                              className="flex-1 px-4 py-2 text-sm font-medium text-muted-foreground border border-border rounded-lg hover:bg-muted/50 transition-colors"
+                            >
+                              Retour
+                            </motion.button>
+                            <motion.button
+                              whileTap={{ scale: 0.97 }}
+                              onClick={handleRecoverWithKey}
+                              disabled={loading || !recoveryKey.trim()}
                               className="flex-1 px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                             >
                               {loading && <Loader2 className="h-4 w-4 animate-spin" />}
