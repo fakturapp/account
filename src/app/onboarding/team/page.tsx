@@ -28,10 +28,11 @@ export default function OnboardingTeamPage() {
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // If user already has a team (coming from dashboard create), skip to company
+  // If user already has a team (coming from dashboard create), skip to recovery-key or company
   useEffect(() => {
     if (user?.currentTeamId) {
-      router.replace('/onboarding/company')
+      const hasKey = sessionStorage.getItem('zenvoice_recovery_key')
+      router.replace(hasKey ? '/onboarding/recovery-key' : '/onboarding/company')
     }
   }, [user, router])
 
@@ -40,13 +41,20 @@ export default function OnboardingTeamPage() {
     setError('')
     setLoading(true)
 
-    const { error: err } = await api.post('/onboarding/team', { name })
+    const { data, error: err } = await api.post<{ recoveryKey: string }>(
+      '/onboarding/team',
+      { name }
+    )
     setLoading(false)
 
     if (err) return setError(err)
 
+    if (data?.recoveryKey) {
+      sessionStorage.setItem('zenvoice_recovery_key', data.recoveryKey)
+    }
+
     await refreshUser()
-    router.push('/onboarding/company')
+    router.push(data?.recoveryKey ? '/onboarding/recovery-key' : '/onboarding/company')
   }
 
   return (

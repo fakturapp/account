@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 
 const steps = [
   { id: 'team', label: 'Équipe', path: '/onboarding/team' },
+  { id: 'recovery-key', label: 'Sécurité', path: '/onboarding/recovery-key' },
   { id: 'company', label: 'Entreprise', path: '/onboarding/company' },
   { id: 'personalization', label: 'Apparence', path: '/onboarding/personalization' },
   { id: 'email', label: 'Email', path: '/onboarding/email' },

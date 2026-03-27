@@ -6,7 +6,8 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-import { KeyRound, Eye, EyeOff, CheckCircle2, ShieldCheck } from 'lucide-react'
+import { KeyRound, Eye, EyeOff, CheckCircle2 } from 'lucide-react'
+import { RecoveryKeyDisplay } from '@/components/shared/recovery-key-display'
 import { api } from '@/lib/api'
 import { useAuth } from '@/lib/auth'
 
@@ -16,7 +17,7 @@ export function RecoveryKeySetupModal({ open }: { open: boolean }) {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [done, setDone] = useState(false)
+  const [recoveryKey, setRecoveryKey] = useState<string | null>(null)
 
   async function handleSetup(e: React.FormEvent) {
     e.preventDefault()
@@ -24,24 +25,28 @@ export function RecoveryKeySetupModal({ open }: { open: boolean }) {
     setError('')
     setLoading(true)
 
-    const { error: err } = await api.post('/auth/crypto/setup-recovery-key', { password })
+    const { data, error: err } = await api.post<{ recoveryKey: string }>(
+      '/auth/crypto/setup-recovery-key',
+      { password }
+    )
     setLoading(false)
 
-    if (err) {
-      return setError(err)
+    if (err || !data?.recoveryKey) {
+      return setError(err || 'Une erreur est survenue')
     }
 
-    setDone(true)
-    setTimeout(async () => {
-      await refreshUser()
-    }, 2000)
+    setRecoveryKey(data.recoveryKey)
+  }
+
+  async function handleClose() {
+    await refreshUser()
   }
 
   if (!open) return null
 
   return (
     <Dialog open={open} onClose={() => {}} dismissible={false}>
-      {!done ? (
+      {!recoveryKey ? (
         <>
           <div className="flex flex-col items-center gap-3 mb-4">
             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/10 border border-indigo-500/20">
@@ -99,17 +104,24 @@ export function RecoveryKeySetupModal({ open }: { open: boolean }) {
           </form>
         </>
       ) : (
-        <div className="flex flex-col items-center gap-4 py-4">
-          <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-green-500/10 border border-green-500/20">
-            <CheckCircle2 className="h-8 w-8 text-green-500" />
+        <div className="flex flex-col gap-4 py-2">
+          <div className="flex flex-col items-center gap-3">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-green-500/10 border border-green-500/20">
+              <CheckCircle2 className="h-7 w-7 text-green-500" />
+            </div>
+            <DialogTitle className="text-center">Clef de secours configurée</DialogTitle>
+            <DialogDescription className="text-center">
+              Sauvegardez cette clef dans un endroit sûr. Elle vous permettra de récupérer vos données en cas de perte de mot de passe.
+            </DialogDescription>
           </div>
-          <DialogTitle className="text-center">Clef de secours configurée</DialogTitle>
-          <div className="flex items-start gap-2 rounded-lg bg-green-500/10 border border-green-500/20 p-3">
-            <ShieldCheck className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />
-            <p className="text-sm text-green-300">
-              Votre clef de secours a été envoyée à votre adresse email. Conservez-la précieusement dans un endroit sûr.
-            </p>
-          </div>
+
+          <RecoveryKeyDisplay recoveryKey={recoveryKey} />
+
+          <DialogFooter>
+            <Button onClick={handleClose} className="w-full">
+              J&apos;ai sauvegardé ma clef
+            </Button>
+          </DialogFooter>
         </div>
       )}
     </Dialog>
