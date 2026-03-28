@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge'
 import Image from 'next/image'
 import Link from 'next/link'
 import {
-  Github,
+  Code2,
   Globe,
   ExternalLink,
   Server,
@@ -24,7 +24,7 @@ import {
 } from 'lucide-react'
 
 const links = [
-  { label: 'GitHub', href: 'https://github.com/faktur/fakturapp', icon: Github },
+  { label: 'GitHub', href: 'https://github.com/faktur/fakturapp', icon: Code2 },
   { label: 'Site web', href: 'https://fakturapp.cc', icon: Globe },
   { label: 'Dashboard', href: 'https://dash.fakturapp.cc', icon: Layout },
   { label: 'API', href: 'https://api.fakturapp.cc', icon: Server },
