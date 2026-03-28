@@ -119,6 +119,14 @@ export function CookieConsent() {
             onDragEnd={handleDragEnd}
             whileDrag={{ scale: 1.1 }}
             onClick={() => {
+              // Re-read consent from localStorage to ensure toggle is accurate
+              try {
+                const stored = localStorage.getItem(STORAGE_KEY)
+                if (stored) {
+                  const parsed: ConsentState = JSON.parse(stored)
+                  setAnalyticsEnabled(parsed.analytics)
+                }
+              } catch {}
               setShowMiniButton(false)
               setVisible(true)
               setShowSettings(true)
