@@ -1,0 +1,208 @@
+'use client'
+
+import { useState } from 'react'
+import { motion } from 'framer-motion'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field'
+import { Separator } from '@/components/ui/separator'
+import { useToast } from '@/components/ui/toast'
+import { Spinner } from '@/components/ui/spinner'
+import { Select } from '@/components/ui/select'
+import { useCompanySettings } from '@/lib/company-settings-context'
+import { api } from '@/lib/api'
+import { Receipt, Banknote, Coins, PenLine, Lock, CreditCard, Info } from 'lucide-react'
+
+export default function PaymentPage() {
+  const { toast } = useToast()
+  const { loading, noCompany, paymentForm, setPaymentForm } = useCompanySettings()
+  const [saving, setSaving] = useState(false)
+
+  function togglePaymentMethod(method: string) {
+    setPaymentForm((p) => {
+      const methods = p.paymentMethods.includes(method)
+        ? p.paymentMethods.filter((m) => m !== method)
+        : [...p.paymentMethods, method]
+      return { ...p, paymentMethods: methods }
+    })
+  }
+
+  async function handleSavePayment(e: React.FormEvent) {
+    e.preventDefault()
+    setSaving(true)
+    const { error } = await api.put('/company', {
+      paymentConditions: paymentForm.paymentConditions,
+      currency: paymentForm.currency,
+      paymentMethods: paymentForm.paymentMethods,
+      customPaymentMethod: paymentForm.customPaymentMethod,
+    })
+    setSaving(false)
+    if (error) return toast(error, 'error')
+    toast('Conditions de paiement mises à jour', 'success')
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-6 px-4 lg:px-6 py-4 md:py-6">
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="h-4 w-64" />
+        </div>
+        <div className="rounded-2xl border border-border/50 p-6 space-y-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-xl" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-6 px-4 lg:px-6 py-4 md:py-6">
+      <div>
+        <h1 className="text-2xl font-bold text-foreground">Paiement</h1>
+        <p className="text-muted-foreground text-sm mt-1">Devise, conditions et moyens de paiement.</p>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          {noCompany ? (
+            <div className="flex flex-col items-center py-8 text-center">
+              <Receipt className="h-8 w-8 text-muted-foreground mb-3" />
+              <p className="text-sm text-muted-foreground">
+                Créez d&apos;abord votre entreprise dans la page Informations.
+              </p>
+            </div>
+          ) : (
+            <form onSubmit={handleSavePayment}>
+              <FieldGroup>
+                <h3 className="font-semibold text-foreground">Devise et conditions</h3>
+
+                <Field>
+                  <FieldLabel htmlFor="currency">Devise</FieldLabel>
+                  <Select id="currency" value={paymentForm.currency} onChange={(e) => setPaymentForm((p) => ({ ...p, currency: e.target.value }))}>
+                    <option value="EUR">EUR - Euro</option>
+                    <option value="USD">USD - Dollar américain</option>
+                    <option value="GBP">GBP - Livre sterling</option>
+                    <option value="CHF">CHF - Franc suisse</option>
+                    <option value="CAD">CAD - Dollar canadien</option>
+                  </Select>
+                  <FieldDescription>La devise utilisée par défaut sur vos factures et devis.</FieldDescription>
+                </Field>
+
+                <Field>
+                  <FieldLabel htmlFor="paymentConditions">Conditions de paiement</FieldLabel>
+                  <Input id="paymentConditions" value={paymentForm.paymentConditions}
+                    onChange={(e) => setPaymentForm((p) => ({ ...p, paymentConditions: e.target.value }))}
+                    placeholder="Ex: Paiement à 30 jours" />
+                  <FieldDescription>Ces conditions seront ajoutées par défaut à vos factures.</FieldDescription>
+                </Field>
+
+                <Separator className="my-2" />
+
+                <h3 className="font-semibold text-foreground">Moyens de paiement acceptés</h3>
+                <FieldDescription>Sélectionnez les moyens de paiement que vous souhaitez afficher sur vos factures.</FieldDescription>
+
+                <div className="space-y-3">
+                  <label className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-muted/30 transition-colors has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5">
+                    <input type="checkbox" checked={paymentForm.paymentMethods.includes('bank_transfer')} onChange={() => togglePaymentMethod('bank_transfer')} className="sr-only" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <Banknote className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Virement bancaire</p>
+                      <p className="text-xs text-muted-foreground">Vos coordonnées bancaires seront affichées sur la facture</p>
+                    </div>
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${paymentForm.paymentMethods.includes('bank_transfer') ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                      {paymentForm.paymentMethods.includes('bank_transfer') && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      )}
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-muted/30 transition-colors has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5">
+                    <input type="checkbox" checked={paymentForm.paymentMethods.includes('cash')} onChange={() => togglePaymentMethod('cash')} className="sr-only" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-500/10">
+                      <Coins className="h-5 w-5 text-green-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Espèces</p>
+                      <p className="text-xs text-muted-foreground">Paiement en espèces accepté</p>
+                    </div>
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${paymentForm.paymentMethods.includes('cash') ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                      {paymentForm.paymentMethods.includes('cash') && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      )}
+                    </div>
+                  </label>
+
+                  <label className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-muted/30 transition-colors has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5">
+                    <input type="checkbox" checked={paymentForm.paymentMethods.includes('custom')} onChange={() => togglePaymentMethod('custom')} className="sr-only" />
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-yellow-500/10">
+                      <PenLine className="h-5 w-5 text-yellow-500" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-foreground">Autre</p>
+                      <p className="text-xs text-muted-foreground">Définissez un moyen de paiement personnalisé</p>
+                    </div>
+                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${paymentForm.paymentMethods.includes('custom') ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
+                      {paymentForm.paymentMethods.includes('custom') && (
+                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      )}
+                    </div>
+                  </label>
+
+                  {paymentForm.paymentMethods.includes('custom') && (
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pl-14">
+                      <Input placeholder="Ex: Chèque, PayPal, etc." value={paymentForm.customPaymentMethod}
+                        onChange={(e) => setPaymentForm((p) => ({ ...p, customPaymentMethod: e.target.value }))} />
+                    </motion.div>
+                  )}
+                </div>
+
+                <Separator className="my-2" />
+
+                <h3 className="font-semibold text-muted-foreground text-sm">Paiement en ligne</h3>
+                <div className="space-y-3 opacity-50">
+                  <div className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-not-allowed">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">Stripe</p>
+                      <p className="text-xs text-muted-foreground">Carte bancaire, Apple Pay, Google Pay</p>
+                    </div>
+                    <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </div>
+                  <div className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-not-allowed">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <CreditCard className="h-5 w-5 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-muted-foreground">PayPal</p>
+                      <p className="text-xs text-muted-foreground">Paiement via compte PayPal</p>
+                    </div>
+                    <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+                  <Info className="h-5 w-5 text-primary shrink-0" />
+                  <p className="text-sm text-foreground">
+                    L&apos;intégration des paiements en ligne (Stripe, PayPal) arrive bientôt.
+                  </p>
+                </div>
+
+                <Button type="submit" disabled={saving}>
+                  {saving ? <><Spinner className="text-primary-foreground" /> Enregistrement...</> : 'Enregistrer'}
+                </Button>
+              </FieldGroup>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}

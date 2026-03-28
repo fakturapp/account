@@ -3,11 +3,11 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
-export default function EmailSettingsRedirect() {
+export default function SettingsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    router.replace('/dashboard/settings/email/accounts')
+    router.replace('/dashboard/settings/company')
   }, [router])
 
   return null

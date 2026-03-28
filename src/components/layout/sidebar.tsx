@@ -47,6 +47,11 @@ import {
   ShieldCheck,
   ArrowLeft,
   BarChart3,
+  Paintbrush,
+  Settings2,
+  ClipboardList,
+  FileCheck,
+  Sparkles,
 } from 'lucide-react'
 
 interface TeamListItem {
@@ -120,29 +125,77 @@ const mainNav: NavItem[] = [
   { href: '/dashboard/expenses', label: 'Depenses', icon: Wallet },
 ]
 
-const settingsNav: NavItem = {
-  href: '/dashboard/company',
-  label: 'Paramètres',
-  icon: Settings,
-  children: [
-    { href: '/dashboard/company', label: 'Entreprise', icon: Building2 },
-    { href: '/dashboard/team', label: 'Équipe', icon: UsersRound },
-    { href: '/dashboard/settings/invoices', label: 'Facturation', icon: CreditCard },
-    { href: '/dashboard/settings/email', label: 'Email', icon: Mail },
-    { href: '/dashboard/settings/reminders', label: 'Relances', icon: Bell },
-  ],
+const settingsNav: NavItem[] = [
+  {
+    href: '/dashboard/settings/company',
+    label: 'Entreprise',
+    icon: Building2,
+    children: [
+      { href: '/dashboard/settings/company', label: 'Informations', icon: Building2 },
+      { href: '/dashboard/settings/company/bank', label: 'Banque', icon: CreditCard },
+      { href: '/dashboard/settings/company/payment', label: 'Paiement', icon: Receipt },
+    ],
+  },
+  { href: '/dashboard/settings/members', label: 'Membres', icon: UsersRound },
+  {
+    href: '/dashboard/settings/documents/invoices',
+    label: 'Facturation',
+    icon: CreditCard,
+    children: [
+      { href: '/dashboard/settings/documents/invoices', label: 'Apparence', icon: Paintbrush },
+      { href: '/dashboard/settings/documents/invoices/options', label: 'Options', icon: Settings2 },
+      { href: '/dashboard/settings/documents/invoices/defaults', label: 'Valeurs par défaut', icon: ClipboardList },
+      { href: '/dashboard/settings/documents/invoices/e-invoicing', label: 'E-Facturation', icon: FileCheck },
+      { href: '/dashboard/settings/documents/invoices/ai', label: 'Faktur AI', icon: Sparkles },
+    ],
+  },
+  {
+    href: '/dashboard/settings/email',
+    label: 'Communication',
+    icon: Mail,
+    children: [
+      { href: '/dashboard/settings/email/accounts', label: 'Comptes email', icon: Mail },
+      { href: '/dashboard/settings/reminders', label: 'Relances', icon: Bell },
+    ],
+  },
+]
+
+const SETTINGS_EXPANDED_KEY = 'zenvoice_settings_expanded'
+
+function getStoredExpanded(): string[] {
+  if (typeof window === 'undefined') return []
+  try { return JSON.parse(localStorage.getItem(SETTINGS_EXPANDED_KEY) || '[]') }
+  catch { return [] }
 }
 
-function NavLink({ item, pathname, badges }: { item: NavItem; pathname: string; badges?: Record<string, number> }) {
+function storeExpanded(expanded: string[]) {
+  localStorage.setItem(SETTINGS_EXPANDED_KEY, JSON.stringify(expanded))
+}
+
+function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathname: string; badges?: Record<string, number>; persistKey?: string }) {
   const isActive = item.href === '/dashboard'
     ? pathname === '/dashboard'
     : pathname === item.href || pathname.startsWith(item.href + '/')
   const hasChildren = item.children && item.children.length > 0
-  const [expanded, setExpanded] = useState(isActive && hasChildren)
+
+  const [expanded, setExpanded] = useState(() => {
+    if (isActive && hasChildren) return true
+    if (persistKey && hasChildren) return getStoredExpanded().includes(item.href)
+    return false
+  })
 
   React.useEffect(() => {
     if (isActive && hasChildren) setExpanded(true)
   }, [isActive, hasChildren])
+
+  function handleToggle() {
+    const next = !expanded
+    setExpanded(next)
+    if (persistKey) {
+      const stored = getStoredExpanded()
+      storeExpanded(next ? [...stored.filter(h => h !== item.href), item.href] : stored.filter(h => h !== item.href))
+    }
+  }
 
   if (!hasChildren) {
     return (
@@ -164,7 +217,7 @@ function NavLink({ item, pathname, badges }: { item: NavItem; pathname: string; 
   return (
     <div>
       <button
-        onClick={() => setExpanded(!expanded)}
+        onClick={handleToggle}
         className={cn(
           'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative',
           isActive
@@ -233,6 +286,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
 
   const isAdminMode = pathname.startsWith('/dashboard/admin')
+  const isSettingsMode = pathname.startsWith('/dashboard/settings')
+  const sidebarMode = isAdminMode ? 'admin' : isSettingsMode ? 'settings' : 'main'
 
   const initials = user.fullName
     ? user.fullName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -246,7 +301,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
       )}
     >
       <AnimatePresence mode="wait">
-        {isAdminMode ? (
+        {sidebarMode === 'admin' ? (
           <motion.div
             key="admin-header"
             initial={{ opacity: 0, x: -20 }}
@@ -262,6 +317,25 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-sm font-semibold text-foreground leading-tight">Administration</p>
                 <p className="text-xs text-muted-foreground">Panel admin</p>
+              </div>
+            </div>
+          </motion.div>
+        ) : sidebarMode === 'settings' ? (
+          <motion.div
+            key="settings-header"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-primary/10 to-transparent"
+          >
+            <div className="flex items-center gap-2.5 px-3 py-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
+                <Settings className="h-4.5 w-4.5" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-semibold text-foreground leading-tight">Paramètres</p>
+                <p className="text-xs text-muted-foreground">Configuration</p>
               </div>
             </div>
           </motion.div>
@@ -361,7 +435,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
       <div className="mx-3 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
       <AnimatePresence mode="wait">
-        {isAdminMode ? (
+        {sidebarMode === 'admin' ? (
           <motion.div
             key="admin-nav"
             initial={{ opacity: 0, x: -30 }}
@@ -399,6 +473,33 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 item={{ href: '/dashboard/admin/analytics', label: 'Analytiques', icon: BarChart3 }}
                 pathname={pathname}
               />
+            </nav>
+          </motion.div>
+        ) : sidebarMode === 'settings' ? (
+          <motion.div
+            key="settings-nav"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="flex flex-1 flex-col overflow-hidden"
+          >
+            {/* Back to dashboard */}
+            <div className="px-3 pt-3 pb-1">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour au dashboard
+              </Link>
+            </div>
+
+            {/* Settings navigation */}
+            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+              {settingsNav.map((item) => (
+                <NavLink key={item.href} item={item} pathname={pathname} persistKey="settings" />
+              ))}
             </nav>
           </motion.div>
         ) : (
@@ -441,7 +542,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 <NavLink key={item.href} item={item} pathname={pathname} badges={badges} />
               ))}
               <div className="mx-1 my-2 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-              <NavLink item={settingsNav} pathname={pathname} badges={badges} />
+              <NavLink
+                item={{ href: '/dashboard/settings', label: 'Paramètres', icon: Settings }}
+                pathname={pathname}
+              />
             </nav>
 
             {/* Feedback & Bug report */}

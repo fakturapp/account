@@ -92,12 +92,22 @@ export function CookieConsent() {
   const handleRejectAnalytics = () => saveConsent(false, 'reject_analytics')
   const handleSavePreferences = () => saveConsent(analyticsEnabled, 'update')
 
+  const isDragging = useRef(false)
+
+  const handleDragStart = () => {
+    isDragging.current = true
+  }
+
   const handleDragEnd = (_: unknown, info: PanInfo) => {
     const newPos = { x: miniPos.x + info.offset.x, y: miniPos.y + info.offset.y }
     setMiniPos(newPos)
     try {
       localStorage.setItem(POSITION_KEY, JSON.stringify(newPos))
     } catch {}
+    // Reset drag flag after a short delay so onClick doesn't fire
+    requestAnimationFrame(() => {
+      setTimeout(() => { isDragging.current = false }, 0)
+    })
   }
 
   return (
@@ -116,9 +126,12 @@ export function CookieConsent() {
             dragConstraints={constraintsRef}
             dragElastic={0.1}
             dragMomentum={false}
+            onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
             whileDrag={{ scale: 1.1 }}
             onClick={() => {
+              // Ignore click if we just finished dragging
+              if (isDragging.current) return
               // Re-read consent from localStorage to ensure toggle is accurate
               try {
                 const stored = localStorage.getItem(STORAGE_KEY)
@@ -131,7 +144,7 @@ export function CookieConsent() {
               setVisible(true)
               setShowSettings(true)
             }}
-            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border shadow-lg hover:bg-muted transition-colors cursor-grab active:cursor-grabbing"
+            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border/50 shadow-lg hover:bg-muted transition-colors cursor-grab active:cursor-grabbing"
             aria-label="Paramètres des cookies"
           >
             <Cookie className="h-4 w-4 text-muted-foreground" />
@@ -147,7 +160,7 @@ export function CookieConsent() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] rounded-xl border border-border bg-card p-5 shadow-xl"
+            className="fixed bottom-4 right-4 z-50 w-[380px] max-w-[calc(100vw-2rem)] rounded-xl border border-border/50 bg-card p-5 shadow-xl"
           >
             {/* Close button */}
             <button
@@ -238,20 +251,12 @@ export function CookieConsent() {
                   </p>
                 </div>
 
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleSavePreferences}
-                    className="flex-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-                  >
-                    Enregistrer
-                  </button>
-                  <button
-                    onClick={() => setShowSettings(false)}
-                    className="rounded-lg border border-border bg-muted/50 px-3 py-2 text-sm font-medium text-foreground hover:bg-muted transition-colors"
-                  >
-                    Retour
-                  </button>
-                </div>
+                <button
+                  onClick={handleSavePreferences}
+                  className="w-full rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  Enregistrer
+                </button>
               </>
             )}
           </motion.div>
