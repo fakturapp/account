@@ -123,8 +123,8 @@ export default function AnalyticsUsersPage() {
               />
               <Tooltip
                 contentStyle={tooltipStyle}
-                labelFormatter={(v: string) =>
-                  new Date(v).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
+                labelFormatter={(v) =>
+                  new Date(String(v)).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
                 }
               />
               <Line

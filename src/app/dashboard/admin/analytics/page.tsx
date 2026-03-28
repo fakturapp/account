@@ -146,8 +146,8 @@ export default function AnalyticsOverviewPage() {
                     borderRadius: '8px',
                     fontSize: '12px',
                   }}
-                  labelFormatter={(v: string) =>
-                    new Date(v).toLocaleDateString('fr-FR', {
+                  labelFormatter={(v) =>
+                    new Date(String(v)).toLocaleDateString('fr-FR', {
                       day: 'numeric',
                       month: 'long',
                     })
