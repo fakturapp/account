@@ -42,6 +42,10 @@ import {
   RefreshCw,
   Bell,
   Wallet,
+  Star,
+  Bug,
+  ShieldCheck,
+  ArrowLeft,
 } from 'lucide-react'
 
 interface TeamListItem {
@@ -62,6 +66,9 @@ export interface SidebarProps {
   onLogout: () => void
   collapsed?: boolean
   badges?: Record<string, number>
+  isAdmin?: boolean
+  onOpenFeedback?: () => void
+  onOpenBugReport?: () => void
 }
 
 const roleIcons: Record<string, React.ReactNode> = {
@@ -218,11 +225,13 @@ function NavLink({ item, pathname, badges }: { item: NavItem; pathname: string; 
   )
 }
 
-export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, onLogout, collapsed, badges }: SidebarProps) {
+export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, onLogout, collapsed, badges, isAdmin, onOpenFeedback, onOpenBugReport }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { resolvedTheme, setTheme } = useTheme()
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
+
+  const isAdminMode = pathname.startsWith('/dashboard/admin')
 
   const initials = user.fullName
     ? user.fullName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -235,147 +244,245 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
         collapsed ? 'w-0 border-r-0' : 'w-(--sidebar-width)'
       )}
     >
-      {/* Team header */}
-      <div className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-primary/5 to-transparent">
-        {teamsLoaded ? (
-          <Dropdown
-            align="left"
-            trigger={
-              <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-all duration-300 ease-in-out w-full">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-xs overflow-hidden">
-                  {currentTeam?.iconUrl ? (
-                    <img src={currentTeam.iconUrl} alt={currentTeam.name} className="h-full w-full object-cover" />
-                  ) : (
-                    currentTeam?.name.charAt(0).toUpperCase() || 'T'
-                  )}
-                </div>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-semibold text-foreground leading-tight truncate">
-                    {currentTeam?.name || 'Équipe'}
-                  </p>
-                  {currentTeam?.role && (
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      {roleIcons[currentTeam.role]}
-                      {roleLabels[currentTeam.role]}
-                    </p>
-                  )}
-                </div>
-                <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              </div>
-            }
-            className="min-w-[230px]"
+      <AnimatePresence mode="wait">
+        {isAdminMode ? (
+          <motion.div
+            key="admin-header"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-indigo-500/10 to-transparent"
           >
-            <DropdownLabel>Vos équipes</DropdownLabel>
-
-            {teams.map((team) => (
-              <DropdownItem
-                key={team.id}
-                onClick={() => {
-                  if (!team.isCurrent) onSwitchTeam(team.id)
-                }}
-              >
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-foreground overflow-hidden">
-                      {team.iconUrl ? (
-                        <img src={team.iconUrl} alt={team.name} className="h-full w-full object-cover" />
-                      ) : (
-                        team.name.charAt(0).toUpperCase()
-                      )}
-                    </div>
-                    <div>
-                      <p className="text-sm font-medium text-foreground leading-tight">{team.name}</p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        {roleIcons[team.role]}
-                        {roleLabels[team.role]}
-                      </p>
-                    </div>
-                  </div>
-                  {team.isCurrent && (
-                    <Check className="h-4 w-4 text-primary shrink-0" />
-                  )}
-                </div>
-              </DropdownItem>
-            ))}
-
-            <DropdownSeparator />
-
-            <Link href="/dashboard/team/create">
-              <DropdownItem>
-                <Plus className="h-4 w-4" /> Créer une équipe
-              </DropdownItem>
-            </Link>
-          </Dropdown>
-        ) : (
-          <div className="flex items-center gap-2.5 px-3 py-2">
-            <div className="h-8 w-8 rounded-lg skeleton-shimmer" />
-            <div className="flex-1 space-y-1.5">
-              <div className="h-3.5 w-24 rounded skeleton-shimmer" />
-              <div className="h-2.5 w-16 rounded skeleton-shimmer" />
+            <div className="flex items-center gap-2.5 px-3 py-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
+                <ShieldCheck className="h-4.5 w-4.5" />
+              </div>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-semibold text-foreground leading-tight">Administration</p>
+                <p className="text-xs text-muted-foreground">Panel admin</p>
+              </div>
             </div>
-          </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="team-header"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+          >
+            {/* Team header */}
+            <div className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-primary/5 to-transparent">
+              {teamsLoaded ? (
+                <Dropdown
+                  align="left"
+                  trigger={
+                    <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-all duration-300 ease-in-out w-full">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-xs overflow-hidden">
+                        {currentTeam?.iconUrl ? (
+                          <img src={currentTeam.iconUrl} alt={currentTeam.name} className="h-full w-full object-cover" />
+                        ) : (
+                          currentTeam?.name.charAt(0).toUpperCase() || 'T'
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 text-left">
+                        <p className="text-sm font-semibold text-foreground leading-tight truncate">
+                          {currentTeam?.name || 'Équipe'}
+                        </p>
+                        {currentTeam?.role && (
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            {roleIcons[currentTeam.role]}
+                            {roleLabels[currentTeam.role]}
+                          </p>
+                        )}
+                      </div>
+                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                    </div>
+                  }
+                  className="min-w-[230px]"
+                >
+                  <DropdownLabel>Vos équipes</DropdownLabel>
+
+                  {teams.map((team) => (
+                    <DropdownItem
+                      key={team.id}
+                      onClick={() => {
+                        if (!team.isCurrent) onSwitchTeam(team.id)
+                      }}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-foreground overflow-hidden">
+                            {team.iconUrl ? (
+                              <img src={team.iconUrl} alt={team.name} className="h-full w-full object-cover" />
+                            ) : (
+                              team.name.charAt(0).toUpperCase()
+                            )}
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground leading-tight">{team.name}</p>
+                            <p className="text-xs text-muted-foreground flex items-center gap-1">
+                              {roleIcons[team.role]}
+                              {roleLabels[team.role]}
+                            </p>
+                          </div>
+                        </div>
+                        {team.isCurrent && (
+                          <Check className="h-4 w-4 text-primary shrink-0" />
+                        )}
+                      </div>
+                    </DropdownItem>
+                  ))}
+
+                  <DropdownSeparator />
+
+                  <Link href="/dashboard/team/create">
+                    <DropdownItem>
+                      <Plus className="h-4 w-4" /> Créer une équipe
+                    </DropdownItem>
+                  </Link>
+                </Dropdown>
+              ) : (
+                <div className="flex items-center gap-2.5 px-3 py-2">
+                  <div className="h-8 w-8 rounded-lg skeleton-shimmer" />
+                  <div className="flex-1 space-y-1.5">
+                    <div className="h-3.5 w-24 rounded skeleton-shimmer" />
+                    <div className="h-2.5 w-16 rounded skeleton-shimmer" />
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
         )}
-      </div>
+      </AnimatePresence>
 
       <div className="mx-3 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
-      {/* Quick create */}
-      <div className="px-3 pt-3 pb-1">
-        <Dropdown
-          align="left"
-          trigger={
-            <div className="flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-sm font-semibold hover:bg-primary/10 transition-all group cursor-pointer">
-              <CirclePlus className="h-4 w-4 text-primary" />
-              <span className="text-primary">Créer</span>
+      <AnimatePresence mode="wait">
+        {isAdminMode ? (
+          <motion.div
+            key="admin-nav"
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -30 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="flex flex-1 flex-col overflow-hidden"
+          >
+            {/* Back to dashboard */}
+            <div className="px-3 pt-3 pb-1">
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Retour au dashboard
+              </Link>
             </div>
-          }
-          className="min-w-[200px]"
-        >
-          <DropdownItem onClick={() => setInvoiceModalOpen(true)}>
-            <FileText className="h-4 w-4 text-primary" />
-            <span>Facture</span>
-          </DropdownItem>
-          <DropdownItem onClick={() => router.push('/dashboard/quotes/new')}>
-            <Receipt className="h-4 w-4 text-orange-500" />
-            <span>Devis</span>
-          </DropdownItem>
-        </Dropdown>
-      </div>
 
-      <CreateInvoiceModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} />
+            {/* Admin navigation */}
+            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+              <NavLink
+                item={{ href: '/dashboard/admin', label: 'Vue d\'ensemble', icon: LayoutDashboard }}
+                pathname={pathname}
+              />
+              <NavLink
+                item={{ href: '/dashboard/admin/feedbacks', label: 'Avis', icon: Star }}
+                pathname={pathname}
+              />
+              <NavLink
+                item={{ href: '/dashboard/admin/bugs', label: 'Rapports de bugs', icon: Bug }}
+                pathname={pathname}
+              />
+            </nav>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="main-nav"
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 30 }}
+            transition={{ duration: 0.25, ease: 'easeInOut' }}
+            className="flex flex-1 flex-col overflow-hidden"
+          >
+            {/* Quick create */}
+            <div className="px-3 pt-3 pb-1">
+              <Dropdown
+                align="left"
+                trigger={
+                  <div className="flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-sm font-semibold hover:bg-primary/10 transition-all group cursor-pointer">
+                    <CirclePlus className="h-4 w-4 text-primary" />
+                    <span className="text-primary">Créer</span>
+                  </div>
+                }
+                className="min-w-[200px]"
+              >
+                <DropdownItem onClick={() => setInvoiceModalOpen(true)}>
+                  <FileText className="h-4 w-4 text-primary" />
+                  <span>Facture</span>
+                </DropdownItem>
+                <DropdownItem onClick={() => router.push('/dashboard/quotes/new')}>
+                  <Receipt className="h-4 w-4 text-orange-500" />
+                  <span>Devis</span>
+                </DropdownItem>
+              </Dropdown>
+            </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
-        {mainNav.map((item) => (
-          <NavLink key={item.href} item={item} pathname={pathname} badges={badges} />
-        ))}
-        <div className="mx-1 my-2 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-        <NavLink item={settingsNav} pathname={pathname} badges={badges} />
-      </nav>
+            <CreateInvoiceModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} />
 
-      {/* About link */}
-      <div className="px-3 pb-2">
-        <Link
-          href="/dashboard/about"
-          className={cn(
-            'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative',
-            pathname === '/dashboard/about'
-              ? 'bg-gradient-to-r from-primary/10 to-transparent text-sidebar-accent-foreground border-l-2 border-primary'
-              : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
-          )}
-        >
-          <Info className={cn('h-4 w-4 shrink-0', pathname === '/dashboard/about' && 'text-primary')} />
-          <span>À propos</span>
-        </Link>
-        <Link
-          href="/legal"
-          target="_blank"
-          className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-        >
-          <Scale className="h-4 w-4 shrink-0" />
-          <span>Informations légales</span>
-        </Link>
-      </div>
+            {/* Navigation */}
+            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+              {mainNav.map((item) => (
+                <NavLink key={item.href} item={item} pathname={pathname} badges={badges} />
+              ))}
+              <div className="mx-1 my-2 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <NavLink item={settingsNav} pathname={pathname} badges={badges} />
+            </nav>
+
+            {/* Feedback & Bug report */}
+            <div className="px-3 pb-1 space-y-0.5">
+              <button
+                onClick={onOpenFeedback}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+              >
+                <Star className="h-4 w-4 shrink-0" />
+                <span>Laisser un avis</span>
+              </button>
+              <button
+                onClick={onOpenBugReport}
+                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+              >
+                <Bug className="h-4 w-4 shrink-0" />
+                <span>Signaler un bug</span>
+              </button>
+            </div>
+
+            {/* About link */}
+            <div className="px-3 pb-2">
+              <Link
+                href="/dashboard/about"
+                className={cn(
+                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative',
+                  pathname === '/dashboard/about'
+                    ? 'bg-gradient-to-r from-primary/10 to-transparent text-sidebar-accent-foreground border-l-2 border-primary'
+                    : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
+                )}
+              >
+                <Info className={cn('h-4 w-4 shrink-0', pathname === '/dashboard/about' && 'text-primary')} />
+                <span>À propos</span>
+              </Link>
+              <Link
+                href="/legal"
+                target="_blank"
+                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
+              >
+                <Scale className="h-4 w-4 shrink-0" />
+                <span>Informations légales</span>
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="mx-3 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
@@ -397,7 +504,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   {user.fullName || user.email}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  Plan Free
+                  {isAdmin ? 'Administrateur' : 'Plan Free'}
                 </p>
               </div>
               <MoreHorizontal className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -420,6 +527,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <User className="h-4 w-4" /> Mon compte
             </DropdownItem>
           </Link>
+
+          {isAdmin && (
+            <Link href="/dashboard/admin">
+              <DropdownItem>
+                <ShieldCheck className="h-4 w-4" /> Panel administrateur
+              </DropdownItem>
+            </Link>
+          )}
 
           <div
             className="flex items-center justify-between gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/90 hover:bg-muted transition-colors cursor-pointer"

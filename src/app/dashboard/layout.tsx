@@ -16,6 +16,8 @@ import { cn } from '@/lib/utils'
 import { InvoiceSettingsProvider } from '@/lib/invoice-settings-context'
 import { EmailProvider } from '@/lib/email-context'
 import { ArrowRightLeft, LogOut } from 'lucide-react'
+import { FeedbackModal } from '@/components/modals/feedback-modal'
+import { BugReportModal } from '@/components/modals/bug-report-modal'
 
 interface TeamListItem {
   id: string
@@ -39,6 +41,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarBadges, setSidebarBadges] = useState<Record<string, number>>({})
   const [logoutConfirm, setLogoutConfirm] = useState(false)
   const [loggingOut, setLoggingOut] = useState(false)
+  const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [bugReportOpen, setBugReportOpen] = useState(false)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -178,6 +182,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         onLogout={() => setLogoutConfirm(true)}
         collapsed={sidebarCollapsed}
         badges={sidebarBadges}
+        isAdmin={user.isAdmin}
+        onOpenFeedback={() => setFeedbackOpen(true)}
+        onOpenBugReport={() => setBugReportOpen(true)}
       />
 
       <div
@@ -278,6 +285,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </motion.div>
         )}
       </AnimatePresence>
+
+      <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
+      <BugReportModal open={bugReportOpen} onClose={() => setBugReportOpen(false)} />
     </div>
     </EmailProvider>
     </InvoiceSettingsProvider>

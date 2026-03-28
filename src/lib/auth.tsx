@@ -22,6 +22,7 @@ interface User {
   hasRecoveryKey: boolean
   hasGoogleProvider: boolean
   vaultLocked: boolean
+  isAdmin: boolean
 }
 
 interface AuthContextType {
