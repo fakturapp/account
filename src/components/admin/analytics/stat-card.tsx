@@ -13,7 +13,8 @@ interface StatCardProps {
 }
 
 export function StatCard({ label, value, trend, trendLabel, icon, className }: StatCardProps) {
-  const trendDirection = trend && trend > 0 ? 'up' : trend && trend < 0 ? 'down' : 'neutral'
+  const safeTrend = typeof trend === 'number' && !Number.isNaN(trend) ? trend : null
+  const trendDirection = safeTrend && safeTrend > 0 ? 'up' : safeTrend && safeTrend < 0 ? 'down' : 'neutral'
 
   return (
     <div className={cn('rounded-xl border border-border bg-card p-5', className)}>
@@ -24,7 +25,7 @@ export function StatCard({ label, value, trend, trendLabel, icon, className }: S
       <div className="text-2xl font-bold text-foreground">
         {typeof value === 'number' ? value.toLocaleString('fr-FR') : value}
       </div>
-      {trend !== undefined && (
+      {safeTrend !== null && (
         <div className="mt-1 flex items-center gap-1">
           {trendDirection === 'up' && <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />}
           {trendDirection === 'down' && <TrendingDown className="h-3.5 w-3.5 text-red-500" />}
@@ -37,8 +38,8 @@ export function StatCard({ label, value, trend, trendLabel, icon, className }: S
               trendDirection === 'neutral' && 'text-muted-foreground'
             )}
           >
-            {trend > 0 ? '+' : ''}
-            {trend.toFixed(1)}%
+            {safeTrend > 0 ? '+' : ''}
+            {safeTrend.toFixed(1)}%
           </span>
           {trendLabel && <span className="text-xs text-muted-foreground">{trendLabel}</span>}
         </div>

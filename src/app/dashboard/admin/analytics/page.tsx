@@ -1,16 +1,68 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { motion } from 'framer-motion'
 import { StatCard } from '@/components/admin/analytics/stat-card'
 import { Heatmap } from '@/components/admin/analytics/heatmap'
 import { DateRangePicker } from '@/components/admin/analytics/date-range-picker'
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { Activity, Zap, AlertTriangle, Users } from 'lucide-react'
 
 const CHART_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4']
+
+const RechartsLine = dynamic(
+  () => import('recharts').then((mod) => {
+    const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } = mod
+    return {
+      default: ({ data }: { data: Array<{ date: string; count: number }> }) => (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <XAxis
+              dataKey="date"
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v: string) =>
+                new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
+              }
+            />
+            <YAxis
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+              width={40}
+            />
+            <Tooltip
+              contentStyle={{
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+              labelFormatter={(v) =>
+                new Date(String(v)).toLocaleDateString('fr-FR', {
+                  day: 'numeric',
+                  month: 'long',
+                })
+              }
+            />
+            <Line
+              type="monotone"
+              dataKey="count"
+              stroke={CHART_COLORS[0]}
+              strokeWidth={2}
+              dot={false}
+              name="Événements"
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      ),
+    }
+  }),
+  { ssr: false, loading: () => <div className="h-64 flex items-center justify-center"><Spinner size="sm" className="text-primary" /></div> }
+)
 
 interface OverviewData {
   stats: {
@@ -32,9 +84,9 @@ export default function AnalyticsOverviewPage() {
   useEffect(() => {
     setLoading(true)
     api.get<OverviewData>(`/admin/analytics/overview?period=${period}`).then((res) => {
-      if (res.data) setData(res.data)
+      if (res.data?.stats) setData(res.data)
       setLoading(false)
-    })
+    }).catch(() => setLoading(false))
   }, [period])
 
   if (loading) {
@@ -66,8 +118,8 @@ export default function AnalyticsOverviewPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}>
           <StatCard
             label="Sessions"
-            value={data.stats.sessions.value}
-            trend={data.stats.sessions.trend}
+            value={data.stats?.sessions?.value ?? 0}
+            trend={data.stats?.sessions?.trend}
             trendLabel="vs période préc."
             icon={<Activity className="h-4 w-4" />}
           />
@@ -75,8 +127,8 @@ export default function AnalyticsOverviewPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <StatCard
             label="Événements"
-            value={data.stats.events.value}
-            trend={data.stats.events.trend}
+            value={data.stats?.events?.value ?? 0}
+            trend={data.stats?.events?.trend}
             trendLabel="vs période préc."
             icon={<Zap className="h-4 w-4" />}
           />
@@ -84,8 +136,8 @@ export default function AnalyticsOverviewPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
           <StatCard
             label="Erreurs"
-            value={data.stats.errors.value}
-            trend={data.stats.errors.trend}
+            value={data.stats?.errors?.value ?? 0}
+            trend={data.stats?.errors?.trend}
             trendLabel="vs période préc."
             icon={<AlertTriangle className="h-4 w-4" />}
           />
@@ -93,8 +145,8 @@ export default function AnalyticsOverviewPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <StatCard
             label="DAU"
-            value={data.stats.dau.value}
-            trend={data.stats.dau.trend}
+            value={data.stats?.dau?.value ?? 0}
+            trend={data.stats?.dau?.trend}
             trendLabel="vs période préc."
             icon={<Users className="h-4 w-4" />}
           />
@@ -109,7 +161,7 @@ export default function AnalyticsOverviewPage() {
         className="rounded-xl border border-border bg-card p-5"
       >
         <h3 className="text-sm font-semibold text-foreground mb-4">Carte de chaleur des connexions</h3>
-        <Heatmap data={data.heatmap} />
+        <Heatmap data={data.heatmap || []} />
       </motion.div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -122,47 +174,7 @@ export default function AnalyticsOverviewPage() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Événements par jour</h3>
           <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={data.eventsByDay}>
-                <XAxis
-                  dataKey="date"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  axisLine={false}
-                  tickLine={false}
-                  tickFormatter={(v: string) =>
-                    new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-                  }
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={40}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                  labelFormatter={(v) =>
-                    new Date(String(v)).toLocaleDateString('fr-FR', {
-                      day: 'numeric',
-                      month: 'long',
-                    })
-                  }
-                />
-                <Line
-                  type="monotone"
-                  dataKey="count"
-                  stroke={CHART_COLORS[0]}
-                  strokeWidth={2}
-                  dot={false}
-                  name="Événements"
-                />
-              </LineChart>
-            </ResponsiveContainer>
+            <RechartsLine data={data.eventsByDay || []} />
           </div>
         </motion.div>
 
@@ -175,7 +187,7 @@ export default function AnalyticsOverviewPage() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Top 10 pages</h3>
           <div className="space-y-2">
-            {data.topPages.slice(0, 10).map((page, i) => (
+            {(data.topPages || []).slice(0, 10).map((page, i) => (
               <div
                 key={page.path}
                 className="flex items-center justify-between gap-4 py-2 border-b border-border last:border-b-0"
@@ -196,7 +208,7 @@ export default function AnalyticsOverviewPage() {
                 </div>
               </div>
             ))}
-            {data.topPages.length === 0 && (
+            {(!data.topPages || data.topPages.length === 0) && (
               <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée</p>
             )}
           </div>

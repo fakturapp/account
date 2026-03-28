@@ -1,26 +1,80 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { motion } from 'framer-motion'
 import { DateRangePicker } from '@/components/admin/analytics/date-range-picker'
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-} from 'recharts'
 import { Users } from 'lucide-react'
 
 const CHART_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4']
+
+const tooltipStyle = {
+  background: 'hsl(var(--card))',
+  border: '1px solid hsl(var(--border))',
+  borderRadius: '8px',
+  fontSize: '12px',
+}
+
+const ActiveUsersChart = dynamic(
+  () => import('recharts').then((mod) => {
+    const { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } = mod
+    return {
+      default: ({ data }: { data: ActiveUsersDay[] }) => (
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data}>
+            <XAxis dataKey="date" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false}
+              tickFormatter={(v: string) => new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })} />
+            <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={40} />
+            <Tooltip contentStyle={tooltipStyle} labelFormatter={(v) => new Date(String(v)).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })} />
+            <Line type="monotone" dataKey="authenticated" stroke={CHART_COLORS[0]} strokeWidth={2} dot={false} name="Authentifiés" />
+            <Line type="monotone" dataKey="anonymous" stroke={CHART_COLORS[2]} strokeWidth={2} dot={false} name="Anonymes" />
+          </LineChart>
+        </ResponsiveContainer>
+      ),
+    }
+  }),
+  { ssr: false, loading: () => <div className="h-72 flex items-center justify-center"><Spinner size="sm" className="text-primary" /></div> }
+)
+
+const DynamicPieChart = dynamic(
+  () => import('recharts').then((mod) => {
+    const { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } = mod
+    return {
+      default: ({ data, colors }: { data: Array<{ name: string; value: number }>; colors: string[] }) => (
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={data} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2}>
+              {data.map((_, i) => <Cell key={i} fill={colors[i % colors.length]} />)}
+            </Pie>
+            <Tooltip contentStyle={tooltipStyle} />
+          </PieChart>
+        </ResponsiveContainer>
+      ),
+    }
+  }),
+  { ssr: false, loading: () => <div className="h-56 flex items-center justify-center"><Spinner size="sm" className="text-primary" /></div> }
+)
+
+const DynamicBarChart = dynamic(
+  () => import('recharts').then((mod) => {
+    const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } = mod
+    return {
+      default: ({ data, color }: { data: BreakdownItem[]; color: string }) => (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
+            <XAxis type="number" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={70} />
+            <Tooltip contentStyle={tooltipStyle} />
+            <Bar dataKey="count" fill={color} radius={[0, 4, 4, 0]} name="Sessions" />
+          </BarChart>
+        </ResponsiveContainer>
+      ),
+    }
+  }),
+  { ssr: false, loading: () => <div className="h-56 flex items-center justify-center"><Spinner size="sm" className="text-primary" /></div> }
+)
 
 interface ActiveUsersDay {
   date: string
@@ -40,13 +94,6 @@ interface UsersResponse {
   topBrowsers: BreakdownItem[]
   topOS: BreakdownItem[]
   topCountries: BreakdownItem[]
-}
-
-const tooltipStyle = {
-  background: 'hsl(var(--card))',
-  border: '1px solid hsl(var(--border))',
-  borderRadius: '8px',
-  fontSize: '12px',
 }
 
 export default function AnalyticsUsersPage() {
@@ -79,11 +126,11 @@ export default function AnalyticsUsersPage() {
   }
 
   const authPieData = [
-    { name: 'Authentifiés', value: data.authBreakdown.authenticated },
-    { name: 'Anonymes', value: data.authBreakdown.anonymous },
+    { name: 'Authentifiés', value: data.authBreakdown?.authenticated ?? 0 },
+    { name: 'Anonymes', value: data.authBreakdown?.anonymous ?? 0 },
   ]
 
-  const devicePieData = data.deviceBreakdown.map((d) => ({
+  const devicePieData = (data.deviceBreakdown || []).map((d) => ({
     name: d.name,
     value: d.count,
   }))
@@ -104,47 +151,7 @@ export default function AnalyticsUsersPage() {
       >
         <h3 className="text-sm font-semibold text-foreground mb-4">Utilisateurs actifs</h3>
         <div className="h-72">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={data.activeUsersOverTime}>
-              <XAxis
-                dataKey="date"
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(v: string) =>
-                  new Date(v).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })
-                }
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                axisLine={false}
-                tickLine={false}
-                width={40}
-              />
-              <Tooltip
-                contentStyle={tooltipStyle}
-                labelFormatter={(v) =>
-                  new Date(String(v)).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })
-                }
-              />
-              <Line
-                type="monotone"
-                dataKey="authenticated"
-                stroke={CHART_COLORS[0]}
-                strokeWidth={2}
-                dot={false}
-                name="Authentifiés"
-              />
-              <Line
-                type="monotone"
-                dataKey="anonymous"
-                stroke={CHART_COLORS[2]}
-                strokeWidth={2}
-                dot={false}
-                name="Anonymes"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          <ActiveUsersChart data={data.activeUsersOverTime || []} />
         </div>
       </motion.div>
 
@@ -159,25 +166,7 @@ export default function AnalyticsUsersPage() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Appareils</h3>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={devicePieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                >
-                  {devicePieData.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
+            <DynamicPieChart data={devicePieData} colors={CHART_COLORS} />
           </div>
           <div className="flex flex-wrap justify-center gap-3 mt-2">
             {devicePieData.map((d, i) => (
@@ -201,24 +190,7 @@ export default function AnalyticsUsersPage() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Authentifiés vs Anonymes</h3>
           <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={authPieData}
-                  dataKey="value"
-                  nameKey="name"
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={50}
-                  outerRadius={80}
-                  paddingAngle={2}
-                >
-                  <Cell fill={CHART_COLORS[0]} />
-                  <Cell fill={CHART_COLORS[3]} />
-                </Pie>
-                <Tooltip contentStyle={tooltipStyle} />
-              </PieChart>
-            </ResponsiveContainer>
+            <DynamicPieChart data={authPieData} colors={[CHART_COLORS[0], CHART_COLORS[3]]} />
           </div>
           <div className="flex justify-center gap-4 mt-2">
             <div className="flex items-center gap-1.5">
@@ -243,28 +215,9 @@ export default function AnalyticsUsersPage() {
           className="rounded-xl border border-border bg-card p-5"
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Navigateurs</h3>
-          {data.topBrowsers.length > 0 ? (
+          {(data.topBrowsers || []).length > 0 ? (
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.topBrowsers} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={70}
-                  />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} name="Sessions" />
-                </BarChart>
-              </ResponsiveContainer>
+              <DynamicBarChart data={data.topBrowsers} color={CHART_COLORS[0]} />
             </div>
           ) : (
             <div className="flex items-center justify-center h-56">
@@ -281,28 +234,9 @@ export default function AnalyticsUsersPage() {
           className="rounded-xl border border-border bg-card p-5"
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Systèmes d&apos;exploitation</h3>
-          {data.topOS.length > 0 ? (
+          {(data.topOS || []).length > 0 ? (
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.topOS} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={70}
-                  />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill={CHART_COLORS[1]} radius={[0, 4, 4, 0]} name="Sessions" />
-                </BarChart>
-              </ResponsiveContainer>
+              <DynamicBarChart data={data.topOS} color={CHART_COLORS[1]} />
             </div>
           ) : (
             <div className="flex items-center justify-center h-56">
@@ -319,28 +253,9 @@ export default function AnalyticsUsersPage() {
           className="rounded-xl border border-border bg-card p-5"
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Pays</h3>
-          {data.topCountries.length > 0 ? (
+          {(data.topCountries || []).length > 0 ? (
             <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={data.topCountries} layout="vertical" margin={{ left: 0, right: 10, top: 0, bottom: 0 }}>
-                  <XAxis
-                    type="number"
-                    tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                    axisLine={false}
-                    tickLine={false}
-                    width={70}
-                  />
-                  <Tooltip contentStyle={tooltipStyle} />
-                  <Bar dataKey="count" fill={CHART_COLORS[4]} radius={[0, 4, 4, 0]} name="Sessions" />
-                </BarChart>
-              </ResponsiveContainer>
+              <DynamicBarChart data={data.topCountries} color={CHART_COLORS[4]} />
             </div>
           ) : (
             <div className="flex items-center justify-center h-56">

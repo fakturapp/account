@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { motion, AnimatePresence, type PanInfo } from 'framer-motion'
 import { Cookie, X, Shield, BarChart3 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
 const STORAGE_KEY = 'faktur_cookie_consent'
+const POSITION_KEY = 'faktur_cookie_pos'
 
 interface ConsentState {
   essential: boolean
@@ -44,11 +45,12 @@ export function CookieConsent() {
   const [showSettings, setShowSettings] = useState(false)
   const [analyticsEnabled, setAnalyticsEnabled] = useState(false)
   const [showMiniButton, setShowMiniButton] = useState(false)
+  const [miniPos, setMiniPos] = useState({ x: 0, y: 0 })
+  const constraintsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (!stored) {
-      // Small delay so the banner doesn't flash immediately
       const t = setTimeout(() => setVisible(true), 1500)
       return () => clearTimeout(t)
     } else {
@@ -58,6 +60,16 @@ export function CookieConsent() {
         setAnalyticsEnabled(parsed.analytics)
       } catch {}
     }
+    // Restore saved mini button position
+    try {
+      const savedPos = localStorage.getItem(POSITION_KEY)
+      if (savedPos) {
+        const parsed = JSON.parse(savedPos)
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          setMiniPos(parsed)
+        }
+      }
+    } catch {}
   }, [])
 
   const saveConsent = useCallback((analytics: boolean, action: string) => {
@@ -80,21 +92,38 @@ export function CookieConsent() {
   const handleRejectAnalytics = () => saveConsent(false, 'reject_analytics')
   const handleSavePreferences = () => saveConsent(analyticsEnabled, 'update')
 
+  const handleDragEnd = (_: unknown, info: PanInfo) => {
+    const newPos = { x: miniPos.x + info.offset.x, y: miniPos.y + info.offset.y }
+    setMiniPos(newPos)
+    try {
+      localStorage.setItem(POSITION_KEY, JSON.stringify(newPos))
+    } catch {}
+  }
+
   return (
     <>
+      {/* Drag constraints (full viewport) */}
+      <div ref={constraintsRef} className="fixed inset-0 z-40 pointer-events-none" />
+
       {/* Mini button to reopen preferences */}
       <AnimatePresence>
         {showMiniButton && !visible && (
           <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0, scale: 0.8, x: miniPos.x, y: miniPos.y }}
+            animate={{ opacity: 1, scale: 1, x: miniPos.x, y: miniPos.y }}
             exit={{ opacity: 0, scale: 0.8 }}
+            drag
+            dragConstraints={constraintsRef}
+            dragElastic={0.1}
+            dragMomentum={false}
+            onDragEnd={handleDragEnd}
+            whileDrag={{ scale: 1.1 }}
             onClick={() => {
               setShowMiniButton(false)
               setVisible(true)
               setShowSettings(true)
             }}
-            className="fixed bottom-4 left-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border shadow-lg hover:bg-muted transition-colors"
+            className="fixed bottom-4 right-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-card border border-border shadow-lg hover:bg-muted transition-colors cursor-grab active:cursor-grabbing"
             aria-label="Paramètres des cookies"
           >
             <Cookie className="h-4 w-4 text-muted-foreground" />

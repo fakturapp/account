@@ -1,15 +1,53 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import dynamic from 'next/dynamic'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { motion } from 'framer-motion'
 import { DateRangePicker } from '@/components/admin/analytics/date-range-picker'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts'
 import { cn } from '@/lib/utils'
 import { TrendingUp, TrendingDown, Minus, Layers } from 'lucide-react'
 
 const CHART_COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f59e0b', '#10b981', '#06b6d4']
+
+const RechartsBar = dynamic(
+  () => import('recharts').then((mod) => {
+    const { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } = mod
+    return {
+      default: ({ data }: { data: Array<{ name: string; count: number }> }) => (
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={data} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
+            <XAxis
+              type="number"
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+              axisLine={false}
+              tickLine={false}
+              width={140}
+            />
+            <Tooltip
+              contentStyle={{
+                background: 'hsl(var(--card))',
+                border: '1px solid hsl(var(--border))',
+                borderRadius: '8px',
+                fontSize: '12px',
+              }}
+            />
+            <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} name="Utilisations" />
+          </BarChart>
+        </ResponsiveContainer>
+      ),
+    }
+  }),
+  { ssr: false, loading: () => <div className="h-72 flex items-center justify-center"><Spinner size="sm" className="text-primary" /></div> }
+)
 
 interface FeatureData {
   name: string
@@ -65,33 +103,7 @@ export default function AnalyticsFeaturesPage() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Top fonctionnalités par utilisation</h3>
           <div className="h-72">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} layout="vertical" margin={{ left: 0, right: 20, top: 0, bottom: 0 }}>
-                <XAxis
-                  type="number"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  type="category"
-                  dataKey="name"
-                  tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
-                  axisLine={false}
-                  tickLine={false}
-                  width={140}
-                />
-                <Tooltip
-                  contentStyle={{
-                    background: 'hsl(var(--card))',
-                    border: '1px solid hsl(var(--border))',
-                    borderRadius: '8px',
-                    fontSize: '12px',
-                  }}
-                />
-                <Bar dataKey="count" fill={CHART_COLORS[0]} radius={[0, 4, 4, 0]} name="Utilisations" />
-              </BarChart>
-            </ResponsiveContainer>
+            <RechartsBar data={chartData} />
           </div>
         </motion.div>
       )}
@@ -115,7 +127,8 @@ export default function AnalyticsFeaturesPage() {
             </thead>
             <tbody>
               {data.map((feature, i) => {
-                const trendDirection = feature.trend > 0 ? 'up' : feature.trend < 0 ? 'down' : 'neutral'
+                const safeTrend = typeof feature.trend === 'number' && !Number.isNaN(feature.trend) ? feature.trend : 0
+                const trendDirection = safeTrend > 0 ? 'up' : safeTrend < 0 ? 'down' : 'neutral'
                 return (
                   <motion.tr
                     key={feature.name}
@@ -129,12 +142,12 @@ export default function AnalyticsFeaturesPage() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="text-sm font-medium text-foreground">
-                        {feature.count.toLocaleString('fr-FR')}
+                        {(feature.count ?? 0).toLocaleString('fr-FR')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="text-sm text-muted-foreground">
-                        {feature.uniqueUsers.toLocaleString('fr-FR')}
+                        {(feature.uniqueUsers ?? 0).toLocaleString('fr-FR')}
                       </span>
                     </td>
                     <td className="px-4 py-3 text-right">
@@ -150,8 +163,8 @@ export default function AnalyticsFeaturesPage() {
                             trendDirection === 'neutral' && 'text-muted-foreground'
                           )}
                         >
-                          {feature.trend > 0 ? '+' : ''}
-                          {feature.trend.toFixed(1)}%
+                          {safeTrend > 0 ? '+' : ''}
+                          {safeTrend.toFixed(1)}%
                         </span>
                       </div>
                     </td>
