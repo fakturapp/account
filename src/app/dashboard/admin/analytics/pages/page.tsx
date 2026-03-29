@@ -72,7 +72,7 @@ export default function AnalyticsPagesPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((page, i) => (
+              {data.filter((p) => p.path).map((page, i) => (
                 <motion.tr
                   key={page.path}
                   initial={{ opacity: 0 }}
@@ -85,17 +85,17 @@ export default function AnalyticsPagesPage() {
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="text-sm font-medium text-foreground">
-                      {page.views.toLocaleString('fr-FR')}
+                      {(page.views ?? 0).toLocaleString('fr-FR')}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="text-sm text-muted-foreground">
-                      {page.uniqueVisitors.toLocaleString('fr-FR')}
+                      {(page.uniqueVisitors ?? 0).toLocaleString('fr-FR')}
                     </span>
                   </td>
                   <td className="px-4 py-3 text-right">
                     <span className="text-sm text-muted-foreground">
-                      {formatDuration(page.avgDuration)}
+                      {formatDuration(page.avgDuration ?? 0)}
                     </span>
                   </td>
                 </motion.tr>

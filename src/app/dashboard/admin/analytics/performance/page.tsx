@@ -132,9 +132,9 @@ export default function AnalyticsPerformancePage() {
                 </tr>
               </thead>
               <tbody>
-                {data.slowestPages.map((page, i) => (
+                {(data.slowestPages || []).map((page, i) => (
                   <motion.tr
-                    key={page.path}
+                    key={page.path || i}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.35 + i * 0.02 }}
@@ -146,17 +146,17 @@ export default function AnalyticsPerformancePage() {
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <span className="text-sm font-medium text-foreground">{formatMs(page.lcp)}</span>
+                      <span className="text-sm font-medium text-foreground">{formatMs(page.lcp ?? 0)}</span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <span className="text-sm text-muted-foreground">{formatMs(page.fcp)}</span>
+                      <span className="text-sm text-muted-foreground">{formatMs(page.fcp ?? 0)}</span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <span className="text-sm text-muted-foreground">{page.cls.toFixed(3)}</span>
+                      <span className="text-sm text-muted-foreground">{(page.cls ?? 0).toFixed(3)}</span>
                     </td>
                   </motion.tr>
                 ))}
-                {data.slowestPages.length === 0 && (
+                {(data.slowestPages || []).length === 0 && (
                   <tr>
                     <td colSpan={4} className="px-4 py-8 text-center">
                       <p className="text-sm text-muted-foreground">Aucune donnée</p>
@@ -177,9 +177,9 @@ export default function AnalyticsPerformancePage() {
         >
           <h3 className="text-sm font-semibold text-foreground mb-4">Répartition par appareil</h3>
           <div className="space-y-3">
-            {data.deviceBreakdown.map((device, i) => (
+            {(data.deviceBreakdown || []).map((device, i) => (
               <motion.div
-                key={device.device}
+                key={device.device || i}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 + i * 0.05 }}
@@ -187,30 +187,30 @@ export default function AnalyticsPerformancePage() {
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-2">
                     <span className="text-muted-foreground">
-                      {deviceIcons[device.device.toLowerCase()] || <Monitor className="h-4 w-4" />}
+                      {deviceIcons[(device.device || '').toLowerCase()] || <Monitor className="h-4 w-4" />}
                     </span>
                     <span className="text-sm font-medium text-foreground capitalize">{device.device}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-muted-foreground">
-                      {device.count.toLocaleString('fr-FR')}
+                      {(device.count ?? 0).toLocaleString('fr-FR')}
                     </span>
                     <span className="text-xs font-medium text-foreground w-10 text-right">
-                      {device.percentage.toFixed(0)}%
+                      {(device.percentage ?? 0).toFixed(0)}%
                     </span>
                   </div>
                 </div>
                 <div className="h-2 rounded-full bg-muted/30 overflow-hidden">
                   <motion.div
                     initial={{ width: 0 }}
-                    animate={{ width: `${device.percentage}%` }}
+                    animate={{ width: `${device.percentage ?? 0}%` }}
                     transition={{ duration: 0.6, delay: 0.4 + i * 0.05 }}
                     className="h-full rounded-full bg-primary"
                   />
                 </div>
               </motion.div>
             ))}
-            {data.deviceBreakdown.length === 0 && (
+            {(data.deviceBreakdown || []).length === 0 && (
               <p className="text-sm text-muted-foreground text-center py-4">Aucune donnée d&apos;appareils</p>
             )}
           </div>

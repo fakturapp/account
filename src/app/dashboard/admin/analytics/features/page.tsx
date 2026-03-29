@@ -81,10 +81,13 @@ export default function AnalyticsFeaturesPage() {
     )
   }
 
-  const chartData = data.slice(0, 10).map((f) => ({
-    name: f.name.length > 20 ? f.name.slice(0, 20) + '...' : f.name,
-    count: f.count,
-  }))
+  const chartData = data
+    .filter((f) => f.name)
+    .slice(0, 10)
+    .map((f) => ({
+      name: f.name.length > 20 ? f.name.slice(0, 20) + '...' : f.name,
+      count: f.count ?? 0,
+    }))
 
   return (
     <div className="space-y-6">
@@ -126,7 +129,7 @@ export default function AnalyticsFeaturesPage() {
               </tr>
             </thead>
             <tbody>
-              {data.map((feature, i) => {
+              {data.filter((f) => f.name).map((feature, i) => {
                 const safeTrend = typeof feature.trend === 'number' && !Number.isNaN(feature.trend) ? feature.trend : 0
                 const trendDirection = safeTrend > 0 ? 'up' : safeTrend < 0 ? 'down' : 'neutral'
                 return (
