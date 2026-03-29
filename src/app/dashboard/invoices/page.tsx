@@ -107,7 +107,7 @@ export default function InvoicesPage() {
     URL.revokeObjectURL(url)
   }
 
-  useEffect(() => {
+  const fetchStats = useCallback(() => {
     api.get<{ stats: { totalInvoiced: { value: number; trend: number }; totalCollected: { value: number } } }>('/dashboard/stats').then(({ data }) => {
       if (data?.stats) {
         setMonthlyStats({
@@ -118,6 +118,10 @@ export default function InvoicesPage() {
       }
     })
   }, [])
+
+  useEffect(() => {
+    fetchStats()
+  }, [fetchStats])
 
   useEffect(() => {
     loadInvoices()
@@ -137,6 +141,7 @@ export default function InvoicesPage() {
       setMeta(data.meta)
     }
     setLoading(false)
+    fetchStats()
   }
 
   const currentMonth = useMemo(() => {
@@ -169,6 +174,7 @@ export default function InvoicesPage() {
 
   function handleStatusChange(id: string, newStatus: string) {
     setInvoices((prev) => prev.map((inv) => (inv.id === id ? { ...inv, status: newStatus as InvoiceListItem['status'] } : inv)))
+    fetchStats()
   }
 
   function handleFilterChange(status: string) {
@@ -179,6 +185,7 @@ export default function InvoicesPage() {
   function handleDeleteFromOverlay(id: string) {
     setInvoices((prev) => prev.filter((inv) => inv.id !== id))
     if (meta) setMeta({ ...meta, total: meta.total - 1 })
+    fetchStats()
   }
 
   return (
