@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "next dev --turbopack",
-    "clean": "node -e \"const fs=require('fs');if(fs.existsSync('.next'))fs.rmSync('.next',{recursive:true,force:true})\"",
+    "clean": "node -e \"const fs=require('fs');try{if(fs.existsSync('.next'))fs.rmSync('.next',{recursive:true,force:true})}catch{}\"",
     "build": "npm run clean && next build",
     "start": "next start",
     "lint": "next lint",
