@@ -136,7 +136,7 @@ const settingsNav: NavItem[] = [
       { href: '/dashboard/settings/company/payment', label: 'Paiement', icon: Receipt },
     ],
   },
-  { href: '/dashboard/settings/members', label: 'Membres', icon: UsersRound },
+  { href: '/dashboard/settings/members', label: 'Équipe', icon: UsersRound },
   {
     href: '/dashboard/settings/documents/invoices',
     label: 'Facturation',
@@ -144,8 +144,16 @@ const settingsNav: NavItem[] = [
     children: [
       { href: '/dashboard/settings/documents/invoices', label: 'Apparence', icon: Paintbrush },
       { href: '/dashboard/settings/documents/invoices/options', label: 'Options', icon: Settings2 },
-      { href: '/dashboard/settings/documents/invoices/defaults', label: 'Valeurs par défaut', icon: ClipboardList },
-      { href: '/dashboard/settings/documents/invoices/e-invoicing', label: 'E-Facturation', icon: FileCheck },
+      {
+        href: '/dashboard/settings/documents/invoices/defaults',
+        label: 'Valeurs par défaut',
+        icon: ClipboardList,
+      },
+      {
+        href: '/dashboard/settings/documents/invoices/e-invoicing',
+        label: 'E-Facturation',
+        icon: FileCheck,
+      },
       { href: '/dashboard/settings/documents/invoices/ai', label: 'Faktur AI', icon: Sparkles },
     ],
   },
