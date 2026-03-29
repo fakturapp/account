@@ -19,6 +19,7 @@ import { ProductCatalogModal, type CatalogProduct } from '@/components/products/
 import { Tabs } from '@/components/ui/tabs'
 import { AiChatSidebar } from '@/components/ai/ai-chat-sidebar'
 import { AiSheetOverlay } from '@/components/ai/ai-sheet-overlay'
+import { DocumentZoom, loadDocumentZoom } from '@/components/shared/document-zoom'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -50,6 +51,8 @@ function EditInvoiceContent() {
   const [saving, setSaving] = useState(false)
   const [downloading, setDownloading] = useState(false)
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
+  const [docZoom, setDocZoom] = useState(100)
+  useEffect(() => setDocZoom(loadDocumentZoom()), [])
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [company, setCompany] = useState<CompanyInfo | null>(null)
   const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null)
@@ -174,7 +177,11 @@ function EditInvoiceContent() {
           })
         }
         if (inv.sourceQuote) setSourceQuote(inv.sourceQuote)
-        if (inv.client) setSelectedClient(inv.client)
+        if (inv.clientSnapshot) {
+          try { setSelectedClient(JSON.parse(inv.clientSnapshot)) } catch { if (inv.client) setSelectedClient(inv.client) }
+        } else if (inv.client) {
+          setSelectedClient(inv.client)
+        }
 
         if (inv.lines && inv.lines.length > 0) {
           setLines(
@@ -333,7 +340,7 @@ function EditInvoiceContent() {
 
     const payload = {
       clientId: selectedClient?.id || undefined,
-      subject: options.subject || undefined,
+      subject: options.showSubject ? (options.subject || undefined) : undefined,
       issueDate: options.issueDate,
       dueDate: options.validityDate || undefined,
       billingType: options.billingType,
@@ -341,18 +348,34 @@ function EditInvoiceContent() {
       logoUrl: logoUrl || undefined,
       language: options.language,
       notes: notes || undefined,
-      acceptanceConditions: options.acceptanceConditions || undefined,
+      acceptanceConditions: options.showAcceptanceConditions ? (options.acceptanceConditions || undefined) : undefined,
       signatureField: options.signatureField,
       documentTitle: options.documentTitle || 'Facture',
-      freeField: options.freeField || undefined,
+      freeField: options.showFreeField ? (options.freeField || undefined) : undefined,
       globalDiscountType: options.globalDiscountType,
       globalDiscountValue: options.globalDiscountValue,
-      deliveryAddress: options.deliveryAddress || undefined,
+      deliveryAddress: options.showDeliveryAddress ? (options.deliveryAddress || undefined) : undefined,
       clientSiren: options.clientSiren || undefined,
       clientVatNumber: options.clientVatNumber || undefined,
       paymentMethod: paymentMethod || undefined,
       bankAccountId: bankAccountId || undefined,
       vatExemptReason: options.vatExemptReason,
+      clientSnapshot: selectedClient ? {
+        type: selectedClient.type,
+        displayName: selectedClient.displayName,
+        companyName: selectedClient.companyName,
+        firstName: selectedClient.firstName,
+        lastName: selectedClient.lastName,
+        email: selectedClient.email,
+        phone: selectedClient.phone,
+        address: selectedClient.address,
+        addressComplement: selectedClient.addressComplement,
+        postalCode: selectedClient.postalCode,
+        city: selectedClient.city,
+        country: selectedClient.country,
+        siren: selectedClient.siren,
+        vatNumber: selectedClient.vatNumber,
+      } : undefined,
       lines: lines
         .filter((l) => l.description.trim())
         .map((l) => ({
@@ -478,7 +501,8 @@ function EditInvoiceContent() {
             <p className="text-muted-foreground mt-0.5 text-sm">{invoiceNumber}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <DocumentZoom value={docZoom} onChange={setDocZoom} />
           <Button variant="outline" size="sm" onClick={handleDownloadPdf} disabled={downloading}>
             {downloading ? <Spinner className="h-3.5 w-3.5 mr-1.5" /> : <Download className="h-3.5 w-3.5 mr-1.5" />}
             {downloading ? 'Téléchargement...' : 'Télécharger'}
@@ -533,7 +557,7 @@ function EditInvoiceContent() {
                 <SlidersHorizontal className="h-4 w-4" />
               </button>
             </div>
-            <div className="relative">
+            <div className="relative" style={{ transform: `scale(${docZoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.15s ease' }}>
             <AiSheetOverlay open={aiProcessing} />
             <A4Sheet
               mode={mode}

@@ -8,7 +8,6 @@ import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar } from '@/components/ui/avatar'
 import { Dropdown, DropdownItem, DropdownLabel, DropdownSeparator } from '@/components/ui/dropdown'
-import { Switch } from '@/components/ui/switch'
 import { useTheme } from '@/lib/theme'
 import { CreateInvoiceModal } from '@/components/invoices/create-invoice-modal'
 import {
@@ -31,6 +30,7 @@ import {
   CirclePlus,
   Sun,
   Moon,
+  Monitor,
   Building2,
   UsersRound,
   CreditCard,
@@ -290,7 +290,7 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
 export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, onLogout, collapsed, badges, isAdmin, onOpenFeedback, onOpenBugReport }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const { resolvedTheme, setTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const [invoiceModalOpen, setInvoiceModalOpen] = useState(false)
 
   const isAdminMode = pathname.startsWith('/dashboard/admin')
@@ -323,7 +323,9 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 <ShieldCheck className="h-4.5 w-4.5" />
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-semibold text-foreground leading-tight">Administration</p>
+                <p className="text-sm font-semibold text-foreground leading-tight">
+                  Administration
+                </p>
                 <p className="text-xs text-muted-foreground">Panel admin</p>
               </div>
             </div>
@@ -364,7 +366,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-all duration-300 ease-in-out w-full">
                       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-xs overflow-hidden">
                         {currentTeam?.iconUrl ? (
-                          <img src={currentTeam.iconUrl} alt={currentTeam.name} className="h-full w-full object-cover" />
+                          <img
+                            src={currentTeam.iconUrl}
+                            alt={currentTeam.name}
+                            className="h-full w-full object-cover"
+                          />
                         ) : (
                           currentTeam?.name.charAt(0).toUpperCase() || 'T'
                         )}
@@ -398,22 +404,26 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                         <div className="flex items-center gap-2.5">
                           <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-foreground overflow-hidden">
                             {team.iconUrl ? (
-                              <img src={team.iconUrl} alt={team.name} className="h-full w-full object-cover" />
+                              <img
+                                src={team.iconUrl}
+                                alt={team.name}
+                                className="h-full w-full object-cover"
+                              />
                             ) : (
                               team.name.charAt(0).toUpperCase()
                             )}
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-foreground leading-tight">{team.name}</p>
+                            <p className="text-sm font-medium text-foreground leading-tight">
+                              {team.name}
+                            </p>
                             <p className="text-xs text-muted-foreground flex items-center gap-1">
                               {roleIcons[team.role]}
                               {roleLabels[team.role]}
                             </p>
                           </div>
                         </div>
-                        {team.isCurrent && (
-                          <Check className="h-4 w-4 text-primary shrink-0" />
-                        )}
+                        {team.isCurrent && <Check className="h-4 w-4 text-primary shrink-0" />}
                       </div>
                     </DropdownItem>
                   ))}
@@ -466,7 +476,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             {/* Admin navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
               <NavLink
-                item={{ href: '/dashboard/admin', label: 'Vue d\'ensemble', icon: LayoutDashboard }}
+                item={{ href: '/dashboard/admin', label: "Vue d'ensemble", icon: LayoutDashboard }}
                 pathname={pathname}
               />
               <NavLink
@@ -542,7 +552,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               </Dropdown>
             </div>
 
-            <CreateInvoiceModal open={invoiceModalOpen} onClose={() => setInvoiceModalOpen(false)} />
+            <CreateInvoiceModal
+              open={invoiceModalOpen}
+              onClose={() => setInvoiceModalOpen(false)}
+            />
 
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
@@ -555,48 +568,6 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 pathname={pathname}
               />
             </nav>
-
-            {/* Feedback & Bug report */}
-            <div className="px-3 pb-1 space-y-0.5">
-              <button
-                onClick={onOpenFeedback}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-              >
-                <Star className="h-4 w-4 shrink-0" />
-                <span>Laisser un avis</span>
-              </button>
-              <button
-                onClick={onOpenBugReport}
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-              >
-                <Bug className="h-4 w-4 shrink-0" />
-                <span>Signaler un bug</span>
-              </button>
-            </div>
-
-            {/* About link */}
-            <div className="px-3 pb-2">
-              <Link
-                href="/dashboard/about"
-                className={cn(
-                  'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative',
-                  pathname === '/dashboard/about'
-                    ? 'bg-gradient-to-r from-primary/10 to-transparent text-sidebar-accent-foreground border-l-2 border-primary'
-                    : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
-                )}
-              >
-                <Info className={cn('h-4 w-4 shrink-0', pathname === '/dashboard/about' && 'text-primary')} />
-                <span>À propos</span>
-              </Link>
-              <Link
-                href="/legal"
-                target="_blank"
-                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground"
-              >
-                <Scale className="h-4 w-4 shrink-0" />
-                <span>Informations légales</span>
-              </Link>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -607,6 +578,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
       <div className="p-3 mx-2 mb-2 rounded-xl bg-gradient-to-br from-primary/5 to-transparent">
         <Dropdown
           align="left"
+          position="above"
+          className="min-w-[260px]"
           trigger={
             <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent/50 transition-all duration-300 ease-in-out w-full">
               <Avatar
@@ -614,29 +587,52 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 alt={user.fullName || user.email}
                 fallback={initials}
                 size="sm"
-                className=""
               />
               <div className="flex-1 min-w-0 text-left">
                 <p className="text-sm font-medium text-foreground truncate leading-tight">
                   {user.fullName || user.email}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
-                  {isAdmin ? 'Administrateur' : 'Plan Free'}
-                </p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
               </div>
+
+              <button
+                type="button"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'
+                  setTheme(next)
+                }}
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                title={theme === 'system' ? 'Systeme' : theme === 'dark' ? 'Sombre' : 'Clair'}
+              >
+                {theme === 'system' ? (
+                  <Monitor className="h-4 w-4" />
+                ) : theme === 'dark' ? (
+                  <Moon className="h-4 w-4" />
+                ) : (
+                  <Sun className="h-4 w-4" />
+                )}
+              </button>
+
               <MoreHorizontal className="h-4 w-4 text-muted-foreground shrink-0" />
             </div>
           }
-          position="above"
-          className="min-w-[230px]"
         >
-          <div className="px-3 py-2 border-b border-border mb-1">
-            <p className="text-sm font-medium text-foreground truncate">
-              {user.fullName || user.email}
-            </p>
-            <p className="text-xs text-muted-foreground truncate">
-              {user.email}
-            </p>
+          <div className="px-3 py-3 border-b border-border mb-1">
+            <div className="flex items-center gap-3">
+              <Avatar
+                src={user.avatarUrl}
+                alt={user.fullName || user.email}
+                fallback={initials}
+                size="sm"
+              />
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user.fullName || user.email}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
+            </div>
           </div>
 
           <Link href="/dashboard/account">
@@ -653,19 +649,52 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             </Link>
           )}
 
-          <div
-            className="flex items-center justify-between gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium text-foreground/90 hover:bg-muted transition-colors cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
-            }}
-          >
-            <div className="flex items-center gap-2.5">
-              {resolvedTheme === 'dark' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
-              <span>Mode sombre</span>
+          <DropdownSeparator />
+
+          <DropdownItem onClick={() => onOpenFeedback?.()}>
+            <Star className="h-4 w-4" /> Laisser un avis
+          </DropdownItem>
+          <DropdownItem onClick={() => onOpenBugReport?.()}>
+            <Bug className="h-4 w-4" /> Signaler un bug
+          </DropdownItem>
+
+          <DropdownSeparator />
+
+          <Link href="/dashboard/about">
+            <DropdownItem>
+              <Info className="h-4 w-4" /> A propos
+            </DropdownItem>
+          </Link>
+          <Link href="/legal" target="_blank">
+            <DropdownItem>
+              <Scale className="h-4 w-4" /> Informations legales
+            </DropdownItem>
+          </Link>
+
+          <div className="px-3 py-2">
+            <p className="text-xs font-medium text-muted-foreground mb-2">Theme</p>
+            <div className="flex gap-1 rounded-lg bg-muted p-1">
+              {([
+                { value: 'light' as const, icon: Sun, label: 'Clair' },
+                { value: 'dark' as const, icon: Moon, label: 'Sombre' },
+                { value: 'system' as const, icon: Monitor, label: 'Systeme' },
+              ]).map(({ value, icon: Icon, label }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setTheme(value) }}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-medium transition-colors',
+                    theme === value
+                      ? 'bg-background text-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground'
+                  )}
+                >
+                  <Icon className="h-3.5 w-3.5" />
+                  {label}
+                </button>
+              ))}
             </div>
-            <Switch checked={resolvedTheme === 'dark'} onChange={() => {}} />
           </div>
 
           <DropdownSeparator />

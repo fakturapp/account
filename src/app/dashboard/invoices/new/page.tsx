@@ -21,6 +21,7 @@ import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { useTrackFeature } from '@/hooks/use-analytics'
 import { FirstDocumentBanner } from '@/components/shared/first-document-banner'
 import { ProductCatalogModal, type CatalogProduct } from '@/components/products/product-catalog-modal'
+import { DocumentZoom, loadDocumentZoom } from '@/components/shared/document-zoom'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -84,6 +85,8 @@ export default function NewInvoicePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
+  const [docZoom, setDocZoom] = useState(100)
+  useEffect(() => setDocZoom(loadDocumentZoom()), [])
   const [invoiceNumber, setInvoiceNumber] = useState('')
   const [company, setCompany] = useState<CompanyInfo | null>(null)
   const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null)
@@ -359,7 +362,7 @@ export default function NewInvoicePage() {
 
     const payload = {
       clientId: selectedClient?.id || undefined,
-      subject: options.subject || undefined,
+      subject: options.showSubject ? (options.subject || undefined) : undefined,
       issueDate: options.issueDate,
       dueDate: options.validityDate || undefined,
       billingType: options.billingType,
@@ -367,18 +370,34 @@ export default function NewInvoicePage() {
       logoUrl: (invoiceSettings.logoSource === 'company' ? companyLogoUrl : invoiceSettings.logoUrl) || undefined,
       language: options.language,
       notes: notes || undefined,
-      acceptanceConditions: options.acceptanceConditions || undefined,
+      acceptanceConditions: options.showAcceptanceConditions ? (options.acceptanceConditions || undefined) : undefined,
       signatureField: options.signatureField,
       documentTitle: options.documentTitle || 'Facture',
-      freeField: options.freeField || undefined,
+      freeField: options.showFreeField ? (options.freeField || undefined) : undefined,
       globalDiscountType: options.globalDiscountType,
       globalDiscountValue: options.globalDiscountValue,
-      deliveryAddress: options.deliveryAddress || undefined,
+      deliveryAddress: options.showDeliveryAddress ? (options.deliveryAddress || undefined) : undefined,
       clientSiren: options.clientSiren || undefined,
       clientVatNumber: options.clientVatNumber || undefined,
       paymentMethod: paymentMethod || undefined,
       bankAccountId: bankAccountId || undefined,
       vatExemptReason: options.vatExemptReason,
+      clientSnapshot: selectedClient ? {
+        type: selectedClient.type,
+        displayName: selectedClient.displayName,
+        companyName: selectedClient.companyName,
+        firstName: selectedClient.firstName,
+        lastName: selectedClient.lastName,
+        email: selectedClient.email,
+        phone: selectedClient.phone,
+        address: selectedClient.address,
+        addressComplement: selectedClient.addressComplement,
+        postalCode: selectedClient.postalCode,
+        city: selectedClient.city,
+        country: selectedClient.country,
+        siren: selectedClient.siren,
+        vatNumber: selectedClient.vatNumber,
+      } : undefined,
       lines: lines
         .filter((l) => l.description.trim())
         .map((l) => ({
@@ -505,7 +524,8 @@ export default function NewInvoicePage() {
             <p className="text-muted-foreground mt-0.5 text-sm">{invoiceNumber}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <DocumentZoom value={docZoom} onChange={setDocZoom} />
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button onClick={() => setMode('edit')} className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-medium transition-all ${mode === 'edit' ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
               <Pencil className="h-3 w-3" /> Edition
@@ -538,7 +558,7 @@ export default function NewInvoicePage() {
                 <SlidersHorizontal className="h-4 w-4" />
               </button>
             </div>
-            <div className="relative">
+            <div className="relative" style={{ transform: `scale(${docZoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.15s ease' }}>
             <AiSheetOverlay
               open={aiProcessing}
               error={aiError}

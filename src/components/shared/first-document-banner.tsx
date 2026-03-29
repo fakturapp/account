@@ -56,7 +56,8 @@ export function FirstDocumentBanner({ documentType, currentNumber, onNumberChang
 
     api.get<{ count: number }>(`${endpoint}/document-count`).then(({ data }) => {
       if (data && data.count === 0) {
-        const numericPart = parseInt(currentNumber.replace(/\D/g, ''), 10)
+        const match = currentNumber.match(/(\d+)$/)
+        const numericPart = match ? parseInt(match[1], 10) : NaN
         if (isNaN(numericPart) || numericPart <= 1) {
           setVisible(true)
         }
@@ -116,7 +117,7 @@ export function FirstDocumentBanner({ documentType, currentNumber, onNumberChang
               value={editValue}
               onChange={(e) => setEditValue(e.target.value)}
               className="max-w-[200px] h-8 text-sm"
-              placeholder={isQuote ? 'DEV-001' : 'FAC-001'}
+              placeholder={isQuote ? 'DEV-001' : 'FAK-001'}
             />
             <Button size="sm" onClick={handleSave} disabled={saving || !editValue.trim()}>
               {saving ? <Spinner className="h-3.5 w-3.5" /> : <Check className="h-3.5 w-3.5 mr-1" />}

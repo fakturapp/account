@@ -21,6 +21,7 @@ import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { useTrackFeature } from '@/hooks/use-analytics'
 import { FirstDocumentBanner } from '@/components/shared/first-document-banner'
 import { ProductCatalogModal, type CatalogProduct } from '@/components/products/product-catalog-modal'
+import { DocumentZoom, loadDocumentZoom } from '@/components/shared/document-zoom'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -83,6 +84,8 @@ export default function NewQuotePage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
+  const [docZoom, setDocZoom] = useState(100)
+  useEffect(() => setDocZoom(loadDocumentZoom()), [])
   const [quoteNumber, setQuoteNumber] = useState('')
   const [company, setCompany] = useState<CompanyInfo | null>(null)
   const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null)
@@ -326,7 +329,7 @@ export default function NewQuotePage() {
 
     const payload = {
       clientId: selectedClient?.id || undefined,
-      subject: options.subject || undefined,
+      subject: options.showSubject ? (options.subject || undefined) : undefined,
       issueDate: options.issueDate,
       validityDate: options.validityDate || undefined,
       billingType: options.billingType,
@@ -334,16 +337,32 @@ export default function NewQuotePage() {
       logoUrl: (invoiceSettings.logoSource === 'company' ? companyLogoUrl : invoiceSettings.logoUrl) || undefined,
       language: options.language,
       notes: notes || undefined,
-      acceptanceConditions: options.acceptanceConditions || undefined,
+      acceptanceConditions: options.showAcceptanceConditions ? (options.acceptanceConditions || undefined) : undefined,
       signatureField: options.signatureField,
       documentTitle: options.documentTitle || undefined,
-      freeField: options.freeField || undefined,
+      freeField: options.showFreeField ? (options.freeField || undefined) : undefined,
       globalDiscountType: options.globalDiscountType,
       globalDiscountValue: options.globalDiscountValue,
-      deliveryAddress: options.deliveryAddress || undefined,
+      deliveryAddress: options.showDeliveryAddress ? (options.deliveryAddress || undefined) : undefined,
       clientSiren: options.clientSiren || undefined,
       clientVatNumber: options.clientVatNumber || undefined,
       vatExemptReason: options.vatExemptReason,
+      clientSnapshot: selectedClient ? {
+        type: selectedClient.type,
+        displayName: selectedClient.displayName,
+        companyName: selectedClient.companyName,
+        firstName: selectedClient.firstName,
+        lastName: selectedClient.lastName,
+        email: selectedClient.email,
+        phone: selectedClient.phone,
+        address: selectedClient.address,
+        addressComplement: selectedClient.addressComplement,
+        postalCode: selectedClient.postalCode,
+        city: selectedClient.city,
+        country: selectedClient.country,
+        siren: selectedClient.siren,
+        vatNumber: selectedClient.vatNumber,
+      } : undefined,
       lines: lines
         .filter((l) => l.description.trim())
         .map((l) => ({
@@ -503,7 +522,8 @@ export default function NewQuotePage() {
         </div>
 
         {/* Mode toggle */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          <DocumentZoom value={docZoom} onChange={setDocZoom} />
           <div className="flex rounded-lg border border-border overflow-hidden">
             <button
               onClick={() => setMode('edit')}
@@ -555,7 +575,7 @@ export default function NewQuotePage() {
             currentNumber={quoteNumber}
             onNumberChange={setQuoteNumber}
           />
-          <div className="relative">
+          <div className="relative" style={{ transform: `scale(${docZoom / 100})`, transformOrigin: 'top center', transition: 'transform 0.15s ease' }}>
           <AiSheetOverlay
             open={aiProcessing}
             error={aiError}

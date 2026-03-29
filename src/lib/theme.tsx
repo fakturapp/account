@@ -32,7 +32,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = localStorage.getItem('faktur_theme') as Theme | null
-    const t = stored || 'light'
+    const t = stored || 'system'
     setThemeState(t)
     const resolved = resolveTheme(t)
     setResolvedTheme(resolved)

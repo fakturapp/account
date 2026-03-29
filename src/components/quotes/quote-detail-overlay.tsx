@@ -55,6 +55,7 @@ interface QuoteDetail {
   clientSiren: string | null
   clientVatNumber: string | null
   clientId: string | null
+  clientSnapshot?: string | null
   client: ClientInfo | null
   vatExemptReason?: 'none' | 'not_subject' | 'france_no_vat' | 'outside_france'
   lines: {
@@ -263,6 +264,13 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
   // Always use current settings logo so preview stays in sync with PDF
   const effectiveLogoUrl = invoiceSettings.logoSource === 'company' ? companyLogoUrl : (invoiceSettings.logoUrl || quote?.logoUrl || null)
 
+  const effectiveClient = useMemo(() => {
+    if (quote?.clientSnapshot) {
+      try { return JSON.parse(quote.clientSnapshot) } catch { return quote.client }
+    }
+    return quote?.client || null
+  }, [quote?.clientSnapshot, quote?.client])
+
   return (
     <AnimatePresence>
       {quoteId && (
@@ -313,7 +321,7 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
                   billingType={quote.billingType}
                   company={company}
                   onCompanyFieldChange={noop}
-                  client={quote.client}
+                  client={effectiveClient}
                   onClientClick={noop}
                   onClearClient={noop}
                   onClientFieldChange={noop}

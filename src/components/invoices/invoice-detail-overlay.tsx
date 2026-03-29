@@ -62,6 +62,7 @@ interface InvoiceDetail {
   clientSiren: string | null
   clientVatNumber: string | null
   clientId: string | null
+  clientSnapshot?: string | null
   client: ClientInfo | null
   vatExemptReason?: 'none' | 'not_subject' | 'france_no_vat' | 'outside_france'
   lines: {
@@ -295,6 +296,13 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
   // Always use current settings logo so preview stays in sync with PDF
   const effectiveLogoUrl = invoiceSettings.logoSource === 'company' ? companyLogoUrl : (invoiceSettings.logoUrl || invoice?.logoUrl || null)
 
+  const effectiveClient = useMemo(() => {
+    if (invoice?.clientSnapshot) {
+      try { return JSON.parse(invoice.clientSnapshot) } catch { return invoice.client }
+    }
+    return invoice?.client || null
+  }, [invoice?.clientSnapshot, invoice?.client])
+
   return (
     <AnimatePresence>
       {invoiceId && (
@@ -345,7 +353,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                   billingType={invoice.billingType}
                   company={company}
                   onCompanyFieldChange={noop}
-                  client={invoice.client}
+                  client={effectiveClient}
                   onClientClick={noop}
                   onClearClient={noop}
                   onClientFieldChange={noop}
