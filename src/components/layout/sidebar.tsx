@@ -121,7 +121,7 @@ const mainNav: NavItem[] = [
   { href: '/dashboard/credit-notes', label: 'Avoirs', icon: FileMinus2 },
   { href: '/dashboard/recurring-invoices', label: 'Recurrences', icon: RefreshCw },
   { href: '/dashboard/clients', label: 'Clients', icon: Users },
-  { href: '/dashboard/products', label: 'Catalogue', icon: Package },
+  { href: '/dashboard/products', label: 'Produits', icon: Package },
   { href: '/dashboard/expenses', label: 'Depenses', icon: Wallet },
 ]
 
