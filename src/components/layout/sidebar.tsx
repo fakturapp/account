@@ -210,13 +210,13 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
       <Link
         href={item.href}
         className={cn(
-          'flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative',
+          'flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200 relative',
           isActive
-            ? 'bg-gradient-to-r from-primary/10 to-transparent text-sidebar-accent-foreground border-l-2 border-primary'
-            : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
+            ? 'liquid-nav-active text-foreground'
+            : 'text-muted-foreground liquid-nav-hover hover:text-foreground'
         )}
       >
-        <item.icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
+        <item.icon className={cn('h-[15px] w-[15px] shrink-0', isActive ? 'text-primary' : 'opacity-70')} />
         <span>{item.label}</span>
       </Link>
     )
@@ -227,19 +227,19 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
       <button
         onClick={handleToggle}
         className={cn(
-          'flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-all duration-300 ease-in-out relative',
+          'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200 relative',
           isActive
-            ? 'bg-gradient-to-r from-primary/10 to-transparent text-sidebar-accent-foreground border-l-2 border-primary'
-            : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
+            ? 'liquid-nav-active text-foreground'
+            : 'text-muted-foreground liquid-nav-hover hover:text-foreground'
         )}
       >
-        <item.icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
+        <item.icon className={cn('h-[15px] w-[15px] shrink-0', isActive ? 'text-primary' : 'opacity-70')} />
         <span className="flex-1 text-left">{item.label}</span>
         <motion.div
           animate={{ rotate: expanded ? 90 : 0 }}
-          transition={{ duration: 0.2 }}
+          transition={{ duration: 0.15 }}
         >
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3 w-3 opacity-40" />
         </motion.div>
       </button>
       <AnimatePresence initial={false}>
@@ -251,7 +251,7 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
             transition={{ duration: 0.2, ease: 'easeInOut' }}
             className="overflow-hidden"
           >
-            <div className="ml-4 border-l border-sidebar-border pl-3 py-1 space-y-0.5">
+            <div className="ml-[18px] border-l border-border/40 pl-2.5 py-0.5 space-y-0.5">
               {item.children!.map((child) => {
                 const childActive = pathname === child.href
                 const badgeCount = badges?.[child.href]
@@ -261,18 +261,18 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
                     key={child.href}
                     href={child.href}
                     className={cn(
-                      'flex items-center justify-between rounded-md px-3 py-1.5 text-sm transition-all duration-300 ease-in-out',
+                      'flex items-center justify-between rounded-md px-2.5 py-[5px] text-[12px] transition-all duration-200',
                       childActive
-                        ? 'bg-sidebar-accent/50 text-sidebar-accent-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-foreground'
+                        ? 'liquid-nav-active text-foreground font-medium'
+                        : 'text-muted-foreground liquid-nav-hover hover:text-foreground'
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      {ChildIcon && <ChildIcon className={cn('h-3.5 w-3.5 shrink-0', childActive && 'text-primary')} />}
+                      {ChildIcon && <ChildIcon className={cn('h-3 w-3 shrink-0', childActive && 'text-primary')} />}
                       {child.label}
                     </span>
                     {badgeCount != null && badgeCount > 0 && (
-                      <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                      <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary/15 px-1 text-[9px] font-semibold text-primary">
                         {badgeCount}
                       </span>
                     )}
@@ -304,9 +304,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
   return (
     <aside
       className={cn(
-        'flex h-screen flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-[width] duration-200 ease-linear overflow-hidden',
-        collapsed ? 'w-0 border-r-0' : 'w-(--sidebar-width)'
+        'flex shrink-0 flex-col liquid-glass liquid-sidebar rounded-2xl transition-all duration-300 ease-out overflow-hidden',
+        collapsed ? 'w-0 opacity-0 p-0 m-0' : 'w-(--sidebar-width) m-2 mr-0 opacity-100'
       )}
+      style={{ height: collapsed ? 0 : 'calc(100vh - 16px)' }}
     >
       <AnimatePresence mode="wait">
         {sidebarMode === 'admin' ? (
@@ -316,17 +317,16 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-indigo-500/10 to-transparent"
+            className="px-3 pt-3 pb-1"
           >
-            <div className="flex items-center gap-2.5 px-3 py-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/15 text-indigo-400">
-                <ShieldCheck className="h-4.5 w-4.5" />
+            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg liquid-nav-active">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-500/15 text-indigo-400">
+                <ShieldCheck className="h-3.5 w-3.5" />
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-semibold text-foreground leading-tight">
+                <p className="text-[13px] font-semibold text-foreground leading-tight">
                   Administration
                 </p>
-                <p className="text-xs text-muted-foreground">Panel admin</p>
               </div>
             </div>
           </motion.div>
@@ -337,15 +337,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
-            className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-primary/10 to-transparent"
+            className="px-3 pt-3 pb-1"
           >
-            <div className="flex items-center gap-2.5 px-3 py-2">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                <Settings className="h-4.5 w-4.5" />
+            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg liquid-nav-active">
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
+                <Settings className="h-3.5 w-3.5" />
               </div>
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-semibold text-foreground leading-tight">Paramètres</p>
-                <p className="text-xs text-muted-foreground">Configuration</p>
+                <p className="text-[13px] font-semibold text-foreground leading-tight">Paramètres</p>
               </div>
             </div>
           </motion.div>
@@ -358,13 +357,13 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {/* Team header */}
-            <div className="mx-2 mt-2 px-1 pt-1 pb-1 rounded-xl bg-gradient-to-br from-primary/5 to-transparent">
+            <div className="px-3 pt-3 pb-1">
               {teamsLoaded ? (
                 <Dropdown
                   align="left"
                   trigger={
-                    <div className="flex items-center gap-2.5 rounded-lg px-3 py-2 hover:bg-sidebar-accent/50 transition-all duration-300 ease-in-out w-full">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-xs overflow-hidden">
+                    <div className="flex items-center gap-2.5 rounded-lg px-2 py-2 liquid-nav-hover transition-all duration-200 w-full">
+                      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold text-[11px] overflow-hidden">
                         {currentTeam?.iconUrl ? (
                           <img
                             src={currentTeam.iconUrl}
@@ -376,17 +375,17 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                         )}
                       </div>
                       <div className="flex-1 min-w-0 text-left">
-                        <p className="text-sm font-semibold text-foreground leading-tight truncate">
+                        <p className="text-[13px] font-semibold text-foreground leading-tight truncate">
                           {currentTeam?.name || 'Équipe'}
                         </p>
                         {currentTeam?.role && (
-                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <p className="text-[11px] text-muted-foreground flex items-center gap-1">
                             {roleIcons[currentTeam.role]}
                             {roleLabels[currentTeam.role]}
                           </p>
                         )}
                       </div>
-                      <ChevronDown className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <ChevronDown className="h-3 w-3 text-muted-foreground shrink-0" />
                     </div>
                   }
                   className="min-w-[230px]"
@@ -437,11 +436,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   </Link>
                 </Dropdown>
               ) : (
-                <div className="flex items-center gap-2.5 px-3 py-2">
-                  <div className="h-8 w-8 rounded-lg skeleton-shimmer" />
+                <div className="flex items-center gap-2.5 px-2 py-2">
+                  <div className="h-7 w-7 rounded-lg skeleton-shimmer" />
                   <div className="flex-1 space-y-1.5">
-                    <div className="h-3.5 w-24 rounded skeleton-shimmer" />
-                    <div className="h-2.5 w-16 rounded skeleton-shimmer" />
+                    <div className="h-3 w-24 rounded skeleton-shimmer" />
+                    <div className="h-2 w-16 rounded skeleton-shimmer" />
                   </div>
                 </div>
               )}
@@ -450,7 +449,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
         )}
       </AnimatePresence>
 
-      <div className="mx-3 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="mx-3 h-px liquid-separator" />
 
       <AnimatePresence mode="wait">
         {sidebarMode === 'admin' ? (
@@ -463,18 +462,18 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             className="flex flex-1 flex-col overflow-hidden"
           >
             {/* Back to dashboard */}
-            <div className="px-3 pt-3 pb-1">
+            <div className="px-3 pt-2 pb-1">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
+                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground liquid-nav-hover hover:text-foreground transition-all"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Retour au dashboard
               </Link>
             </div>
 
             {/* Admin navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
               <NavLink
                 item={{ href: '/dashboard/admin', label: "Vue d'ensemble", icon: LayoutDashboard }}
                 pathname={pathname}
@@ -503,18 +502,18 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             className="flex flex-1 flex-col overflow-hidden"
           >
             {/* Back to dashboard */}
-            <div className="px-3 pt-3 pb-1">
+            <div className="px-3 pt-2 pb-1">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 rounded-xl border border-border/50 bg-muted/30 px-3 py-2.5 text-sm font-medium text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all"
+                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground liquid-nav-hover hover:text-foreground transition-all"
               >
-                <ArrowLeft className="h-4 w-4" />
+                <ArrowLeft className="h-3.5 w-3.5" />
                 Retour au dashboard
               </Link>
             </div>
 
             {/* Settings navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
               {settingsNav.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} persistKey="settings" />
               ))}
@@ -530,12 +529,12 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             className="flex flex-1 flex-col overflow-hidden"
           >
             {/* Quick create */}
-            <div className="px-3 pt-3 pb-1">
+            <div className="px-3 pt-2 pb-1">
               <Dropdown
                 align="left"
                 trigger={
-                  <div className="flex items-center justify-center gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2.5 text-sm font-semibold hover:bg-primary/10 transition-all group cursor-pointer">
-                    <CirclePlus className="h-4 w-4 text-primary" />
+                  <div className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-semibold liquid-nav-hover transition-all group cursor-pointer">
+                    <CirclePlus className="h-3.5 w-3.5 text-primary" />
                     <span className="text-primary">Créer</span>
                   </div>
                 }
@@ -558,11 +557,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             />
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
+            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
               {mainNav.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} badges={badges} />
               ))}
-              <div className="mx-1 my-2 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="mx-2 my-2 h-px liquid-separator" />
               <NavLink
                 item={{ href: '/dashboard/settings', label: 'Paramètres', icon: Settings }}
                 pathname={pathname}
@@ -572,10 +571,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
         )}
       </AnimatePresence>
 
-      <div className="mx-3 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="mx-3 h-px liquid-separator" />
 
       {/* User section */}
-      <div className="p-3 mx-2 mb-2 rounded-xl bg-gradient-to-br from-primary/5 to-transparent">
+      <div className="p-2.5">
         <Dropdown
           align="left"
           position="above"
@@ -583,7 +582,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           alignOffset={8}
           className="min-w-[260px]"
           trigger={
-            <div className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-sidebar-accent/50 transition-all duration-300 ease-in-out w-full">
+            <div className="flex items-center gap-2.5 rounded-lg px-2 py-2 liquid-nav-hover transition-all duration-200 w-full">
               <Avatar
                 src={user.avatarUrl}
                 alt={user.fullName || user.email}
@@ -591,10 +590,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 size="sm"
               />
               <div className="flex-1 min-w-0 text-left">
-                <p className="text-sm font-medium text-foreground truncate leading-tight">
+                <p className="text-[13px] font-medium text-foreground truncate leading-tight">
                   {user.fullName || user.email}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
               </div>
 
               <button
@@ -604,19 +603,19 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'
                   setTheme(next)
                 }}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
                 title={theme === 'system' ? 'Systeme' : theme === 'dark' ? 'Sombre' : 'Clair'}
               >
                 {theme === 'system' ? (
-                  <Monitor className="h-4 w-4" />
+                  <Monitor className="h-3.5 w-3.5" />
                 ) : theme === 'dark' ? (
-                  <Moon className="h-4 w-4" />
+                  <Moon className="h-3.5 w-3.5" />
                 ) : (
-                  <Sun className="h-4 w-4" />
+                  <Sun className="h-3.5 w-3.5" />
                 )}
               </button>
 
-              <MoreHorizontal className="h-4 w-4 text-muted-foreground shrink-0" />
+              <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
             </div>
           }
         >

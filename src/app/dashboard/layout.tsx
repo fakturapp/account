@@ -108,40 +108,42 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   if (loading) {
     return (
-      <div className="flex h-screen overflow-hidden bg-sidebar">
-        <div className="w-(--sidebar-width) bg-sidebar border-r border-sidebar-border flex flex-col">
-          <div className="px-3 py-3">
-            <div className="flex items-center gap-2.5 px-3 py-2">
-              <Skeleton className="h-8 w-8 rounded-lg" />
+      <div className="flex h-screen overflow-hidden finder-window-bg bg-background">
+        {/* Skeleton sidebar bubble */}
+        <div className="w-(--sidebar-width) shrink-0 m-2 mr-0 rounded-2xl liquid-glass liquid-sidebar flex flex-col overflow-hidden" style={{ height: 'calc(100vh - 16px)' }}>
+          <div className="px-3 pt-3 pb-2">
+            <div className="flex items-center gap-2.5 px-2 py-2">
+              <Skeleton className="h-7 w-7 rounded-lg" />
               <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-3.5 w-24" />
-                <Skeleton className="h-2.5 w-16" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-2 w-16" />
               </div>
             </div>
           </div>
-          <div className="mx-3 h-px bg-border" />
-          <div className="flex-1 px-3 py-3 space-y-2">
+          <div className="mx-3 h-px liquid-separator" />
+          <div className="flex-1 px-3 py-2 space-y-1">
             {[...Array(5)].map((_, i) => (
-              <Skeleton key={i} className="h-9 w-full rounded-lg" />
+              <Skeleton key={i} className="h-8 w-full rounded-lg" />
             ))}
-            <div className="pt-4" />
+            <div className="pt-3" />
             {[...Array(4)].map((_, i) => (
-              <Skeleton key={i} className="h-9 w-full rounded-lg" />
+              <Skeleton key={i} className="h-8 w-full rounded-lg" />
             ))}
           </div>
-          <div className="mx-3 h-px bg-border" />
-          <div className="p-3">
-            <div className="flex items-center gap-3 px-2">
-              <Skeleton className="h-8 w-8 rounded-full" />
+          <div className="mx-3 h-px liquid-separator" />
+          <div className="p-2.5">
+            <div className="flex items-center gap-2.5 px-2">
+              <Skeleton className="h-7 w-7 rounded-full" />
               <div className="flex-1 space-y-1">
-                <Skeleton className="h-3.5 w-24" />
-                <Skeleton className="h-2.5 w-32" />
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-2 w-32" />
               </div>
             </div>
           </div>
         </div>
-        <div className="flex-1 flex flex-col overflow-hidden dark:md:m-2 dark:md:ml-0 dark:md:rounded-xl dark:md:shadow-sm bg-background">
-          <div className="h-(--header-height) border-b border-border shrink-0" />
+        {/* Skeleton content area */}
+        <div className="flex-1 flex flex-col overflow-hidden m-2 rounded-2xl liquid-content">
+          <div className="h-(--header-height) shrink-0 liquid-glass-toolbar liquid-toolbar rounded-t-2xl" />
           <div className="flex-1 p-6 space-y-6">
             <div className="grid gap-4 grid-cols-4">
               {[...Array(4)].map((_, i) => (
@@ -177,7 +179,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <InvoiceSettingsProvider>
     <EmailProvider>
-    <div className="flex h-screen overflow-hidden bg-sidebar">
+    <div className="flex h-screen overflow-hidden finder-window-bg bg-background">
       <Sidebar
         teams={teams}
         currentTeam={currentTeam}
@@ -198,9 +200,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <div
         className={cn(
-          'relative flex min-h-0 flex-1 flex-col bg-background transition-all duration-200 ease-linear overflow-hidden',
-          'dark:md:m-2 dark:md:ml-0 dark:md:rounded-xl dark:md:shadow-sm',
-          sidebarCollapsed && 'dark:md:ml-2',
+          'relative flex min-h-0 flex-1 flex-col transition-all duration-300 ease-out overflow-hidden',
+          'm-2 rounded-2xl liquid-content',
           switching && 'blur-sm pointer-events-none'
         )}
       >

@@ -65,18 +65,18 @@ export function SiteHeader({ onToggleSidebar }: SiteHeaderProps) {
   }, '/dashboard')
 
   return (
-    <header className="relative flex h-(--header-height) shrink-0 items-center gap-2 border-b border-border/50 transition-[width,height] ease-linear">
+    <header className="relative flex h-(--header-height) shrink-0 items-center gap-2 liquid-glass-toolbar liquid-toolbar rounded-t-2xl transition-[width,height] ease-linear">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         {onToggleSidebar && (
           <button
             onClick={onToggleSidebar}
-            className="-ml-1 flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground transition-all duration-200"
+            className="-ml-1 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all duration-200"
           >
-            <PanelLeft className="h-4 w-4" />
+            <PanelLeft className="h-3.5 w-3.5" />
           </button>
         )}
-        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4" />
-        <h1 className="text-sm font-medium text-muted-foreground">{routeTitles[title] || 'Dashboard'}</h1>
+        <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 opacity-30" />
+        <h1 className="text-[13px] font-medium text-muted-foreground">{routeTitles[title] || 'Dashboard'}</h1>
 
         {/* Settings search bar - absolutely centered in navbar */}
         {isSettings && (
