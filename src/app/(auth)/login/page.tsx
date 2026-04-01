@@ -13,7 +13,8 @@ import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
-import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff } from 'lucide-react'
+import { startAuthentication } from '@simplewebauthn/browser'
+import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Smartphone } from 'lucide-react'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 12 },
@@ -45,6 +46,7 @@ function LoginContent() {
   const [requires2FA, setRequires2FA] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
   const [googleLoading, setGoogleLoading] = useState(false)
+  const [passkeyLoading, setPasskeyLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
   const turnstileRef = useRef<TurnstileInstance>(null)
   const resetTurnstile = useCallback(() => {
@@ -90,6 +92,51 @@ function LoginContent() {
       return setError(err || 'Impossible de se connecter avec Google.')
     }
     window.location.href = data.url
+  }
+
+  async function handlePasskeyLogin() {
+    setError('')
+    setPasskeyLoading(true)
+    try {
+      const { data: options, error: optErr } = await api.post<any>('/auth/passkey/login-options', {})
+      if (optErr || !options) {
+        setPasskeyLoading(false)
+        return setError(optErr || 'Impossible de démarrer l\'authentification passkey.')
+      }
+
+      const credential = await startAuthentication({ optionsJSON: options })
+
+      const { data, error: verifyErr } = await api.post<{
+        token?: string
+        user?: any
+        vaultKey?: string
+        requiresEmailVerification?: boolean
+        email?: string
+      }>('/auth/passkey/login-verify', { credential })
+      setPasskeyLoading(false)
+
+      if (verifyErr) return setError(verifyErr)
+
+      if (data?.requiresEmailVerification) {
+        router.push(`/verify-email?email=${encodeURIComponent(data.email || '')}`)
+        return
+      }
+
+      if (data?.token && data?.user) {
+        login(data.token, data.user, data.vaultKey)
+        if (!data.user.onboardingCompleted) {
+          router.push('/onboarding/team')
+        } else {
+          router.push('/dashboard')
+        }
+      }
+    } catch (err: any) {
+      setPasskeyLoading(false)
+      if (err.name === 'NotAllowedError') {
+        return // User cancelled
+      }
+      setError('Erreur lors de l\'authentification passkey.')
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -313,8 +360,36 @@ function LoginContent() {
                 </button>
               </motion.div>
 
+              {/* Passkey + Mobile App buttons */}
+              <motion.div variants={fadeIn} custom={2} className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handlePasskeyLogin}
+                  disabled={passkeyLoading}
+                  className="w-full flex items-center justify-center gap-3 h-11 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all hover:bg-muted/50 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {passkeyLoading ? (
+                    <Spinner size="sm" />
+                  ) : (
+                    <KeyRound className="h-[18px] w-[18px]" />
+                  )}
+                  Se connecter avec une clé d'accès
+                </button>
+                <button
+                  type="button"
+                  disabled
+                  className="w-full flex items-center justify-center gap-3 h-11 rounded-lg border border-border/50 bg-muted/30 text-sm font-medium text-muted-foreground cursor-not-allowed relative"
+                >
+                  <Smartphone className="h-[18px] w-[18px]" />
+                  Se connecter avec l'app mobile
+                  <span className="absolute right-3 text-[10px] font-semibold uppercase tracking-wider bg-muted rounded-full px-2 py-0.5 text-muted-foreground">
+                    Bientôt
+                  </span>
+                </button>
+              </motion.div>
+
               {/* Separator */}
-              <motion.div variants={fadeIn} custom={2} className="relative">
+              <motion.div variants={fadeIn} custom={3} className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
                 </div>
@@ -337,7 +412,7 @@ function LoginContent() {
                     </motion.div>
                   )}
 
-                  <motion.div variants={fadeIn} custom={3}>
+                  <motion.div variants={fadeIn} custom={4}>
                     <Field>
                       <FieldLabel htmlFor="email">Email</FieldLabel>
                       <Input
@@ -353,7 +428,7 @@ function LoginContent() {
                     </Field>
                   </motion.div>
 
-                  <motion.div variants={fadeIn} custom={4}>
+                  <motion.div variants={fadeIn} custom={5}>
                     <Field>
                       <div className="flex items-center justify-between">
                         <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
@@ -386,7 +461,7 @@ function LoginContent() {
                   </motion.div>
 
                   {process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && (
-                    <motion.div variants={fadeIn} custom={5} className="flex justify-center">
+                    <motion.div variants={fadeIn} custom={6} className="flex justify-center">
                       <Turnstile
                         ref={turnstileRef}
                         siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
@@ -398,7 +473,7 @@ function LoginContent() {
                     </motion.div>
                   )}
 
-                  <motion.div variants={fadeIn} custom={6}>
+                  <motion.div variants={fadeIn} custom={7}>
                     <Button
                       type="submit"
                       className="w-full h-11 font-semibold gap-2"
@@ -412,7 +487,7 @@ function LoginContent() {
                     </Button>
                   </motion.div>
 
-                  <motion.div variants={fadeIn} custom={7}>
+                  <motion.div variants={fadeIn} custom={8}>
                     <p className="text-center text-sm text-muted-foreground">
                       Pas encore de compte ?{' '}
                       <Link href="/register" className="text-primary font-medium hover:text-primary/80 transition-colors">
@@ -430,7 +505,7 @@ function LoginContent() {
       {/* Legal footer */}
       <motion.p
         variants={fadeIn}
-        custom={8}
+        custom={9}
         initial="hidden"
         animate="visible"
         className="text-center mt-8 text-[11px] text-muted-foreground/60"
