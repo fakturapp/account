@@ -21,6 +21,7 @@ interface User {
   cryptoResetNeeded: boolean
   hasRecoveryKey: boolean
   hasGoogleProvider: boolean
+  hasPasskeys: boolean
   vaultLocked: boolean
   isAdmin: boolean
 }
