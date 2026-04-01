@@ -42,7 +42,7 @@ export const CHAT_MODES: ChatModeConfig[] = [
 
 // ─── Providers & Models ──────────────────────────────────────────────────
 
-export type ProviderId = 'gemini' | 'groq' | 'claude'
+export type ProviderId = 'groq'
 
 export interface ProviderConfig {
   id: ProviderId
@@ -54,27 +54,19 @@ export interface ProviderConfig {
 export interface ModelConfig {
   id: string
   name: string
+  tier: 'rapide' | 'raisonnement' | 'pro'
+  description: string
 }
 
 export const CHAT_PROVIDERS: ProviderConfig[] = [
-  { id: 'gemini', name: 'Gemini', iconClass: '', iconBg: 'bg-blue-500/10' },
   { id: 'groq', name: 'Groq', iconClass: 'text-orange-500', iconBg: 'bg-orange-500/10' },
-  { id: 'claude', name: 'Claude', iconClass: 'text-violet-500', iconBg: 'bg-violet-500/10' },
 ]
 
 export const CHAT_MODELS: Record<ProviderId, ModelConfig[]> = {
-  gemini: [
-    { id: 'gemini-2.5-flash-lite', name: 'Flash Lite' },
-    { id: 'gemini-2.5-flash', name: 'Flash' },
-    { id: 'gemini-2.5-pro', name: 'Pro' },
-  ],
   groq: [
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
-    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
-  ],
-  claude: [
-    { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet' },
-    { id: 'claude-opus-4-6', name: 'Opus' },
+    { id: 'llama-3.1-8b-instant', name: 'Rapide', tier: 'rapide', description: 'Réponses instantanées' },
+    { id: 'llama-3.3-70b-versatile', name: 'Raisonnement', tier: 'raisonnement', description: 'Bon équilibre qualité/vitesse' },
+    { id: 'deepseek-r1-distill-llama-70b', name: 'Pro', tier: 'pro', description: 'Meilleur modèle disponible' },
   ],
 }
 
