@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/componen
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
 import { useToast } from '@/components/ui/toast'
 import { GroqIcon } from '@/components/icons/groq-icon'
+import { api } from '@/lib/api'
 import {
   Sparkles,
   FlaskConical,
@@ -23,6 +24,8 @@ import {
   HelpCircle,
   Wand2,
   Shield,
+  RefreshCw,
+  BarChart3,
 } from 'lucide-react'
 
 /* ─── Model tiers ─────────────────────────────────────────────── */
@@ -110,12 +113,93 @@ function saveDefaultMode(mode: string) {
   } catch {}
 }
 
+/* ─── Quota types & helpers ──────────────────────────────────── */
+
+interface QuotaBucket {
+  used: number
+  limit: number
+  resetsAt: string
+}
+
+interface QuotaData {
+  hourly: QuotaBucket
+  weekly: QuotaBucket
+  allowed: boolean
+}
+
+function formatResetTime(iso: string): string {
+  const reset = new Date(iso)
+  const now = new Date()
+  const diffMs = reset.getTime() - now.getTime()
+
+  if (diffMs <= 0) return 'maintenant'
+
+  const totalMin = Math.ceil(diffMs / 60_000)
+  if (totalMin < 60) return `dans ${totalMin} min`
+
+  const h = Math.floor(totalMin / 60)
+  const m = totalMin % 60
+  if (m === 0) return `dans ${h} h`
+  return `dans ${h} h ${m} min`
+}
+
+function formatWeeklyReset(iso: string): string {
+  const reset = new Date(iso)
+  const days = ['dim.', 'lun.', 'mar.', 'mer.', 'jeu.', 'ven.', 'sam.']
+  const day = days[reset.getDay()]
+  const hours = reset.getHours().toString().padStart(2, '0')
+  const mins = reset.getMinutes().toString().padStart(2, '0')
+  return `${day} ${hours}:${mins}`
+}
+
+function formatLastUpdated(date: Date | null): string {
+  if (!date) return '—'
+  const diffSec = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (diffSec < 60) return 'il y a moins d\u2019une minute'
+  if (diffSec < 3600) {
+    const m = Math.floor(diffSec / 60)
+    return `il y a ${m} min`
+  }
+  const h = Math.floor(diffSec / 3600)
+  return `il y a ${h} h`
+}
+
 export default function FakturAIPage() {
   const { toast } = useToast()
   const { settings, loading, updateSettings } = useInvoiceSettings()
 
   const [showAiBetaModal, setShowAiBetaModal] = useState(false)
   const [defaultMode, setDefaultMode] = useState(getDefaultMode)
+
+  // Quota state
+  const [quota, setQuota] = useState<QuotaData | null>(null)
+  const [quotaLoading, setQuotaLoading] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+  const [, setTick] = useState(0) // force re-render for relative time
+
+  const fetchQuota = useCallback(async () => {
+    setQuotaLoading(true)
+    try {
+      const res = await api.get<{ quota: QuotaData }>('/ai/quota')
+      if (res.error || !res.data) return
+      setQuota(res.data.quota)
+      setLastUpdated(new Date())
+    } catch {
+      // silent
+    } finally {
+      setQuotaLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (settings.aiEnabled) fetchQuota()
+  }, [settings.aiEnabled, fetchQuota])
+
+  // Tick every 30s to update relative timestamps
+  useEffect(() => {
+    const id = setInterval(() => setTick((t) => t + 1), 30_000)
+    return () => clearInterval(id)
+  }, [])
 
   if (loading) {
     return (
@@ -215,6 +299,141 @@ export default function FakturAIPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ═══ Quota Card (visible when enabled) ═══ */}
+      <AnimatePresence>
+        {settings.aiEnabled && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-5">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10">
+                      <BarChart3 className="h-4.5 w-4.5 text-blue-500" />
+                    </div>
+                    <div>
+                      <h2 className="text-sm font-semibold text-foreground">Limites d&apos;utilisation</h2>
+                      <p className="text-xs text-muted-foreground">Forfait Faktur AI</p>
+                    </div>
+                  </div>
+                </div>
+
+                {quotaLoading && !quota ? (
+                  <div className="space-y-4">
+                    <Skeleton className="h-24 w-full rounded-xl" />
+                    <Skeleton className="h-24 w-full rounded-xl" />
+                  </div>
+                ) : quota ? (
+                  <div className="space-y-4">
+                    {/* Session (hourly) bar */}
+                    <div className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-medium text-foreground">Session actuelle</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Réinitialisation {formatResetTime(quota.hourly.resetsAt)}
+                        </p>
+                      </div>
+                      <div className="flex items-end gap-2 mb-2.5">
+                        <span className="text-2xl font-bold text-foreground">
+                          {Math.round((quota.hourly.used / quota.hourly.limit) * 100)} %
+                        </span>
+                        <span className="text-xs text-muted-foreground mb-1">utilisés</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min((quota.hourly.used / quota.hourly.limit) * 100, 100)}%` }}
+                          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+                          className={`h-full rounded-full ${
+                            quota.hourly.used >= quota.hourly.limit
+                              ? 'bg-red-500'
+                              : quota.hourly.used >= quota.hourly.limit * 0.8
+                                ? 'bg-amber-500'
+                                : 'bg-blue-500'
+                          }`}
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        {quota.hourly.used} / {quota.hourly.limit} requêtes par heure
+                      </p>
+                    </div>
+
+                    {/* Weekly bar */}
+                    <div className="rounded-xl border border-border p-4">
+                      <div className="flex items-center justify-between mb-1">
+                        <p className="text-xs font-medium text-foreground">Limites hebdomadaires</p>
+                        <p className="text-[10px] text-muted-foreground">
+                          Réinitialisation {formatWeeklyReset(quota.weekly.resetsAt)}
+                        </p>
+                      </div>
+                      <div className="flex items-end gap-2 mb-2.5">
+                        <span className="text-2xl font-bold text-foreground">
+                          {Math.round((quota.weekly.used / quota.weekly.limit) * 100)} %
+                        </span>
+                        <span className="text-xs text-muted-foreground mb-1">utilisés</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-muted overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min((quota.weekly.used / quota.weekly.limit) * 100, 100)}%` }}
+                          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                          className={`h-full rounded-full ${
+                            quota.weekly.used >= quota.weekly.limit
+                              ? 'bg-red-500'
+                              : quota.weekly.used >= quota.weekly.limit * 0.8
+                                ? 'bg-amber-500'
+                                : 'bg-indigo-500'
+                          }`}
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1.5">
+                        {quota.weekly.used} / {quota.weekly.limit} requêtes par semaine
+                      </p>
+                    </div>
+
+                    {/* Quota exceeded warning */}
+                    {!quota.allowed && (
+                      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                        <div className="flex items-start gap-2.5">
+                          <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-medium text-red-500">Quota dépassé</p>
+                            <p className="text-[11px] text-foreground/70 mt-0.5">
+                              Vous avez atteint la limite d&apos;utilisation. L&apos;IA sera de nouveau accessible après la réinitialisation.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Last updated + refresh */}
+                    <div className="flex items-center justify-between pt-1">
+                      <p className="text-[10px] text-muted-foreground">
+                        Dernière mise à jour : {formatLastUpdated(lastUpdated)}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={fetchQuota}
+                        disabled={quotaLoading}
+                        className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${quotaLoading ? 'animate-spin' : ''}`} />
+                        Actualiser
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ═══ Configuration (visible when enabled) ═══ */}
       <AnimatePresence>
