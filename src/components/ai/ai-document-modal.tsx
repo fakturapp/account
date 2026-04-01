@@ -32,43 +32,25 @@ import {
   Check,
 } from 'lucide-react'
 import { ShinyText } from '@/components/ui/shiny-text'
-import { AnthropicIcon } from '@/components/icons/anthropic-icon'
-import { GoogleIcon } from '@/components/icons/google-icon'
 import { GroqIcon } from '@/components/icons/groq-icon'
 
 const AI_MODEL_PREF_KEY = 'faktur_ai_model_pref'
 
-const AI_PROVIDERS = [
-  { id: 'gemini' as const, name: 'Gemini', icon: GoogleIcon, iconClass: '', iconBg: 'bg-blue-500/10' },
-  { id: 'groq' as const, name: 'Groq', icon: GroqIcon, iconClass: 'text-orange-500', iconBg: 'bg-orange-500/10' },
-  { id: 'claude' as const, name: 'Claude', icon: AnthropicIcon, iconClass: 'text-violet-500', iconBg: 'bg-violet-500/10' },
-] as const
+const AI_MODELS = [
+  { id: 'llama-3.1-8b-instant', name: 'Rapide' },
+  { id: 'llama-3.3-70b-versatile', name: 'Raisonnement' },
+  { id: 'deepseek-r1-distill-llama-70b', name: 'Pro' },
+]
 
-const AI_MODELS: Record<string, { id: string; name: string }[]> = {
-  gemini: [
-    { id: 'gemini-2.5-flash-lite', name: 'Flash Lite' },
-    { id: 'gemini-2.5-flash', name: 'Flash' },
-    { id: 'gemini-2.5-pro', name: 'Pro' },
-  ],
-  groq: [
-    { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B' },
-    { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
-  ],
-  claude: [
-    { id: 'claude-sonnet-4-5-20250929', name: 'Sonnet' },
-    { id: 'claude-opus-4-6', name: 'Opus' },
-  ],
-}
-
-function loadModelPref(): { provider: string; model: string } | null {
+function loadModelPref(): { model: string } | null {
   try {
     const raw = localStorage.getItem(AI_MODEL_PREF_KEY)
     return raw ? JSON.parse(raw) : null
   } catch { return null }
 }
 
-function saveModelPref(provider: string, model: string) {
-  try { localStorage.setItem(AI_MODEL_PREF_KEY, JSON.stringify({ provider, model })) } catch {}
+function saveModelPref(model: string) {
+  try { localStorage.setItem(AI_MODEL_PREF_KEY, JSON.stringify({ model })) } catch {}
 }
 
 interface ClientInfo {
@@ -94,8 +76,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
   const [clientSearch, setClientSearch] = useState('')
   const [loadingClients, setLoadingClients] = useState(false)
   const [generating, setGenerating] = useState(false)
-  const [selectedProvider, setSelectedProvider] = useState(settings.aiProvider)
-  const [selectedModel, setSelectedModel] = useState(settings.aiModel)
+  const [selectedModel, setSelectedModel] = useState(settings.aiModel || 'llama-3.3-70b-versatile')
   const [showModelDropdown, setShowModelDropdown] = useState(false)
   const [billingType, setBillingType] = useState<'quick' | 'detailed'>('detailed')
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash' | 'other'>('bank_transfer')
@@ -124,11 +105,9 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
       // Restore saved model preference or use settings
       const pref = loadModelPref()
       if (pref) {
-        setSelectedProvider(pref.provider as any)
         setSelectedModel(pref.model)
       } else {
-        setSelectedProvider(settings.aiProvider)
-        setSelectedModel(settings.aiModel)
+        setSelectedModel(settings.aiModel || 'llama-3.3-70b-versatile')
       }
     }
   }, [open, settings.aiProvider, settings.aiModel])
@@ -161,7 +140,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
     setStep('generating')
     setGenerating(true)
 
-    saveModelPref(selectedProvider, selectedModel)
+    saveModelPref(selectedModel)
 
     // Build enriched prompt with options
     let enrichedPrompt = prompt.trim()
@@ -187,7 +166,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
         type,
         prompt: enrichedPrompt,
         clientId: selectedClient?.id,
-        provider: selectedProvider,
+        provider: 'groq',
         model: selectedModel,
       }),
       new Promise((r) => setTimeout(r, 1500)),
@@ -258,13 +237,9 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
                 onClick={() => setShowModelDropdown(!showModelDropdown)}
                 className="w-full flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3 py-2 text-left transition-all hover:border-primary/30"
               >
-                {(() => {
-                  const p = AI_PROVIDERS.find((x) => x.id === selectedProvider)
-                  const Icon = p?.icon
-                  return Icon ? <Icon className={cn('h-3.5 w-3.5', p.iconClass)} /> : null
-                })()}
+                <GroqIcon className="h-3.5 w-3.5 text-orange-500" />
                 <span className="text-xs text-foreground font-medium flex-1">
-                  {AI_PROVIDERS.find((x) => x.id === selectedProvider)?.name} — {AI_MODELS[selectedProvider]?.find((m) => m.id === selectedModel)?.name || selectedModel}
+                  Groq — {AI_MODELS.find((m) => m.id === selectedModel)?.name || 'Raisonnement'}
                 </span>
                 <ChevronDown className={cn('h-3.5 w-3.5 text-muted-foreground transition-transform', showModelDropdown && 'rotate-180')} />
               </button>
@@ -278,40 +253,28 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
                     transition={{ duration: 0.15 }}
                     className="absolute top-full left-0 right-0 mt-1 z-20 rounded-xl border border-border bg-card shadow-xl overflow-hidden"
                   >
-                    {AI_PROVIDERS.map((p) => {
-                      const hasKey = p.id === 'claude' ? !!settings.aiApiKeyClaude : p.id === 'gemini' ? !!settings.aiApiKeyGemini : !!settings.aiApiKeyGroq
-                      const disabled = settings.aiKeyMode === 'custom' && !hasKey
-                      const Icon = p.icon
-                      return (
-                        <div key={p.id}>
-                          <div className={cn('px-3 py-1.5 flex items-center gap-2 border-b border-border/50 bg-muted/30', disabled && 'opacity-50')}>
-                            <Icon className={cn('h-3 w-3', p.iconClass)} />
-                            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{p.name}</span>
-                            {disabled && <span className="text-[8px] text-destructive/70 ml-auto">Clé manquante</span>}
-                          </div>
-                          {AI_MODELS[p.id]?.map((m) => (
-                            <button
-                              key={m.id}
-                              disabled={disabled}
-                              onClick={() => {
-                                setSelectedProvider(p.id)
-                                setSelectedModel(m.id)
-                                setShowModelDropdown(false)
-                              }}
-                              className={cn(
-                                'w-full flex items-center gap-2 px-3 py-2 text-left transition-all text-xs',
-                                selectedProvider === p.id && selectedModel === m.id
-                                  ? 'bg-primary/5 text-primary'
-                                  : 'text-foreground hover:bg-muted/50',
-                                disabled && 'opacity-40 cursor-not-allowed'
-                              )}
-                            >
-                              <span className="flex-1 font-medium">{m.name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )
-                    })}
+                    <div className="px-3 py-1.5 flex items-center gap-2 border-b border-border/50 bg-muted/30">
+                      <GroqIcon className="h-3 w-3 text-orange-500" />
+                      <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Groq</span>
+                    </div>
+                    {AI_MODELS.map((m) => (
+                      <button
+                        key={m.id}
+                        onClick={() => {
+                          setSelectedModel(m.id)
+                          setShowModelDropdown(false)
+                        }}
+                        className={cn(
+                          'w-full flex items-center gap-2 px-3 py-2 text-left transition-all text-xs',
+                          selectedModel === m.id
+                            ? 'bg-primary/5 text-primary'
+                            : 'text-foreground hover:bg-muted/50'
+                        )}
+                      >
+                        <span className="flex-1 font-medium">{m.name}</span>
+                        {selectedModel === m.id && <Check className="h-3 w-3 text-primary" />}
+                      </button>
+                    ))}
                   </motion.div>
                 )}
               </AnimatePresence>
