@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import {
   Trash2, Search, X, Building2, UserRound,
-  RefreshCw, MousePointerClick, FileText, Plus, Type, ChevronDown, Package,
+  RefreshCw, MousePointerClick, FileText, Plus, Type, ChevronDown, Package, ImagePlus, Upload,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { RichTextarea, mdToHtml } from '@/components/ui/rich-textarea'
@@ -555,6 +556,289 @@ function AddLineDropdown({
 }
 
 /* ═══════════════════════════════════════════════════════════
+   StyledCheckbox — custom animated checkbox
+   ═══════════════════════════════════════════════════════════ */
+
+function StyledCheckbox({ checked, onChange, label }: { checked: boolean; onChange: (v: boolean) => void; label?: string }) {
+  return (
+    <label className="flex items-center gap-2.5 text-xs text-muted-foreground cursor-pointer select-none" onClick={(e) => { e.preventDefault(); onChange(!checked) }}>
+      <span
+        className={cn(
+          'h-[18px] w-[18px] shrink-0 rounded-[5px] border-2 transition-all flex items-center justify-center',
+          checked ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 bg-transparent hover:border-zinc-400',
+        )}
+      >
+        <AnimatePresence>
+          {checked && (
+            <motion.svg initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }}
+              transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+              width="10" height="8" viewBox="0 0 10 8" fill="none">
+              <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </motion.svg>
+          )}
+        </AnimatePresence>
+      </span>
+      {label}
+    </label>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LogoImportModal — modal for importing a logo (portaled to body)
+   ═══════════════════════════════════════════════════════════ */
+
+function LogoImportModal({
+  open, onClose, companyLogoUrl, onSelectCompanyLogo, onSelectFile,
+}: {
+  open: boolean
+  onClose: () => void
+  companyLogoUrl?: string | null
+  onSelectCompanyLogo?: (saveToSettings: boolean) => void
+  onSelectFile: (file: File, saveToSettings: boolean) => void
+}) {
+  const [saveToSettings, setSaveToSettings] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  if (typeof document === 'undefined') return null
+
+  return createPortal(
+    <Dialog open={open} onClose={onClose} className="max-w-sm">
+      <DialogTitle>Importer un logo</DialogTitle>
+      <div className="mt-4 space-y-3">
+        {companyLogoUrl && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05, duration: 0.25 }}
+            onClick={() => { onSelectCompanyLogo?.(saveToSettings); onClose() }}
+            className="w-full flex items-center gap-3 rounded-xl p-3 border border-border hover:bg-muted/50 transition-colors text-left"
+          >
+            <img src={companyLogoUrl} alt="" className="h-10 w-10 object-contain rounded-lg" />
+            <div>
+              <div className="text-sm font-medium text-foreground">Logo de l&apos;entreprise</div>
+              <div className="text-xs text-muted-foreground">Utiliser le logo actuel</div>
+            </div>
+          </motion.button>
+        )}
+        <motion.button
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: companyLogoUrl ? 0.1 : 0.05, duration: 0.25 }}
+          onClick={() => fileRef.current?.click()}
+          className="w-full flex items-center gap-3 rounded-xl p-3 border border-dashed border-border hover:bg-muted/50 transition-colors text-left"
+        >
+          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+            <Upload className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div>
+            <div className="text-sm font-medium text-foreground">Importer depuis le PC</div>
+            <div className="text-xs text-muted-foreground">PNG, JPG, SVG, WebP — max 2 Mo</div>
+          </div>
+        </motion.button>
+        <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp" className="hidden"
+          onChange={(e) => {
+            const file = e.target.files?.[0]
+            if (!file || file.size > 2 * 1024 * 1024) return
+            onSelectFile(file, saveToSettings)
+            onClose()
+            e.target.value = ''
+          }}
+        />
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 }} className="pt-1">
+          <StyledCheckbox checked={saveToSettings} onChange={setSaveToSettings} label="Appliquer aussi aux parametres" />
+        </motion.div>
+      </div>
+    </Dialog>,
+    document.body,
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
+   LogoEditor — interactive logo zone (import, resize, round, delete)
+   ═══════════════════════════════════════════════════════════ */
+
+function LogoEditor({
+  logoUrl, logoBorderRadius = 0, accentColor, companyLogoUrl,
+  onLogoChange, onLogoBorderRadiusChange, onLogoUpload, T,
+  variant = 'standard', company, t,
+}: {
+  logoUrl: string | null
+  logoBorderRadius: number
+  accentColor: string
+  companyLogoUrl?: string | null
+  onLogoChange?: (logoUrl: string | null, saveToSettings: boolean) => void
+  onLogoBorderRadiusChange?: (radius: number) => void
+  onLogoUpload?: (file: File, saveToSettings: boolean) => void
+  T: TemplateConfig
+  variant?: 'standard' | 'banner'
+  company?: CompanyInfo | null
+  t: any
+}) {
+  const [importModalOpen, setImportModalOpen] = useState(false)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [deleteFromSettings, setDeleteFromSettings] = useState(false)
+  const [radiusOpen, setRadiusOpen] = useState(false)
+  const [hovered, setHovered] = useState(false)
+  const radiusRef = useRef<HTMLDivElement>(null)
+
+  const [logoSize, setLogoSize] = useState(() => {
+    try {
+      const saved = localStorage.getItem('faktur_logo_size')
+      return saved ? parseInt(saved, 10) : (variant === 'banner' ? 48 : 56)
+    } catch { return variant === 'banner' ? 48 : 56 }
+  })
+
+  useEffect(() => {
+    try { localStorage.setItem('faktur_logo_size', String(logoSize)) } catch {}
+  }, [logoSize])
+
+  useEffect(() => {
+    if (!radiusOpen) return
+    const handler = (e: MouseEvent) => {
+      if (radiusRef.current && !radiusRef.current.contains(e.target as Node)) setRadiusOpen(false)
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [radiusOpen])
+
+  const handleResize = (e: React.MouseEvent) => {
+    e.preventDefault(); e.stopPropagation()
+    const startY = e.clientY, startSize = logoSize
+    const onMove = (me: MouseEvent) => setLogoSize(Math.max(40, Math.min(200, startSize + (me.clientY - startY))))
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp) }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+  }
+
+  /* No logo — placeholder */
+  if (!logoUrl) {
+    if (variant === 'banner') {
+      return (
+        <>
+          <div className="flex items-center gap-2 cursor-pointer group/logo" onClick={() => setImportModalOpen(true)}>
+            <div className="text-[18px] font-bold" style={{ color: contrastText(accentColor) }}>
+              {company?.legalName || t.society}
+            </div>
+            <ImagePlus className="h-4 w-4 opacity-0 group-hover/logo:opacity-70 transition-opacity" style={{ color: contrastText(accentColor) }} />
+          </div>
+          <LogoImportModal open={importModalOpen} onClose={() => setImportModalOpen(false)}
+            companyLogoUrl={companyLogoUrl}
+            onSelectCompanyLogo={(save) => onLogoChange?.(companyLogoUrl!, save)}
+            onSelectFile={(file, save) => onLogoUpload?.(file, save)} />
+        </>
+      )
+    }
+    return (
+      <>
+        <div
+          className="w-16 h-16 flex items-center justify-center mb-2 border-2 border-dashed cursor-pointer transition-colors"
+          style={{ background: `${accentColor}15`, borderColor: `${accentColor}66`, borderRadius: T.borderRadius }}
+          onClick={() => setImportModalOpen(true)}
+          onMouseEnter={(e) => (e.currentTarget.style.borderColor = accentColor)}
+          onMouseLeave={(e) => (e.currentTarget.style.borderColor = `${accentColor}66`)}
+        >
+          <ImagePlus className="h-5 w-5" style={{ color: accentColor }} />
+        </div>
+        <LogoImportModal open={importModalOpen} onClose={() => setImportModalOpen(false)}
+          companyLogoUrl={companyLogoUrl}
+          onSelectCompanyLogo={(save) => onLogoChange?.(companyLogoUrl!, save)}
+          onSelectFile={(file, save) => onLogoUpload?.(file, save)} />
+      </>
+    )
+  }
+
+  /* Has logo — image with overlay controls */
+  return (
+    <>
+      <div
+        className={cn('relative inline-block group/logowrap', variant === 'standard' ? 'mb-2' : 'mb-1')}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
+        <img src={logoUrl} alt="Logo" className="w-auto object-contain"
+          style={{ height: `${logoSize}px`, maxWidth: variant === 'banner' ? '100px' : '150px', borderRadius: `${logoBorderRadius}px`, cursor: 'se-resize' }}
+          onDoubleClick={() => setImportModalOpen(true)}
+        />
+
+        {/* Resize grip — visible on hover */}
+        <div className="absolute -bottom-1 -right-1 opacity-0 group-hover/logowrap:opacity-100 transition-opacity pointer-events-none">
+          <div className="w-3.5 h-3.5 rounded-sm bg-white/80 shadow-sm flex items-center justify-center">
+            <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+              <path d="M6 1L1 6" stroke="#666" strokeWidth="1.2" strokeLinecap="round"/>
+              <path d="M6 4L4 6" stroke="#666" strokeWidth="1.2" strokeLinecap="round"/>
+            </svg>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {(hovered || radiusOpen) && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.15 }}
+              className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.35)', borderRadius: `${logoBorderRadius}px` }}>
+              {/* Delete — top right */}
+              <button className="absolute top-1 right-1 h-5 w-5 rounded-full flex items-center justify-center bg-white/90 hover:bg-white transition-colors"
+                onClick={(e) => { e.stopPropagation(); setDeleteDialogOpen(true) }} title="Supprimer">
+                <X className="h-3 w-3 text-red-500" />
+              </button>
+
+              {/* Border-radius — bottom left */}
+              <div className="absolute bottom-1 left-1" ref={radiusRef}>
+                <button className="h-5 w-5 rounded-full flex items-center justify-center bg-white/90 hover:bg-white transition-colors"
+                  onClick={(e) => { e.stopPropagation(); setRadiusOpen(!radiusOpen) }} title="Arrondi">
+                  <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M1 9V5C1 2.79 2.79 1 5 1H9" stroke="#555" strokeWidth="1.5" strokeLinecap="round"/></svg>
+                </button>
+                <AnimatePresence>
+                  {radiusOpen && (
+                    <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }} transition={{ duration: 0.15 }}
+                      className="absolute left-0 bottom-full mb-1 z-20 rounded-lg p-2.5"
+                      style={{ backgroundColor: T.docBg, border: `1px solid ${T.borderLight}`, boxShadow: '0 4px 12px rgba(0,0,0,0.15)', width: '140px' }}
+                      onClick={(e) => e.stopPropagation()} onMouseEnter={() => setHovered(true)}>
+                      <div className="text-[10px] font-medium mb-1.5" style={{ color: T.textMuted }}>Arrondi : {logoBorderRadius}px</div>
+                      <input type="range" min="0" max="50" value={logoBorderRadius}
+                        onChange={(e) => onLogoBorderRadiusChange?.(parseInt(e.target.value, 10))}
+                        className="w-full h-1 cursor-pointer" style={{ accentColor }} />
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Resize handle — bottom right */}
+              <div className="absolute -bottom-1 -right-1 w-6 h-6 cursor-se-resize" onMouseDown={handleResize}>
+                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-sm bg-white/90 shadow-sm flex items-center justify-center">
+                  <svg width="8" height="8" viewBox="0 0 8 8" fill="none">
+                    <path d="M6 1L1 6" stroke="#444" strokeWidth="1.2" strokeLinecap="round"/>
+                    <path d="M6 4L4 6" stroke="#444" strokeWidth="1.2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Delete confirmation — portaled to body */}
+      {typeof document !== 'undefined' && createPortal(
+        <Dialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} className="max-w-xs">
+          <DialogTitle>Supprimer le logo ?</DialogTitle>
+          <p className="mt-2 text-sm text-muted-foreground">Le logo sera retire de ce document.</p>
+          <div className="mt-3">
+            <StyledCheckbox checked={deleteFromSettings} onChange={setDeleteFromSettings} label="Supprimer aussi des parametres" />
+          </div>
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="outline" size="sm" onClick={() => setDeleteDialogOpen(false)}>Annuler</Button>
+            <Button variant="destructive" size="sm" onClick={() => {
+              onLogoChange?.(null, deleteFromSettings)
+              setDeleteDialogOpen(false); setDeleteFromSettings(false)
+            }}>Supprimer</Button>
+          </div>
+        </Dialog>,
+        document.body,
+      )}
+
+      <LogoImportModal open={importModalOpen} onClose={() => setImportModalOpen(false)}
+        companyLogoUrl={companyLogoUrl}
+        onSelectCompanyLogo={(save) => onLogoChange?.(companyLogoUrl!, save)}
+        onSelectFile={(file, save) => onLogoUpload?.(file, save)} />
+    </>
+  )
+}
+
+/* ═══════════════════════════════════════════════════════════
    A4Sheet — main document component
    ═══════════════════════════════════════════════════════════ */
 
@@ -615,6 +899,10 @@ interface A4SheetProps {
   bankAccountInfo?: { bankName: string | null; iban: string | null; bic: string | null } | null
   paymentMethod?: string | null
   logoBorderRadius?: number
+  onLogoChange?: (logoUrl: string | null, saveToSettings: boolean) => void
+  onLogoBorderRadiusChange?: (radius: number) => void
+  companyLogoUrl?: string | null
+  onLogoUpload?: (file: File, saveToSettings: boolean) => void
   validationErrors?: string[]
   onAcceptanceConditionsChange?: (v: string) => void
   onFreeFieldChange?: (v: string) => void
@@ -639,6 +927,7 @@ export function A4Sheet({
   footerMode = 'company_info',
   documentType = 'quote',
   bankAccountInfo, paymentMethod, logoBorderRadius = 0,
+  onLogoChange, onLogoBorderRadiusChange, companyLogoUrl, onLogoUpload,
   validationErrors = [],
   onAcceptanceConditionsChange, onFreeFieldChange, onFooterTextChange, onDeliveryAddressChange,
   onIssueDateChange, onValidityDateChange,
@@ -728,7 +1017,11 @@ export function A4Sheet({
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      {logoUrl ? (
+                      {ed ? (
+                        <LogoEditor logoUrl={logoUrl} logoBorderRadius={logoBorderRadius} accentColor={accentColor}
+                          companyLogoUrl={companyLogoUrl} onLogoChange={onLogoChange} onLogoBorderRadiusChange={onLogoBorderRadiusChange}
+                          onLogoUpload={onLogoUpload} T={T} variant="banner" company={company} t={t} />
+                      ) : logoUrl ? (
                         <img src={logoUrl} alt="Logo" className="h-12 w-auto max-w-[100px] object-contain mb-1" style={{ borderRadius: `${logoBorderRadius}px` }} />
                       ) : (
                         <div className="text-[18px] font-bold" style={{ color: contrastText(accentColor) }}>
@@ -753,20 +1046,13 @@ export function A4Sheet({
                 <div className="flex justify-between items-start mb-5">
                   {/* Left: Logo + Company (all editable) */}
                   <div className="max-w-[55%]">
-                    {logoUrl ? (
+                    {ed ? (
+                      <LogoEditor logoUrl={logoUrl} logoBorderRadius={logoBorderRadius} accentColor={accentColor}
+                        companyLogoUrl={companyLogoUrl} onLogoChange={onLogoChange} onLogoBorderRadiusChange={onLogoBorderRadiusChange}
+                        onLogoUpload={onLogoUpload} T={T} variant="standard" company={company} t={t} />
+                    ) : logoUrl ? (
                       <img src={logoUrl} alt="Logo" className="h-14 w-auto max-w-[110px] object-contain mb-2" style={{ borderRadius: `${logoBorderRadius}px` }} />
-                    ) : (
-                      <div
-                        className="w-16 h-16 flex items-center justify-center mb-2 border-2 border-dashed"
-                        style={{
-                          background: `${accentColor}15`,
-                          borderColor: `${accentColor}66`,
-                          borderRadius: T.borderRadius,
-                        }}
-                      >
-                        <span className="text-[10px] font-medium" style={{ color: accentColor }}>Logo</span>
-                      </div>
-                    )}
+                    ) : null}
                     {company && (
                       <div className="text-[12px] leading-[1.6]" style={{ color: T.text }}>
                         <div>{ie(company.legalName, (v) => onCompanyFieldChange('legalName', v), `font-semibold text-[13px]`, t.society)}</div>
