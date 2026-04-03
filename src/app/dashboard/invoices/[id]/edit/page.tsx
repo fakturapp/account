@@ -45,7 +45,7 @@ function EditInvoiceContent() {
   const invoiceId = params.id as string
   const router = useRouter()
   const { toast } = useToast()
-  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings } = useInvoiceSettings()
+  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -264,6 +264,28 @@ function EditInvoiceContent() {
     setCompany((prev) => prev ? { ...prev, [field]: value } : prev)
     setIsDirty(true)
   }, [])
+
+  const handleLogoChange = useCallback((url: string | null, saveToSettings: boolean) => {
+    setLogoUrl(url)
+    if (saveToSettings) {
+      if (url === null) updateSettings({ logoUrl: null, logoSource: 'custom' })
+      else if (url === companyLogoUrl) updateSettings({ logoSource: 'company' })
+      else updateSettings({ logoUrl: url, logoSource: 'custom' })
+    }
+    setIsDirty(true)
+  }, [companyLogoUrl, updateSettings])
+
+  const handleLogoUpload = useCallback((file: File, saveToSettings: boolean) => {
+    const reader = new FileReader()
+    reader.onload = () => setLogoUrl(reader.result as string)
+    reader.readAsDataURL(file)
+    if (saveToSettings) { uploadLogo(file); updateSettings({ logoSource: 'custom' }) }
+    setIsDirty(true)
+  }, [uploadLogo, updateSettings])
+
+  const handleLogoBorderRadiusChange = useCallback((radius: number) => {
+    updateSettings({ logoBorderRadius: radius })
+  }, [updateSettings])
 
   const handleBankAccountChange = useCallback((id: string) => {
     setBankAccountId(id)
@@ -577,7 +599,7 @@ function EditInvoiceContent() {
             <AiSheetOverlay open={aiProcessing} />
             <A4Sheet
               mode={mode}
-              logoUrl={logoUrl || (invoiceSettings.logoSource === 'company' ? companyLogoUrl : invoiceSettings.logoUrl)}
+              logoUrl={logoUrl || (invoiceSettings.logoSource === 'company' ? companyLogoUrl : invoiceSettings.logoUrl) || companyLogoUrl}
               accentColor={accentColor}
               documentTitle={options.documentTitle}
               documentType="invoice"
@@ -639,6 +661,10 @@ function EditInvoiceContent() {
               onDeliveryAddressChange={(v) => handleOptionsChange({ deliveryAddress: v })}
               onIssueDateChange={(d) => handleOptionsChange({ issueDate: d })}
               onValidityDateChange={(d) => handleOptionsChange({ validityDate: d })}
+              companyLogoUrl={companyLogoUrl}
+              onLogoChange={handleLogoChange}
+              onLogoBorderRadiusChange={handleLogoBorderRadiusChange}
+              onLogoUpload={handleLogoUpload}
             />
             </div>
           </div>
