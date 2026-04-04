@@ -24,6 +24,7 @@ import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor 
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 import { SyncBroadcaster } from '@/components/collaboration/sync-broadcaster'
 import { setApplyingRemote } from '@/components/collaboration/use-broadcast'
+import { useAuth } from '@/lib/auth'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -48,6 +49,7 @@ function EditInvoiceContent() {
   const searchParams = useSearchParams()
   const invoiceId = params.id as string
   const router = useRouter()
+  const { user: authUser } = useAuth()
   const { toast } = useToast()
   const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
 
@@ -592,6 +594,7 @@ function EditInvoiceContent() {
           <CollaborationToolbar
             documentType="invoice"
             documentId={invoiceId}
+            isAdmin={authUser?.isAdmin}
             className="flex items-center gap-2"
           />
           <DocumentZoom value={docZoom} onChange={setDocZoom} />

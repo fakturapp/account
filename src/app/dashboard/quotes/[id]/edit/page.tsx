@@ -23,6 +23,7 @@ import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor 
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 import { SyncBroadcaster } from '@/components/collaboration/sync-broadcaster'
 import { setApplyingRemote } from '@/components/collaboration/use-broadcast'
+import { useAuth } from '@/lib/auth'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -47,6 +48,7 @@ function EditQuoteContent() {
   const params = useParams()
   const searchParams = useSearchParams()
   const quoteId = params.id as string
+  const { user: authUser } = useAuth()
   const { toast } = useToast()
   const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
 
@@ -549,6 +551,7 @@ function EditQuoteContent() {
           <CollaborationToolbar
             documentType="quote"
             documentId={quoteId}
+            isAdmin={authUser?.isAdmin}
             className="flex items-center gap-2"
           />
           <DocumentZoom value={docZoom} onChange={setDocZoom} />

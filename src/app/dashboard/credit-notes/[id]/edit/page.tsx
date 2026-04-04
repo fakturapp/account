@@ -20,6 +20,7 @@ import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor 
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 import { SyncBroadcaster } from '@/components/collaboration/sync-broadcaster'
 import { setApplyingRemote } from '@/components/collaboration/use-broadcast'
+import { useAuth } from '@/lib/auth'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -37,6 +38,7 @@ function EditCreditNoteContent() {
   const params = useParams()
   const searchParams = useSearchParams()
   const creditNoteId = params.id as string
+  const { user: authUser } = useAuth()
   const router = useRouter()
   const { toast } = useToast()
   const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
@@ -443,6 +445,7 @@ function EditCreditNoteContent() {
           <CollaborationToolbar
             documentType="credit_note"
             documentId={creditNoteId}
+            isAdmin={authUser?.isAdmin}
             className="flex items-center gap-2"
           />
           <div className="flex rounded-lg border border-border overflow-hidden">
