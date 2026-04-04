@@ -88,7 +88,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (user && isPublicPath) {
       // Let these pages handle their own "already logged in" state
-      if (pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/invite') || pathname.startsWith('/legal')) {
+      if (pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/invite') || pathname.startsWith('/legal') || pathname.startsWith('/share')) {
         return
       }
       if (!user.onboardingCompleted) {
