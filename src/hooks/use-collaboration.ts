@@ -41,6 +41,7 @@ export interface UseCollaborationOptions {
   documentId: string | null
   enabled?: boolean
   onDocumentChange?: (change: DocumentChange) => void
+  onDocumentSaved?: (savedByUserId: string) => void
   onAccessRevoked?: () => void
 }
 
@@ -63,6 +64,7 @@ export function useCollaboration({
   documentId,
   enabled = true,
   onDocumentChange,
+  onDocumentSaved,
   onAccessRevoked,
 }: UseCollaborationOptions): UseCollaborationReturn {
   const socketRef = useRef<Socket | null>(null)
@@ -77,6 +79,8 @@ export function useCollaboration({
   // Store latest callbacks in refs to avoid reconnecting on every render
   const onDocumentChangeRef = useRef(onDocumentChange)
   onDocumentChangeRef.current = onDocumentChange
+  const onDocumentSavedRef = useRef(onDocumentSaved)
+  onDocumentSavedRef.current = onDocumentSaved
   const onAccessRevokedRef = useRef(onAccessRevoked)
   onAccessRevokedRef.current = onAccessRevoked
 
@@ -174,6 +178,10 @@ export function useCollaboration({
 
     socket.on('permission-changed', (data: { permission: 'viewer' | 'editor' }) => {
       setMyPermission(data.permission)
+    })
+
+    socket.on('document-saved', (data: { savedByUserId: string }) => {
+      onDocumentSavedRef.current?.(data.savedByUserId)
     })
 
     socket.on('access-revoked', () => {
