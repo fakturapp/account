@@ -293,16 +293,24 @@ export function ShareModal({ open, onClose, documentType, documentId }: ShareMod
                   <Trash2 className="h-3.5 w-3.5" />
                 </Button>
               </div>
-              <div className="flex items-center gap-3 text-xs text-muted-foreground px-1">
-                <span className="flex items-center gap-1">
-                  {activeLink.visibility === 'anyone' ? (
-                    <><Globe className="h-3 w-3" /> Tout le monde</>
-                  ) : (
-                    <><Shield className="h-3 w-3" /> Equipe uniquement</>
-                  )}
-                </span>
+              <div className="flex items-center gap-2 px-1">
+                <Select
+                  value={activeLink.visibility}
+                  onChange={async (e) => {
+                    const vis = e.target.value as Visibility
+                    await api.patch(`/collaboration/share-links/${activeLink.id}`, { visibility: vis })
+                    setLinks((prev) =>
+                      prev.map((l) => (l.id === activeLink.id ? { ...l, visibility: vis } : l))
+                    )
+                    toast(vis === 'anyone' ? 'Lien accessible a tous' : 'Lien restreint a l\'equipe', 'success')
+                  }}
+                  className="h-7 text-xs w-[160px]"
+                >
+                  <option value="anyone">Tout le monde</option>
+                  <option value="team">Equipe uniquement</option>
+                </Select>
                 {activeLink.autoExpire && (
-                  <span className="text-amber-500">Expire quand vous quittez</span>
+                  <span className="text-[10px] text-amber-500">Expire quand vous quittez</span>
                 )}
               </div>
             </div>
