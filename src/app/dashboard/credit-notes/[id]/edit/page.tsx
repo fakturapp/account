@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
@@ -16,7 +16,7 @@ import { Save, ArrowLeft, Eye, Pencil, SlidersHorizontal, X, FileText } from 'lu
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { ProductCatalogModal, type CatalogProduct } from '@/components/products/product-catalog-modal'
-import { CollaborationToolbar, CollaborationReadOnlyBanner } from '@/components/collaboration/collaboration-toolbar'
+import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor } from '@/components/collaboration/collaboration-toolbar'
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 
 const fadeUp = {
@@ -42,6 +42,7 @@ function EditCreditNoteContent() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [mode, setMode] = useState<'edit' | 'preview'>('edit')
+  const editorAreaRef = useRef<HTMLDivElement>(null)
   const [creditNoteNumber, setCreditNoteNumber] = useState('')
   const [company, setCompany] = useState<CompanyInfo | null>(null)
   const [selectedClient, setSelectedClient] = useState<ClientInfo | null>(null)
@@ -448,6 +449,7 @@ function EditCreditNoteContent() {
       {/* Main content */}
       <div className="flex flex-col xl:flex-row gap-5">
         <motion.div variants={fadeUp} custom={1} className="flex-1 min-w-0 order-1">
+          <CollaborationEditor editorRef={editorAreaRef}>
           <div className="rounded-xl relative">
             <button onClick={() => setShowOptions(!showOptions)} className="absolute top-3 right-3 z-10 p-1.5 rounded-lg border border-border bg-card/80 backdrop-blur-sm text-muted-foreground hover:text-foreground transition-colors" title={showOptions ? 'Masquer les options' : 'Afficher les options'}>
               <SlidersHorizontal className="h-4 w-4" />
@@ -520,6 +522,7 @@ function EditCreditNoteContent() {
               onLogoUpload={handleLogoUpload}
             />
           </div>
+          </CollaborationEditor>
         </motion.div>
 
         <AnimatePresence>

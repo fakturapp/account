@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useCallback, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef, Suspense } from 'react'
 import { useRouter, useParams, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -19,7 +19,7 @@ import { Tabs } from '@/components/ui/tabs'
 import { AiChatSidebar } from '@/components/ai/ai-chat-sidebar'
 import { AiSheetOverlay } from '@/components/ai/ai-sheet-overlay'
 import { DocumentZoom, loadDocumentZoom } from '@/components/shared/document-zoom'
-import { CollaborationToolbar, CollaborationReadOnlyBanner } from '@/components/collaboration/collaboration-toolbar'
+import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor } from '@/components/collaboration/collaboration-toolbar'
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 
 const fadeUp = {
@@ -64,6 +64,7 @@ function EditQuoteContent() {
   const [showOptions, setShowOptions] = useState(true)
   const [sidebarTab, setSidebarTab] = useState<'options' | 'chat'>('options')
   const [aiProcessing, setAiProcessing] = useState(false)
+  const editorAreaRef = useRef<HTMLDivElement>(null)
 
   const [lines, setLines] = useState<DocumentLine[]>([])
 
@@ -559,6 +560,7 @@ function EditQuoteContent() {
       <div className="flex flex-col xl:flex-row gap-5">
         {/* A4 Sheet */}
         <motion.div variants={fadeUp} custom={1} className="flex-1 min-w-0 order-1">
+          <CollaborationEditor editorRef={editorAreaRef}>
           <div className="rounded-xl relative">
           {/* Toggle options + AI button */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
@@ -645,6 +647,7 @@ function EditQuoteContent() {
           />
           </div>
           </div>
+          </CollaborationEditor>
         </motion.div>
 
         {/* Right Sidebar */}
