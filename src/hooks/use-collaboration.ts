@@ -189,6 +189,10 @@ export function useCollaboration({
       onDocumentSavedRef.current?.(data.savedByUserId)
     })
 
+    socket.on('document-deleted', () => {
+      onAccessRevokedRef.current?.()
+    })
+
     socket.on('access-revoked', () => {
       onAccessRevokedRef.current?.()
     })
