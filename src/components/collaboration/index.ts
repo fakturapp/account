@@ -1,5 +1,6 @@
 export { ShareModal } from './share-modal'
 export { PresenceBar } from './presence-bar'
 export { LiveCursors } from './live-cursors'
-export { CollaborationToolbar, CollaborationEditor } from './collaboration-toolbar'
+export { CollaborationToolbar, CollaborationEditor, CollaborationReadOnlyBanner } from './collaboration-toolbar'
+export { CollaborationProvider, useCollaborationContext } from './collaboration-provider'
 export { ReadOnlyBanner } from './read-only-banner'

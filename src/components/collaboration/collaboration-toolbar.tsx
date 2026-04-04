@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useRef, useCallback, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/ui/toast'
-import { useCollaboration, type DocumentChange } from '@/hooks/use-collaboration'
 import { ShareModal } from '@/components/collaboration/share-modal'
 import { PresenceBar } from '@/components/collaboration/presence-bar'
 import { LiveCursors } from '@/components/collaboration/live-cursors'
+import { ReadOnlyBanner } from '@/components/collaboration/read-only-banner'
+import { useCollaborationContext } from '@/components/collaboration/collaboration-provider'
 import { Share2, Wifi, WifiOff } from 'lucide-react'
+import type { DocumentChange } from '@/hooks/use-collaboration'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -21,6 +22,7 @@ interface CollaborationToolbarProps {
 
 /**
  * Drop-in toolbar component for the editor header.
+ * Reads collaboration state from CollaborationProvider context.
  * Renders: Share button + PresenceBar + connection indicator.
  */
 export function CollaborationToolbar({
@@ -29,20 +31,11 @@ export function CollaborationToolbar({
   className,
 }: CollaborationToolbarProps) {
   const [shareOpen, setShareOpen] = useState(false)
-  const { addToast } = useToast()
+  const collab = useCollaborationContext()
 
-  const {
-    collaborators,
-    isConnected,
-  } = useCollaboration({
-    documentType,
-    documentId,
-    enabled: !!documentId,
-    onAccessRevoked: () => {
-      addToast("Votre acces a ce document a ete revoque", 'error')
-      window.location.href = '/dashboard'
-    },
-  })
+  const collaborators = collab?.collaborators ?? []
+  const isConnected = collab?.isConnected ?? false
+  const myPermission = collab?.myPermission
 
   return (
     <>
@@ -61,8 +54,8 @@ export function CollaborationToolbar({
         {/* Presence avatars */}
         <PresenceBar collaborators={collaborators} />
 
-        {/* Share button */}
-        {documentId && (
+        {/* Share button — only owners can share */}
+        {documentId && myPermission === 'editor' && (
           <Button
             variant="outline"
             size="sm"
@@ -88,55 +81,42 @@ export function CollaborationToolbar({
   )
 }
 
+// ── Read-only banner (uses context) ───────────────────────────────────────
+
+export function CollaborationReadOnlyBanner() {
+  const collab = useCollaborationContext()
+  if (!collab || collab.myPermission !== 'viewer') return null
+  return <ReadOnlyBanner />
+}
+
 // ── Collaboration wrapper for the editor area ─────────────────────────────
 
 interface CollaborationEditorProps {
-  documentType: DocumentType
-  documentId: string | null
   /** Ref to the A4Sheet container for cursor positioning */
   editorRef: React.RefObject<HTMLDivElement | null>
-  /** Called when a remote user changes a field */
-  onRemoteChange?: (change: DocumentChange) => void
   children: React.ReactNode
 }
 
 /**
  * Wraps the editor area to add live cursors and cursor tracking.
+ * Reads collaboration state from CollaborationProvider context.
  */
 export function CollaborationEditor({
-  documentType,
-  documentId,
   editorRef,
-  onRemoteChange,
   children,
 }: CollaborationEditorProps) {
-  const { addToast } = useToast()
+  const collab = useCollaborationContext()
 
-  const {
-    collaborators,
-    cursors,
-    focusedFields,
-    myPermission,
-    isConnected,
-    sendCursorMove,
-    sendDocumentChange,
-    sendFieldFocus,
-    sendFieldBlur,
-  } = useCollaboration({
-    documentType,
-    documentId,
-    enabled: !!documentId,
-    onDocumentChange: onRemoteChange,
-    onAccessRevoked: () => {
-      addToast("Votre acces a ce document a ete revoque", 'error')
-      window.location.href = '/dashboard'
-    },
-  })
+  const collaborators = collab?.collaborators ?? []
+  const cursors = collab?.cursors ?? new Map()
+  const isConnected = collab?.isConnected ?? false
+  const myPermission = collab?.myPermission
+  const sendCursorMove = collab?.sendCursorMove
 
   // Track mouse position for cursor broadcasting
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
-      if (!editorRef.current || !isConnected) return
+      if (!editorRef.current || !isConnected || !sendCursorMove) return
       const rect = editorRef.current.getBoundingClientRect()
       sendCursorMove(
         e.clientX - rect.left,

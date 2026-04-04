@@ -16,7 +16,8 @@ import { Save, ArrowLeft, Eye, Pencil, SlidersHorizontal, X, FileText } from 'lu
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useUnsavedChanges } from '@/hooks/use-unsaved-changes'
 import { ProductCatalogModal, type CatalogProduct } from '@/components/products/product-catalog-modal'
-import { CollaborationToolbar } from '@/components/collaboration/collaboration-toolbar'
+import { CollaborationToolbar, CollaborationReadOnlyBanner } from '@/components/collaboration/collaboration-toolbar'
+import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -383,7 +384,18 @@ function EditCreditNoteContent() {
   }
 
   return (
+    <CollaborationProvider
+      documentType="credit_note"
+      documentId={creditNoteId}
+      enabled={!!creditNoteId}
+      onAccessRevoked={() => {
+        toast('Votre acces a ce document a ete revoque', 'error')
+        router.push('/dashboard')
+      }}
+    >
     <motion.div initial="hidden" animate="visible" className="space-y-5 px-4 lg:px-6 py-4 md:py-5">
+      <CollaborationReadOnlyBanner />
+
       {/* Header */}
       <motion.div variants={fadeUp} custom={0} className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -598,6 +610,7 @@ function EditCreditNoteContent() {
         </DialogFooter>
       </Dialog>
     </motion.div>
+    </CollaborationProvider>
   )
 }
 

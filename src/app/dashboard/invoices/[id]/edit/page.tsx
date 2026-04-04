@@ -20,7 +20,8 @@ import { Tabs } from '@/components/ui/tabs'
 import { AiChatSidebar } from '@/components/ai/ai-chat-sidebar'
 import { AiSheetOverlay } from '@/components/ai/ai-sheet-overlay'
 import { DocumentZoom, loadDocumentZoom } from '@/components/shared/document-zoom'
-import { CollaborationToolbar } from '@/components/collaboration/collaboration-toolbar'
+import { CollaborationToolbar, CollaborationReadOnlyBanner } from '@/components/collaboration/collaboration-toolbar'
+import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -526,7 +527,19 @@ function EditInvoiceContent() {
   }
 
   return (
+    <CollaborationProvider
+      documentType="invoice"
+      documentId={invoiceId}
+      enabled={!!invoiceId}
+      onAccessRevoked={() => {
+        toast('Votre acces a ce document a ete revoque', 'error')
+        router.push('/dashboard')
+      }}
+    >
     <motion.div initial="hidden" animate="visible" className="space-y-5 px-4 lg:px-6 py-4 md:py-5">
+      {/* Read-only banner for viewers */}
+      <CollaborationReadOnlyBanner />
+
       {/* Header */}
       <motion.div variants={fadeUp} custom={0} className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -840,6 +853,7 @@ function EditInvoiceContent() {
         </DialogFooter>
       </Dialog>
     </motion.div>
+    </CollaborationProvider>
   )
 }
 
