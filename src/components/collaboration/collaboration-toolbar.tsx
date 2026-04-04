@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { ShareModal } from '@/components/collaboration/share-modal'
 import { PresenceBar } from '@/components/collaboration/presence-bar'
@@ -8,7 +8,6 @@ import { LiveCursors } from '@/components/collaboration/live-cursors'
 import { ReadOnlyBanner } from '@/components/collaboration/read-only-banner'
 import { useCollaborationContext } from '@/components/collaboration/collaboration-provider'
 import { Share2, Wifi, WifiOff } from 'lucide-react'
-import type { DocumentChange } from '@/hooks/use-collaboration'
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -23,7 +22,6 @@ interface CollaborationToolbarProps {
 /**
  * Drop-in toolbar component for the editor header.
  * Reads collaboration state from CollaborationProvider context.
- * Renders: Share button + PresenceBar + connection indicator.
  */
 export function CollaborationToolbar({
   documentType,
@@ -36,7 +34,6 @@ export function CollaborationToolbar({
   const collaborators = collab?.collaborators ?? []
   const isConnected = collab?.isConnected ?? false
   const isOwner = collab?.isOwner ?? false
-  const myPermission = collab?.myPermission
 
   return (
     <>
@@ -100,7 +97,8 @@ interface CollaborationEditorProps {
 
 /**
  * Wraps the editor area to add live cursors and cursor tracking.
- * Reads collaboration state from CollaborationProvider context.
+ * Uses percentage-based coordinates (0-1) so cursors are accurate
+ * regardless of screen size, zoom level, or scroll position.
  */
 export function CollaborationEditor({
   editorRef,
@@ -114,20 +112,20 @@ export function CollaborationEditor({
   const myPermission = collab?.myPermission
   const sendCursorMove = collab?.sendCursorMove
 
-  // Track mouse position for cursor broadcasting
+  // Send cursor as percentage (0-1) of container dimensions
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!editorRef.current || !isConnected || !sendCursorMove) return
       const rect = editorRef.current.getBoundingClientRect()
-      sendCursorMove(
-        e.clientX - rect.left,
-        e.clientY - rect.top
-      )
+      if (rect.width === 0 || rect.height === 0) return
+      // Normalize to 0-1 range
+      const xPct = (e.clientX - rect.left) / rect.width
+      const yPct = (e.clientY - rect.top) / rect.height
+      sendCursorMove(xPct, yPct)
     },
     [editorRef, isConnected, sendCursorMove]
   )
 
-  // Read-only overlay for viewers
   const isReadOnly = myPermission === 'viewer'
 
   return (

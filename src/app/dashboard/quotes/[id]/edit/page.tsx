@@ -21,6 +21,7 @@ import { AiSheetOverlay } from '@/components/ai/ai-sheet-overlay'
 import { DocumentZoom, loadDocumentZoom } from '@/components/shared/document-zoom'
 import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor } from '@/components/collaboration/collaboration-toolbar'
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
+import { SyncBroadcaster } from '@/components/collaboration/sync-broadcaster'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -493,6 +494,17 @@ function EditQuoteContent() {
       documentType="quote"
       documentId={quoteId}
       enabled={!!quoteId}
+      onDocumentChange={(change) => {
+        if (change.path === 'notes') setNotes(change.value)
+        else if (change.path === 'accentColor') setAccentColor(change.value)
+        else if (change.path === 'lines') setLines(change.value)
+        else if (change.path === 'invoiceNumber') setQuoteNumber(change.value)
+        else if (change.path === 'client') setSelectedClient(change.value)
+        else if (change.path.startsWith('options.')) {
+          const key = change.path.replace('options.', '')
+          setOptions((prev) => ({ ...prev, [key]: change.value }))
+        }
+      }}
       onDocumentSaved={() => {
         toast('Le document a ete mis a jour par un collaborateur', 'info')
       }}
@@ -503,6 +515,14 @@ function EditQuoteContent() {
     >
     <motion.div initial="hidden" animate="visible" className="space-y-5 px-4 lg:px-6 py-4 md:py-5">
       <CollaborationReadOnlyBanner />
+      <SyncBroadcaster
+        notes={notes}
+        accentColor={accentColor}
+        lines={lines}
+        options={options}
+        documentNumber={quoteNumber}
+        selectedClient={selectedClient}
+      />
 
       {/* ── Header ── */}
       <motion.div variants={fadeUp} custom={0} className="flex items-center justify-between">

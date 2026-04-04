@@ -1,25 +1,43 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { CollaboratorInfo, CursorPosition } from '@/hooks/use-collaboration'
 
 interface LiveCursorsProps {
   cursors: Map<string, CursorPosition>
   collaborators: CollaboratorInfo[]
-  /** Ref to the container element for relative positioning */
+  /** Ref to the container for converting % coords to local pixels */
   containerRef: React.RefObject<HTMLElement | null>
 }
 
 function getDisplayName(collab: CollaboratorInfo): string {
   if (collab.fullName) {
-    const parts = collab.fullName.split(' ')
-    return parts[0] // First name only for cursor label
+    return collab.fullName.split(' ')[0]
   }
   return collab.email.split('@')[0]
 }
 
 export function LiveCursors({ cursors, collaborators, containerRef }: LiveCursorsProps) {
   const collabMap = new Map(collaborators.map((c) => [c.userId, c]))
+  const [containerSize, setContainerSize] = useState({ w: 0, h: 0 })
+
+  // Track container size changes (zoom, resize)
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+
+    const update = () => {
+      setContainerSize({ w: el.offsetWidth, h: el.offsetHeight })
+    }
+    update()
+
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [containerRef])
+
+  if (containerSize.w === 0) return null
 
   return (
     <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden">
@@ -28,6 +46,13 @@ export function LiveCursors({ cursors, collaborators, containerRef }: LiveCursor
           const collab = collabMap.get(userId)
           if (!collab) return null
 
+          // Convert percentage (0-1) to local pixels
+          const localX = pos.x * containerSize.w
+          const localY = pos.y * containerSize.h
+
+          // Skip if out of bounds
+          if (pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1) return null
+
           return (
             <motion.div
               key={userId}
@@ -35,15 +60,15 @@ export function LiveCursors({ cursors, collaborators, containerRef }: LiveCursor
               animate={{
                 opacity: 1,
                 scale: 1,
-                x: pos.x,
-                y: pos.y,
+                x: localX,
+                y: localY,
               }}
               exit={{ opacity: 0, scale: 0.5 }}
               transition={{
-                x: { type: 'spring', stiffness: 500, damping: 28, mass: 0.5 },
-                y: { type: 'spring', stiffness: 500, damping: 28, mass: 0.5 },
-                opacity: { duration: 0.2 },
-                scale: { duration: 0.2 },
+                x: { type: 'spring', stiffness: 400, damping: 25, mass: 0.5 },
+                y: { type: 'spring', stiffness: 400, damping: 25, mass: 0.5 },
+                opacity: { duration: 0.15 },
+                scale: { duration: 0.15 },
               }}
               className="absolute top-0 left-0"
               style={{ willChange: 'transform' }}
