@@ -108,6 +108,11 @@ export function useCollaboration({
 
     socket.on('disconnect', () => {
       setIsConnected(false)
+      setCursors(new Map()) // Clear cursors on disconnect
+    })
+
+    socket.on('connect_error', (err) => {
+      console.warn('[collaboration] connection error:', err.message)
     })
 
     socket.on('room-joined', (data: {
@@ -149,7 +154,7 @@ export function useCollaboration({
     socket.on('cursor-moved', (data: CursorPosition) => {
       setCursors((prev) => {
         const next = new Map(prev)
-        next.set(data.userId, data)
+        next.set(data.userId, { ...data, _ts: Date.now() } as any)
         return next
       })
     })
@@ -196,7 +201,24 @@ export function useCollaboration({
       console.error('[collaboration]', data.message)
     })
 
+    // Clean up stale cursors every 5s (remove if no update for 5s)
+    const cursorCleanup = setInterval(() => {
+      setCursors((prev) => {
+        const now = Date.now()
+        let changed = false
+        const next = new Map(prev)
+        for (const [userId, pos] of next) {
+          if (now - ((pos as any)._ts || 0) > 5000) {
+            next.delete(userId)
+            changed = true
+          }
+        }
+        return changed ? next : prev
+      })
+    }, 5000)
+
     return () => {
+      clearInterval(cursorCleanup)
       socket.emit('leave-document')
       socket.disconnect()
       socketRef.current = null
