@@ -492,6 +492,9 @@ function EditQuoteContent() {
       documentType="quote"
       documentId={quoteId}
       enabled={!!quoteId}
+      onDocumentSaved={() => {
+        toast('Le document a ete mis a jour par un collaborateur', 'info')
+      }}
       onAccessRevoked={() => {
         toast('Votre acces a ce document a ete revoque', 'error')
         router.push('/dashboard')
