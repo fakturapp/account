@@ -33,6 +33,16 @@ const OAUTH_ERRORS: Record<string, string> = {
   account_inactive: 'Ce compte est désactivé.',
 }
 
+function getPostLoginRedirect(onboardingCompleted: boolean): string {
+  if (!onboardingCompleted) return '/onboarding/team'
+  const shareRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('faktur_share_redirect') : null
+  if (shareRedirect) {
+    sessionStorage.removeItem('faktur_share_redirect')
+    return shareRedirect
+  }
+  return '/dashboard'
+}
+
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -71,11 +81,7 @@ function LoginContent() {
           return
         }
         login(token, data.user)
-        if (!data.user.onboardingCompleted) {
-          router.push('/onboarding/team')
-        } else {
-          router.push('/dashboard')
-        }
+        router.push(getPostLoginRedirect(data.user.onboardingCompleted))
       })
     } else if (oauthError) {
       window.history.replaceState({}, '', '/login')
@@ -124,11 +130,7 @@ function LoginContent() {
 
       if (data?.token && data?.user) {
         login(data.token, data.user, data.vaultKey)
-        if (!data.user.onboardingCompleted) {
-          router.push('/onboarding/team')
-        } else {
-          router.push('/dashboard')
-        }
+        router.push(getPostLoginRedirect(data.user.onboardingCompleted))
       }
     } catch (err: any) {
       setPasskeyLoading(false)
@@ -154,11 +156,7 @@ function LoginContent() {
       if (err) return setError(err)
       if (data?.token) {
         login(data.token, data.user)
-        if (!data.user.onboardingCompleted) {
-          router.push('/onboarding/team')
-        } else {
-          router.push('/dashboard')
-        }
+        router.push(getPostLoginRedirect(data.user.onboardingCompleted))
       }
       return
     }
@@ -192,11 +190,7 @@ function LoginContent() {
 
     if (data?.token && data?.user) {
       login(data.token, data.user, data.vaultKey)
-      if (!data.user.onboardingCompleted) {
-        router.push('/onboarding/team')
-      } else {
-        router.push('/dashboard')
-      }
+      router.push(getPostLoginRedirect(data.user.onboardingCompleted))
     }
   }
 
