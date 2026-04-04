@@ -49,14 +49,6 @@ export function CollaborationToolbar({
   return (
     <>
       <div className={className}>
-        {/* Beta badge */}
-        {documentId && (
-          <div className="flex items-center gap-1 rounded-full bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 text-[10px] font-semibold text-purple-500 uppercase tracking-wider">
-            <FlaskConical className="h-3 w-3" />
-            Beta
-          </div>
-        )}
-
         {/* Connection indicator */}
         {documentId && collaborators.length > 0 && (
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground mr-1" title={isConnected ? 'Connecte en temps reel' : 'Reconnexion...'}>
@@ -71,16 +63,20 @@ export function CollaborationToolbar({
         {/* Presence avatars */}
         <PresenceBar collaborators={collaborators} />
 
-        {/* Share button */}
+        {/* Share button with beta badge */}
         {documentId && (
           <Button
             variant="outline"
             size="sm"
             onClick={handleShareClick}
-            className="gap-1.5"
+            className="gap-1.5 relative"
           >
             <Share2 className="h-3.5 w-3.5" />
             Partager
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-purple-500/10 border border-purple-500/20 px-1.5 py-px text-[9px] font-bold text-purple-500 uppercase tracking-wider">
+              <FlaskConical className="h-2.5 w-2.5" />
+              Beta
+            </span>
           </Button>
         )}
       </div>
