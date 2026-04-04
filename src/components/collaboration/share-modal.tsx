@@ -33,10 +33,14 @@ interface ShareEntry {
   createdAt: string
 }
 
+type Visibility = 'team' | 'anyone'
+
 interface ShareLinkEntry {
   id: string
   token: string
   permission: Permission
+  visibility: Visibility
+  autoExpire: boolean
   isActive: boolean
   expiresAt: string | null
   createdAt: string
@@ -83,6 +87,8 @@ export function ShareModal({ open, onClose, documentType, documentId }: ShareMod
   const [inviteEmail, setInviteEmail] = useState('')
   const [invitePermission, setInvitePermission] = useState<Permission>('viewer')
   const [linkPermission, setLinkPermission] = useState<Permission>('viewer')
+  const [linkVisibility, setLinkVisibility] = useState<Visibility>('anyone')
+  const [linkAutoExpire, setLinkAutoExpire] = useState(true)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
   const [inviting, setInviting] = useState(false)
@@ -116,6 +122,8 @@ export function ShareModal({ open, onClose, documentType, documentId }: ShareMod
       documentType,
       documentId,
       permission: linkPermission,
+      visibility: linkVisibility,
+      autoExpire: linkAutoExpire,
     })
     if (error) {
       toast(error, 'error')
@@ -239,58 +247,93 @@ export function ShareModal({ open, onClose, documentType, documentId }: ShareMod
           </label>
 
           {activeLink ? (
-            <div className="flex items-center gap-2 rounded-lg border border-border bg-background/50 p-2.5">
-              <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <span className="flex-1 truncate text-sm text-muted-foreground">
-                {FRONTEND_URL}/share/{activeLink.token.slice(0, 12)}...
-              </span>
-              <Select
-                value={activeLink.permission}
-                onChange={async (e) => {
-                  const perm = e.target.value as Permission
-                  await api.patch(`/collaboration/share-links/${activeLink.id}`, { permission: perm })
-                  setLinks((prev) =>
-                    prev.map((l) => (l.id === activeLink.id ? { ...l, permission: perm } : l))
-                  )
-                }}
-                className="h-8 w-[130px] text-xs"
-              >
-                <option value="viewer">Lecture seule</option>
-                <option value="editor">Peut modifier</option>
-              </Select>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={() => copyLink(activeLink.token)}
-                title="Copier le lien"
-              >
-                {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-destructive"
-                onClick={() => deleteShareLink(activeLink.id)}
-                title="Desactiver le lien"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </Button>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-background/50 p-2.5">
+                <Globe className="h-4 w-4 shrink-0 text-muted-foreground" />
+                <span className="flex-1 truncate text-sm text-muted-foreground">
+                  {FRONTEND_URL}/share/{activeLink.token.slice(0, 12)}...
+                </span>
+                <Select
+                  value={activeLink.permission}
+                  onChange={async (e) => {
+                    const perm = e.target.value as Permission
+                    await api.patch(`/collaboration/share-links/${activeLink.id}`, { permission: perm })
+                    setLinks((prev) =>
+                      prev.map((l) => (l.id === activeLink.id ? { ...l, permission: perm } : l))
+                    )
+                  }}
+                  className="h-8 w-[120px] text-xs"
+                >
+                  <option value="viewer">Lecture seule</option>
+                  <option value="editor">Peut modifier</option>
+                </Select>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={() => copyLink(activeLink.token)}
+                  title="Copier le lien"
+                >
+                  {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive"
+                  onClick={() => deleteShareLink(activeLink.id)}
+                  title="Desactiver le lien"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+              <div className="flex items-center gap-3 text-xs text-muted-foreground px-1">
+                <span className="flex items-center gap-1">
+                  {activeLink.visibility === 'anyone' ? (
+                    <><Globe className="h-3 w-3" /> Tout le monde</>
+                  ) : (
+                    <><Shield className="h-3 w-3" /> Equipe uniquement</>
+                  )}
+                </span>
+                {activeLink.autoExpire && (
+                  <span className="text-amber-500">Expire quand vous quittez</span>
+                )}
+              </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Select
-                value={linkPermission}
-                onChange={(e) => setLinkPermission(e.target.value as Permission)}
-                className="w-[140px]"
-              >
-                <option value="viewer">Lecture seule</option>
-                <option value="editor">Peut modifier</option>
-              </Select>
-              <Button variant="outline" onClick={createShareLink} className="gap-2">
-                <Link2 className="h-4 w-4" />
-                Generer un lien
-              </Button>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <Select
+                  value={linkPermission}
+                  onChange={(e) => setLinkPermission(e.target.value as Permission)}
+                  className="w-[130px]"
+                >
+                  <option value="viewer">Lecture seule</option>
+                  <option value="editor">Peut modifier</option>
+                </Select>
+                <Select
+                  value={linkVisibility}
+                  onChange={(e) => setLinkVisibility(e.target.value as Visibility)}
+                  className="w-[150px]"
+                >
+                  <option value="anyone">Tout le monde</option>
+                  <option value="team">Equipe uniquement</option>
+                </Select>
+                <Button variant="outline" onClick={createShareLink} className="gap-1.5 shrink-0">
+                  <Link2 className="h-4 w-4" />
+                  Generer
+                </Button>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer px-1">
+                <input
+                  type="checkbox"
+                  checked={linkAutoExpire}
+                  onChange={(e) => setLinkAutoExpire(e.target.checked)}
+                  className="h-3.5 w-3.5 rounded border-border accent-primary"
+                />
+                <span className="text-xs text-muted-foreground">
+                  Desactiver le lien quand je quitte la page
+                </span>
+              </label>
             </div>
           )}
         </div>
