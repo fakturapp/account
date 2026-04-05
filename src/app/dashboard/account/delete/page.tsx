@@ -263,63 +263,36 @@ export default function DeleteAccountPage() {
       className="max-w-2xl mx-auto px-4 lg:px-6 py-4 md:py-6 space-y-6"
     >
       {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.push('/dashboard/account')}
-          className="shrink-0"
-        >
-          <ArrowLeft className="h-4 w-4 mr-1.5" /> Retour
-        </Button>
+      <div className="flex items-center gap-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-destructive/10">
+          <Trash2 className="h-6 w-6 text-destructive" />
+        </div>
         <div>
           <h1 className="text-xl font-bold text-destructive">Supprimer mon compte</h1>
-          <p className="text-sm text-muted-foreground">Cette action est définitive et irréversible.</p>
+          <p className="text-sm text-muted-foreground">Cette action est d&eacute;finitive et irr&eacute;versible.</p>
         </div>
       </div>
 
       {/* Step indicator */}
-      <div className="flex items-center justify-between px-2">
-        {steps.map((step, i) => {
-          const Icon = step.icon
-          const isActive = i === currentStep
-          const isCompleted = i < currentStep
-          return (
-            <div key={i} className="flex items-center gap-0 flex-1 last:flex-none">
-              <div className="flex flex-col items-center gap-1.5">
-                <div
-                  className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all duration-300 ${
-                    isCompleted
-                      ? 'bg-destructive border-destructive text-white'
-                      : isActive
-                        ? 'border-destructive text-destructive bg-destructive/10'
-                        : 'border-muted-foreground/30 text-muted-foreground/50'
-                  }`}
-                >
-                  {isCompleted ? (
-                    <Check className="h-4 w-4" />
-                  ) : (
-                    <Icon className="h-4 w-4" />
-                  )}
-                </div>
-                <span
-                  className={`text-[10px] font-medium hidden sm:block ${
-                    isActive ? 'text-destructive' : isCompleted ? 'text-foreground' : 'text-muted-foreground/50'
-                  }`}
-                >
-                  {step.label}
-                </span>
-              </div>
-              {i < steps.length - 1 && (
-                <div
-                  className={`h-0.5 flex-1 mx-1.5 rounded-full transition-colors duration-300 ${
-                    i < currentStep ? 'bg-destructive' : 'bg-muted-foreground/20'
-                  }`}
-                />
-              )}
-            </div>
-          )
-        })}
+      <div className="rounded-2xl border border-border bg-card p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-semibold text-muted-foreground">
+            &Eacute;tape {currentStep + 1} sur {steps.length}
+          </p>
+          <p className="text-xs font-medium text-destructive">
+            {steps[currentStep].label}
+          </p>
+        </div>
+        <div className="flex gap-1 mt-2.5">
+          {steps.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                i < currentStep ? 'bg-destructive' : i === currentStep ? 'bg-destructive/60' : 'bg-muted'
+              }`}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Step content */}
