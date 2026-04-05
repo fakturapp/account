@@ -260,7 +260,7 @@ export default function DeleteAccountPage() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="max-w-2xl mx-auto px-4 lg:px-6 py-4 md:py-6 space-y-6"
+      className="max-w-2xl mx-auto space-y-6"
     >
       {/* Header */}
       <div className="flex items-center gap-4">

@@ -579,7 +579,7 @@ export default function AccountPage() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 px-4 lg:px-6 py-4 md:py-6"
+      className="space-y-6"
     >
       {/* Profile tab */}
       {activeTab === 'profile' && (
