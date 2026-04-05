@@ -13,7 +13,6 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { SecurityVerificationModal } from '@/components/modals/security-verification-modal'
-import { ExportModal } from '@/components/modals/export-modal'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/components/ui/toast'
 import { api } from '@/lib/api'
@@ -1033,29 +1032,7 @@ export default function AccountPage() {
         </div>
       )}
 
-      {/* Export tab */}
-      {activeTab === 'export' && (
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex flex-col items-center text-center gap-4 py-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                <Download className="h-8 w-8 text-primary" />
-              </div>
-              <div>
-                <h3 className="font-semibold text-foreground text-lg">Exporter les données</h3>
-                <p className="text-sm text-muted-foreground mt-1 max-w-md">
-                  Téléchargez toutes les données d&apos;une équipe (factures, devis, clients, paramètres, logos) dans un fichier archive. Vous pouvez optionnellement chiffrer l&apos;export.
-                </p>
-              </div>
-              <Button onClick={() => setExportModalOpen(true)} size="lg">
-                <Download className="h-4 w-4 mr-2" /> Lancer l&apos;export
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Export modal */}
+      {/* Modals */}
       {/* Name edit modal */}
       <Dialog open={nameModalOpen} onClose={() => setNameModalOpen(false)} className="max-w-sm">
         <DialogTitle>Modifier le pseudo</DialogTitle>
@@ -1088,7 +1065,6 @@ export default function AccountPage() {
         </form>
       </Dialog>
 
-      <ExportModal open={exportModalOpen} onClose={() => setExportModalOpen(false)} />
 
       {/* Security Verification Modal */}
       <SecurityVerificationModal
