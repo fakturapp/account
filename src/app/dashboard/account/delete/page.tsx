@@ -168,7 +168,7 @@ export default function DeleteAccountPage() {
     if (error) return toast(error, 'error')
     setTeams((prev) => prev.filter((t) => t.id !== transferDialog.id))
     setTransferDialog(null)
-    toast('Propriété transférée', 'success')
+    toast('Propriété transférée et équipe quittée', 'success')
   }
 
   // Step 2: Leave team
