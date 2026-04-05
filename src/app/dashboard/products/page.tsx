@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
 import { api } from '@/lib/api'
 import { ProductPanel } from '@/components/products/product-panel'
 import {
@@ -60,6 +61,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState<ProductListItem[]>([])
   const [search, setSearch] = useState('')
   const [filterType, setFilterType] = useState<'all' | 'service' | 'product' | 'archived'>('all')
+  const [page, setPage] = useState(1)
   const [panelOpen, setPanelOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState<ProductListItem | null>(null)
 
@@ -127,6 +129,11 @@ export default function ProductsPage() {
     const matchesType = filterType === 'all' || p.saleType === filterType
     return matchesSearch && matchesType
   })
+
+  const PER_PAGE = 20
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paginatedProducts = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const paginationMeta = filtered.length > PER_PAGE ? { total: filtered.length, perPage: PER_PAGE, currentPage: page, lastPage: totalPages } : null
 
   const serviceCount = products.filter((p) => p.saleType === 'service' && !p.isArchived).length
   const productCount = products.filter((p) => p.saleType === 'product' && !p.isArchived).length
@@ -252,7 +259,7 @@ export default function ProductsPage() {
         </motion.div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((product, i) => (
+          {paginatedProducts.map((product, i) => (
             <motion.div key={product.id} variants={fadeUp} custom={3 + i * 0.3}>
               <div
                 onClick={() => handleEdit(product)}
@@ -344,6 +351,8 @@ export default function ProductsPage() {
           ))}
         </div>
       )}
+
+      <Pagination meta={paginationMeta} onPageChange={(p) => { setPage(p); window.scrollTo(0, 0) }} />
 
       {/* Create/Edit panel */}
       <ProductPanel

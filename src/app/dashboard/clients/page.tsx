@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
 import { api } from '@/lib/api'
 import {
   Plus,
@@ -51,6 +52,7 @@ export default function ClientsPage() {
   const [loading, setLoading] = useState(true)
   const [clients, setClients] = useState<ClientListItem[]>([])
   const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
   const [filterType, setFilterType] = useState<'all' | 'company' | 'individual'>('all')
 
   useEffect(() => {
@@ -75,6 +77,11 @@ export default function ClientsPage() {
     const matchesType = filterType === 'all' || c.type === filterType
     return matchesSearch && matchesType
   })
+
+  const PER_PAGE = 20
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paginatedClients = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const paginationMeta = filtered.length > PER_PAGE ? { total: filtered.length, perPage: PER_PAGE, currentPage: page, lastPage: totalPages } : null
 
   const companyCount = clients.filter((c) => c.type === 'company').length
   const individualCount = clients.filter((c) => c.type === 'individual').length
@@ -212,7 +219,7 @@ export default function ClientsPage() {
         </motion.div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((client, i) => (
+          {paginatedClients.map((client, i) => (
             <motion.div key={client.id} variants={fadeUp} custom={3 + i * 0.3}>
             <Link
               href={`/dashboard/clients/${client.id}/edit`}
@@ -277,6 +284,7 @@ export default function ClientsPage() {
         </div>
       )}
 
+      <Pagination meta={paginationMeta} onPageChange={(p) => { setPage(p); window.scrollTo(0, 0) }} />
     </motion.div>
   )
 }

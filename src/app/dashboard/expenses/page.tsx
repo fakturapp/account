@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
@@ -62,6 +63,7 @@ export default function ExpensesPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState<ExpenseListItem[]>([])
+  const [page, setPage] = useState(1)
   const [totals, setTotals] = useState<Totals>({ amount: 0, vat: 0, ttc: 0 })
   const [search, setSearch] = useState('')
   const [panelOpen, setPanelOpen] = useState(false)
@@ -120,9 +122,14 @@ export default function ExpensesPage() {
     )
   })
 
-  // Group by month
+  const PER_PAGE = 20
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paginatedExpenses = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const expensePaginationMeta = filtered.length > PER_PAGE ? { total: filtered.length, perPage: PER_PAGE, currentPage: page, lastPage: totalPages } : null
+
+  // Group by month (paginated)
   const grouped: Record<string, ExpenseListItem[]> = {}
-  for (const item of filtered) {
+  for (const item of paginatedExpenses) {
     const key = item.expenseDate.slice(0, 7) // YYYY-MM
     if (!grouped[key]) grouped[key] = []
     grouped[key].push(item)
@@ -330,6 +337,8 @@ export default function ExpensesPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      <Pagination meta={expensePaginationMeta} onPageChange={(p) => { setPage(p); window.scrollTo(0, 0) }} />
     </motion.div>
   )
 }

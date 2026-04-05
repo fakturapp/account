@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Pagination } from '@/components/ui/pagination'
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { api } from '@/lib/api'
@@ -64,6 +65,7 @@ export default function RecurringInvoicesPage() {
   const { toast } = useToast()
   const [loading, setLoading] = useState(true)
   const [items, setItems] = useState<RecurringListItem[]>([])
+  const [page, setPage] = useState(1)
   const [search, setSearch] = useState('')
   const [filterActive, setFilterActive] = useState<'all' | 'active' | 'paused'>('all')
   const [panelOpen, setPanelOpen] = useState(false)
@@ -146,6 +148,11 @@ export default function RecurringInvoicesPage() {
       item.clientName?.toLowerCase().includes(s)
     )
   })
+
+  const PER_PAGE = 20
+  const totalPages = Math.ceil(filtered.length / PER_PAGE)
+  const paginatedItems = filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE)
+  const paginationMeta = filtered.length > PER_PAGE ? { total: filtered.length, perPage: PER_PAGE, currentPage: page, lastPage: totalPages } : null
 
   const activeCount = items.filter((i) => i.isActive).length
   const pausedCount = items.filter((i) => !i.isActive).length
@@ -270,7 +277,7 @@ export default function RecurringInvoicesPage() {
         </motion.div>
       ) : (
         <div className="space-y-2">
-          {filtered.map((item, i) => (
+          {paginatedItems.map((item, i) => (
             <motion.div key={item.id} variants={fadeUp} custom={3 + i * 0.3}>
               <div className="w-full flex items-center gap-4 rounded-xl border border-border bg-card/50 hover:bg-card/80 p-4 transition-colors group">
                 {/* Icon */}
@@ -379,6 +386,8 @@ export default function RecurringInvoicesPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+
+      <Pagination meta={paginationMeta} onPageChange={(p) => { setPage(p); window.scrollTo(0, 0) }} />
     </motion.div>
   )
 }
