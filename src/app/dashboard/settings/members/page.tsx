@@ -108,6 +108,7 @@ export default function TeamPage() {
   const [searchResults, setSearchResults] = useState<{ id: string; emailHint: string; fullName: string | null; avatarUrl: string | null }[]>([])
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<{ id: string; emailHint: string; fullName: string | null; avatarUrl: string | null } | null>(null)
 
   // Role change
   const [roleDialogOpen, setRoleDialogOpen] = useState(false)
@@ -119,6 +120,7 @@ export default function TeamPage() {
   const [transferOpen, setTransferOpen] = useState(false)
   const [transferTarget, setTransferTarget] = useState<TeamMember | null>(null)
   const [transferring, setTransferring] = useState(false)
+  const [transferPassword, setTransferPassword] = useState('')
 
   // Remove
   const [removeOpen, setRemoveOpen] = useState(false)
@@ -195,6 +197,9 @@ export default function TeamPage() {
     setInviteRole('member')
     setInviteResult(null)
     setCopied(false)
+    setSelectedUser(null)
+    setSearchResults([])
+    setShowSuggestions(false)
   }
 
   async function handleRevokeInvite(memberId: string) {
@@ -216,13 +221,17 @@ export default function TeamPage() {
   }
 
   async function handleTransferOwnership() {
-    if (!transferTarget) return
+    if (!transferTarget || !transferPassword) return
     setTransferring(true)
-    const { error } = await api.post('/team/transfer-ownership', { memberId: transferTarget.id })
+    const { error } = await api.post('/team/transfer-ownership', {
+      memberId: transferTarget.id,
+      password: transferPassword,
+    })
     setTransferring(false)
     if (error) return toast(error, 'error')
     toast('Propriété transférée', 'success')
     setTransferOpen(false)
+    setTransferPassword('')
     loadTeam()
   }
 
@@ -657,6 +666,35 @@ export default function TeamPage() {
             <form onSubmit={handleInvite} className="mt-4 space-y-4">
               <Field>
                 <FieldLabel htmlFor="inviteEmail">Adresse email</FieldLabel>
+
+                {selectedUser ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/5 p-3"
+                  >
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary overflow-hidden">
+                      {selectedUser.avatarUrl ? (
+                        <img src={selectedUser.avatarUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        (selectedUser.fullName || selectedUser.emailHint).slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">{selectedUser.fullName || 'Utilisateur'}</p>
+                      <p className="text-xs text-muted-foreground">{selectedUser.emailHint}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      type="button"
+                      onClick={() => { setSelectedUser(null); setInviteEmail('') }}
+                    >
+                      Changer
+                    </Button>
+                  </motion.div>
+                ) : (
+
                 <div className="relative">
                   <Input
                     id="inviteEmail"
@@ -666,7 +704,6 @@ export default function TeamPage() {
                     onChange={(e) => {
                       const val = e.target.value
                       setInviteEmail(val)
-                      // Search users as they type
                       if (searchTimeout) clearTimeout(searchTimeout)
                       if (val.length >= 2) {
                         setSearchTimeout(setTimeout(async () => {
@@ -683,7 +720,6 @@ export default function TeamPage() {
                     required
                     autoComplete="off"
                   />
-                  {/* Autocomplete dropdown */}
                   {showSuggestions && searchResults.length > 0 && (
                     <div className="absolute z-50 top-full left-0 right-0 mt-1 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
                       {searchResults.map((u) => (
@@ -693,9 +729,10 @@ export default function TeamPage() {
                           className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-muted/50 transition-colors text-left"
                           onMouseDown={(e) => {
                             e.preventDefault()
-                            // Don't fill the full email — user must type it (security)
-                            // Just show the hint so they know they found the right person
+                            setSelectedUser(u)
+                            setInviteEmail(u.emailHint.replace(/\*+/, ''))
                             setShowSuggestions(false)
+                            setSearchResults([])
                           }}
                         >
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary overflow-hidden">
@@ -714,6 +751,7 @@ export default function TeamPage() {
                     </div>
                   )}
                 </div>
+                )}
               </Field>
 
               <Field>
@@ -808,15 +846,25 @@ export default function TeamPage() {
           serez rétrogradé au rôle d&apos;Administrateur. Cette action est irréversible.
         </DialogDescription>
 
+        <div className="mt-4">
+          <Input
+            type="password"
+            placeholder="Votre mot de passe"
+            value={transferPassword}
+            onChange={(e) => setTransferPassword(e.target.value)}
+            onKeyDown={(e) => { if (e.key === 'Enter' && transferPassword) handleTransferOwnership() }}
+          />
+        </div>
+
         <DialogFooter>
-          <Button variant="outline" onClick={() => setTransferOpen(false)}>
+          <Button variant="outline" onClick={() => { setTransferOpen(false); setTransferPassword('') }}>
             Annuler
           </Button>
           <Button
             variant="outline"
             className="border-destructive/30 text-destructive hover:bg-destructive/10"
             onClick={handleTransferOwnership}
-            disabled={transferring}
+            disabled={transferring || !transferPassword}
           >
             {transferring ? <><Spinner /> Transfert...</> : 'Confirmer le transfert'}
           </Button>
