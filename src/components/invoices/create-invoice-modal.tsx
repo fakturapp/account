@@ -59,13 +59,20 @@ interface PaginationMeta {
 export function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
   const router = useRouter()
   const { toast } = useToast()
-  const [step, setStep] = useState<'choose' | 'select-quote'>('choose')
   const [quotes, setQuotes] = useState<QuoteItem[]>([])
   const [loadingQuotes, setLoadingQuotes] = useState(false)
   const [search, setSearch] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [convertingId, setConvertingId] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<string[]>(['sent', 'accepted'])
+
+  // Restore filters from localStorage
+  const [statusFilter, setStatusFilter] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('faktur_convert_filters')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return ['sent', 'accepted']
+  })
   const [quotePage, setQuotePage] = useState(1)
   const [quoteMeta, setQuoteMeta] = useState<PaginationMeta | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -93,21 +100,19 @@ export function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
 
   useEffect(() => {
     if (!open) {
-      setStep('choose')
       setSearch('')
       setDebouncedSearch('')
       setQuotes([])
-      setStatusFilter(['sent', 'accepted'])
       setQuotePage(1)
       setQuoteMeta(null)
     }
   }, [open])
 
   useEffect(() => {
-    if (step === 'select-quote') {
+    if (open) {
       loadQuotes()
     }
-  }, [quotePage, debouncedSearch, statusFilter, step])
+  }, [quotePage, debouncedSearch, statusFilter, open])
 
   async function loadQuotes() {
     setLoadingQuotes(true)
@@ -125,15 +130,6 @@ export function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
       setQuoteMeta(data.meta)
     }
     setLoadingQuotes(false)
-  }
-
-  function handleConvertChoice() {
-    setStep('select-quote')
-  }
-
-  function handleBlankChoice() {
-    onClose()
-    router.push('/dashboard/invoices/new')
   }
 
   async function handleConvertQuote(quoteId: string) {
@@ -157,9 +153,11 @@ export function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
   }
 
   function toggleStatusFilter(status: string) {
-    setStatusFilter((prev) =>
-      prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
-    )
+    setStatusFilter((prev) => {
+      const next = prev.includes(status) ? prev.filter((s) => s !== status) : [...prev, status]
+      try { localStorage.setItem('faktur_convert_filters', JSON.stringify(next)) } catch {}
+      return next
+    })
     setQuotePage(1)
   }
 
@@ -202,47 +200,6 @@ export function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
               </Button>
             </div>
           </motion.div>
-        ) : step === 'choose' ? (
-          <motion.div
-            key="choose"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-          >
-            <DialogTitle>Créer une facture</DialogTitle>
-            <p className="text-sm text-muted-foreground mt-1 mb-5">
-              Choisissez comment créer votre facture
-            </p>
-
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={handleConvertChoice}
-                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card/50 hover:bg-card/80 hover:border-primary/30 p-6 transition-all text-center group"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 group-hover:bg-blue-500/20 transition-colors">
-                  <RefreshCw className="h-6 w-6 text-blue-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Convertir un devis</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">À partir d&apos;un devis existant</p>
-                </div>
-              </button>
-
-              <button
-                onClick={handleBlankChoice}
-                className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card/50 hover:bg-card/80 hover:border-primary/30 p-6 transition-all text-center group"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-green-500/10 group-hover:bg-green-500/20 transition-colors">
-                  <FilePlus className="h-6 w-6 text-green-500" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-foreground">Facture vierge</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Créer de zéro</p>
-                </div>
-              </button>
-            </div>
-          </motion.div>
         ) : (
           <motion.div
             key="select-quote"
@@ -252,13 +209,7 @@ export function CreateInvoiceModal({ open, onClose }: CreateInvoiceModalProps) {
             transition={{ duration: 0.2 }}
           >
             <div className="flex items-center gap-2 mb-4">
-              <button
-                onClick={() => setStep('choose')}
-                className="flex h-7 w-7 items-center justify-center rounded-lg hover:bg-muted/50 transition-colors"
-              >
-                <ArrowLeft className="h-4 w-4 text-muted-foreground" />
-              </button>
-              <DialogTitle className="!mb-0 flex-1">Sélectionner un devis</DialogTitle>
+              <DialogTitle className="!mb-0 flex-1">Convertir un devis en facture</DialogTitle>
               <Dropdown
                 align="right"
                 trigger={
