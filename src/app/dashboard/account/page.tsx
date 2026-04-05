@@ -61,6 +61,7 @@ export default function AccountPage() {
   const [fullName, setFullName] = useState(user?.fullName || '')
   const [profileLoading, setProfileLoading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
+  const [nameModalOpen, setNameModalOpen] = useState(false)
 
   // Email change (multi-step)
   const [emailStep, setEmailStep] = useState<'idle' | 'verify_current' | 'enter_new' | 'verify_new'>('idle')
@@ -583,44 +584,37 @@ export default function AccountPage() {
     >
       {/* Profile tab */}
       {activeTab === 'profile' && (
-        <div className="space-y-6">
+        <div className="space-y-4">
+          {/* Display name */}
           <Card>
-            <CardContent className="p-6">
-              <form onSubmit={handleUpdateProfile}>
-                <FieldGroup>
-                  <div className="flex items-center gap-3 mb-1">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                      <User className="h-4.5 w-4.5 text-primary" />
-                    </div>
-                    <h3 className="font-semibold text-foreground">Informations personnelles</h3>
-                  </div>
-
-                  <Field>
-                    <FieldLabel htmlFor="fullName">Nom complet</FieldLabel>
-                    <Input
-                      id="fullName"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                    />
-                  </Field>
-
-                  <Button type="submit" disabled={profileLoading}>
-                    {profileLoading ? <><Spinner /> Enregistrement...</> : 'Enregistrer'}
-                  </Button>
-                </FieldGroup>
-              </form>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-5">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
-                    <Globe className="h-4.5 w-4.5 text-primary" />
+                    <User className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">Adresse email</h3>
+                    <h3 className="text-sm font-semibold text-foreground">Pseudo</h3>
+                    <p className="text-sm text-muted-foreground">{user?.fullName || 'Non d\u00e9fini'}</p>
+                  </div>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => { setFullName(user?.fullName || ''); setNameModalOpen(true) }}>
+                  Modifier
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Email */}
+          <Card>
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                    <Globe className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground">Adresse email</h3>
                     <p className="text-sm text-muted-foreground">{user?.email}</p>
                   </div>
                 </div>
@@ -1062,6 +1056,38 @@ export default function AccountPage() {
       )}
 
       {/* Export modal */}
+      {/* Name edit modal */}
+      <Dialog open={nameModalOpen} onClose={() => setNameModalOpen(false)} className="max-w-sm">
+        <DialogTitle>Modifier le pseudo</DialogTitle>
+        <form onSubmit={async (e) => {
+          e.preventDefault()
+          setProfileLoading(true)
+          const { error } = await api.put('/account/profile', { fullName })
+          setProfileLoading(false)
+          if (error) return toast(error, 'error')
+          await refreshUser()
+          setNameModalOpen(false)
+          toast('Pseudo mis \u00e0 jour', 'success')
+        }}>
+          <div className="mt-3">
+            <Input
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              placeholder="Votre pseudo"
+              autoFocus
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" type="button" onClick={() => setNameModalOpen(false)}>
+              Annuler
+            </Button>
+            <Button size="sm" type="submit" disabled={profileLoading || !fullName.trim()}>
+              {profileLoading ? <Spinner /> : 'Enregistrer'}
+            </Button>
+          </DialogFooter>
+        </form>
+      </Dialog>
+
       <ExportModal open={exportModalOpen} onClose={() => setExportModalOpen(false)} />
 
       {/* Security Verification Modal */}
