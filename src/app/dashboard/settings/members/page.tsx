@@ -105,7 +105,7 @@ export default function TeamPage() {
   const [copied, setCopied] = useState(false)
 
   // User search for invite
-  const [searchResults, setSearchResults] = useState<{ id: string; email: string; fullName: string | null; avatarUrl: string | null }[]>([])
+  const [searchResults, setSearchResults] = useState<{ id: string; emailHint: string; fullName: string | null; avatarUrl: string | null }[]>([])
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const [showSuggestions, setShowSuggestions] = useState(false)
 
@@ -693,21 +693,21 @@ export default function TeamPage() {
                           className="flex items-center gap-3 w-full px-3 py-2.5 hover:bg-muted/50 transition-colors text-left"
                           onMouseDown={(e) => {
                             e.preventDefault()
-                            setInviteEmail(u.email)
+                            // Don't fill the full email — user must type it (security)
+                            // Just show the hint so they know they found the right person
                             setShowSuggestions(false)
-                            setSearchResults([])
                           }}
                         >
                           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary overflow-hidden">
                             {u.avatarUrl ? (
                               <img src={u.avatarUrl} alt="" className="h-full w-full object-cover" />
                             ) : (
-                              (u.fullName || u.email).slice(0, 2).toUpperCase()
+                              (u.fullName || u.emailHint).slice(0, 2).toUpperCase()
                             )}
                           </div>
                           <div className="min-w-0">
-                            <p className="text-sm font-medium text-foreground truncate">{u.fullName || u.email}</p>
-                            <p className="text-xs text-muted-foreground truncate">{u.email}</p>
+                            <p className="text-sm font-medium text-foreground truncate">{u.fullName || 'Utilisateur'}</p>
+                            <p className="text-xs text-muted-foreground truncate">{u.emailHint}</p>
                           </div>
                         </button>
                       ))}
