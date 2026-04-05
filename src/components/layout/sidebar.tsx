@@ -521,7 +521,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 trigger={
                   <div className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-semibold liquid-nav-hover transition-all group cursor-pointer">
                     <CirclePlus className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-primary">Cr\u00e9er</span>
+                    <span className="text-primary">Créer</span>
                   </div>
                 }
                 className="min-w-[220px]"
@@ -537,8 +537,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   <DropdownItem onClick={() => router.push('/dashboard/invoices/new')}>
                     <FilePlus className="h-4 w-4 text-primary" /> Facture vierge
                   </DropdownItem>
-                  <DropdownItem onClick={() => router.push('/dashboard/quotes?convert=1')}>
-                    <ArrowRight className="h-4 w-4 text-emerald-500" /> Convertir un devis
+                  <DropdownItem onClick={() => router.push('/dashboard/invoices/drafts?convert=1')}>
+                    <RefreshCw className="h-4 w-4 text-emerald-500" /> Convertir un devis
                   </DropdownItem>
                 </DropdownSub>
                 <DropdownItem onClick={() => router.push('/dashboard/quotes/new')}>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { motion, type Variants } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -19,7 +20,6 @@ import {
   ArrowLeft,
   Trash2,
 } from 'lucide-react'
-import { CreateInvoiceModal } from '@/components/invoices/create-invoice-modal'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -62,7 +62,7 @@ export default function InvoiceDraftsPage() {
   const [meta, setMeta] = useState<PaginationMeta | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
+  const router = useRouter()
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
   const handleSearchChange = useCallback((value: string) => {
@@ -145,7 +145,7 @@ export default function InvoiceDraftsPage() {
             </p>
           </div>
         </div>
-        <Button onClick={() => setShowCreateModal(true)}>
+        <Button onClick={() => router.push('/dashboard/invoices/new')}>
           <Plus className="h-4 w-4 mr-1.5" /> Créer une facture
         </Button>
       </motion.div>
@@ -197,7 +197,7 @@ export default function InvoiceDraftsPage() {
               : 'Vos factures en brouillon apparaitront ici'}
           </p>
           {!debouncedSearch && (
-            <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
+            <Button className="mt-4" onClick={() => router.push('/dashboard/invoices/new')}>
               <Plus className="h-4 w-4 mr-1.5" /> Créer une facture
             </Button>
           )}
@@ -270,7 +270,6 @@ export default function InvoiceDraftsPage() {
 
       <Pagination meta={meta} onPageChange={setPage} />
 
-      <CreateInvoiceModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />
     </motion.div>
   )
 }

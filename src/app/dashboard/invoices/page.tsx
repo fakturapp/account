@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { motion, type Variants } from 'framer-motion'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -23,10 +24,10 @@ import {
   CalendarDays,
   FilePlus,
   Sparkles,
+  RefreshCw,
 } from 'lucide-react'
 import { Spinner } from '@/components/ui/spinner'
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown'
-import { CreateInvoiceModal } from '@/components/invoices/create-invoice-modal'
 import { InvoiceDetailOverlay } from '@/components/invoices/invoice-detail-overlay'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
 import { AiDocumentModal } from '@/components/ai/ai-document-modal'
@@ -65,6 +66,7 @@ interface PaginationMeta {
 }
 
 export default function InvoicesPage() {
+  const router = useRouter()
   const { toast } = useToast()
   const { settings } = useInvoiceSettings()
   const activeEditors = useActiveEditors('invoice')
@@ -77,7 +79,6 @@ export default function InvoicesPage() {
   const [page, setPage] = useState(1)
   const [meta, setMeta] = useState<PaginationMeta | null>(null)
   const [downloadingId, setDownloadingId] = useState<string | null>(null)
-  const [showCreateModal, setShowCreateModal] = useState(false)
   const [selectedInvoiceId, setSelectedInvoiceId] = useState<string | null>(null)
   const [monthlyStats, setMonthlyStats] = useState<{ totalInvoiced: number; totalCollected: number; trend: number } | null>(null)
   const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined)
@@ -200,28 +201,28 @@ export default function InvoicesPage() {
             {meta?.total ?? 0} facture{(meta?.total ?? 0) > 1 ? 's' : ''} au total
           </p>
         </div>
-        {settings.aiEnabled ? (
-          <Dropdown
-            trigger={
-              <Button>
-                <Plus className="h-4 w-4 mr-1.5" /> Créer une facture
-              </Button>
-            }
-          >
-            <DropdownItem onClick={() => setShowCreateModal(true)}>
-              <FilePlus className="h-4 w-4 text-muted-foreground" />
-              Créer une facture
-            </DropdownItem>
+        <Dropdown
+          trigger={
+            <Button>
+              <Plus className="h-4 w-4 mr-1.5" /> Nouvelle facture
+            </Button>
+          }
+        >
+          <DropdownItem onClick={() => router.push('/dashboard/invoices/new')}>
+            <FilePlus className="h-4 w-4 text-primary" />
+            Facture vierge
+          </DropdownItem>
+          <DropdownItem onClick={() => router.push('/dashboard/invoices/drafts?convert=1')}>
+            <RefreshCw className="h-4 w-4 text-emerald-500" />
+            Convertir un devis
+          </DropdownItem>
+          {settings.aiEnabled && (
             <DropdownItem onClick={() => setAiModalOpen(true)}>
               <Sparkles className="h-4 w-4 text-purple-500" />
               Créer avec l&apos;IA
             </DropdownItem>
-          </Dropdown>
-        ) : (
-          <Button onClick={() => setShowCreateModal(true)}>
-            <Plus className="h-4 w-4 mr-1.5" /> Créer une facture
-          </Button>
-        )}
+          )}
+        </Dropdown>
       </motion.div>
 
       {/* Monthly summary */}
@@ -328,7 +329,7 @@ export default function InvoicesPage() {
               : 'Commencez par créer votre première facture'}
           </p>
           {!debouncedSearch && filterStatus === 'all' && (
-            <Button className="mt-4" onClick={() => setShowCreateModal(true)}>
+            <Button className="mt-4" onClick={() => router.push('/dashboard/invoices/new')}>
               <Plus className="h-4 w-4 mr-1.5" /> Créer une facture
             </Button>
           )}
@@ -430,7 +431,6 @@ export default function InvoicesPage() {
 
       <Pagination meta={meta} onPageChange={setPage} />
 
-      <CreateInvoiceModal open={showCreateModal} onClose={() => setShowCreateModal(false)} />
 
       <InvoiceDetailOverlay
         invoiceId={selectedInvoiceId}
