@@ -107,14 +107,21 @@ export default function CreateTeamPage() {
       <div>
         <Link
           href="/dashboard/team"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-4"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-5"
         >
-          <ArrowLeft className="h-4 w-4" /> Retour
+          <ArrowLeft className="h-4 w-4" /> Retour aux &eacute;quipes
         </Link>
-        <h1 className="text-2xl font-bold text-foreground">Nouvelle équipe</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Créez une nouvelle équipe ou importez une équipe existante.
-        </p>
+        <div className="flex items-center gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10">
+            <Users className="h-6 w-6 text-primary" />
+          </div>
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Nouvelle &eacute;quipe</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">
+              Cr&eacute;ez une nouvelle &eacute;quipe ou importez une &eacute;quipe existante.
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Mode selector */}
@@ -171,12 +178,6 @@ export default function CreateTeamPage() {
               <CardContent className="p-6">
                 <form onSubmit={handleCreate}>
                   <FieldGroup>
-                    <div className="flex justify-center mb-2">
-                      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
-                        <Users className="h-8 w-8 text-primary" />
-                      </div>
-                    </div>
-
                     <Field>
                       <FieldLabel htmlFor="teamName">Nom de l&apos;équipe</FieldLabel>
                       <Input
