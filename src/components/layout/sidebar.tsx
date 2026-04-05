@@ -398,10 +398,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {/* Faktur logo header */}
-            <div className="px-3 pt-3 pb-1">
-              <div className="flex items-center gap-2.5 px-2.5 py-2">
-                <img src="/logo.svg" alt="Faktur" className="h-7 w-7 shrink-0" />
-                <span className="text-[15px] font-extrabold text-foreground tracking-tight">Faktur</span>
+            <div className="px-3 pt-3 pb-2">
+              <div className="flex items-center gap-3 px-2 py-1.5">
+                <img src="/logo.svg" alt="Faktur" className="h-9 w-9 shrink-0" />
+                <span className="text-[17px] font-extrabold text-foreground tracking-tight">Faktur</span>
               </div>
             </div>
           </motion.div>
@@ -537,7 +537,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   <DropdownItem onClick={() => router.push('/dashboard/invoices/new')}>
                     <FilePlus className="h-4 w-4 text-primary" /> Facture vierge
                   </DropdownItem>
-                  <DropdownItem onClick={() => router.push('/dashboard/invoices/drafts?convert=1')}>
+                  <DropdownItem onClick={() => router.push('/dashboard/invoices?convert=1')}>
                     <RefreshCw className="h-4 w-4 text-emerald-500" /> Convertir un devis
                   </DropdownItem>
                 </DropdownSub>
@@ -648,19 +648,25 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           <DropdownSub
             trigger={
               <>
-                <UsersRound className="h-4 w-4" />
-                <span className="flex-1 text-left">{currentTeam?.name || '\u00c9quipe'}</span>
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-primary/10 text-[9px] font-bold text-primary overflow-hidden">
+                  {currentTeam?.iconUrl ? (
+                    <img src={currentTeam.iconUrl} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    (currentTeam?.name || 'E').charAt(0).toUpperCase()
+                  )}
+                </div>
+                <span className="flex-1 text-left truncate max-w-[140px]">{currentTeam?.name || 'Équipe'}</span>
               </>
             }
           >
-            <DropdownLabel>Vos \u00e9quipes</DropdownLabel>
+            <DropdownLabel>Vos équipes</DropdownLabel>
             {teams.map((team) => (
               <DropdownItem
                 key={team.id}
                 onClick={() => { if (!team.isCurrent) onSwitchTeam(team.id) }}
               >
-                <div className="flex items-center justify-between w-full">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between w-full gap-2">
+                  <div className="flex items-center gap-2 min-w-0">
                     <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[10px] font-semibold text-foreground overflow-hidden">
                       {team.iconUrl ? (
                         <img src={team.iconUrl} alt={team.name} className="h-full w-full object-cover" />
@@ -668,7 +674,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                         team.name.charAt(0).toUpperCase()
                       )}
                     </div>
-                    <span className="text-sm">{team.name}</span>
+                    <span className="text-sm truncate">{team.name}</span>
                   </div>
                   {team.isCurrent && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
                 </div>
@@ -677,7 +683,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             <DropdownSeparator />
             <Link href="/dashboard/team/create">
               <DropdownItem>
-                <Plus className="h-4 w-4" /> Nouvelle \u00e9quipe
+                <Plus className="h-4 w-4" /> Nouvelle équipe
               </DropdownItem>
             </Link>
           </DropdownSub>
