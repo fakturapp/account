@@ -53,6 +53,8 @@ import {
   Sparkles,
   Download,
   Trash2,
+  FilePlus,
+  ArrowRight,
 } from 'lucide-react'
 
 interface TeamListItem {
@@ -397,11 +399,9 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           >
             {/* Faktur logo header */}
             <div className="px-3 pt-3 pb-1">
-              <div className="flex items-center gap-2.5 px-2 py-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white font-bold text-[11px]">
-                  F
-                </div>
-                <p className="text-[14px] font-bold text-foreground tracking-tight">Faktur</p>
+              <div className="flex items-center gap-2.5 px-2.5 py-2">
+                <img src="/logo.svg" alt="Faktur" className="h-7 w-7 shrink-0" />
+                <span className="text-[15px] font-extrabold text-foreground tracking-tight">Faktur</span>
               </div>
             </div>
           </motion.div>
@@ -535,10 +535,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   }
                 >
                   <DropdownItem onClick={() => router.push('/dashboard/invoices/new')}>
-                    <FileText className="h-4 w-4" /> Facture vierge
+                    <FilePlus className="h-4 w-4 text-primary" /> Facture vierge
                   </DropdownItem>
                   <DropdownItem onClick={() => router.push('/dashboard/quotes?convert=1')}>
-                    <Receipt className="h-4 w-4" /> Convertir un devis
+                    <ArrowRight className="h-4 w-4 text-emerald-500" /> Convertir un devis
                   </DropdownItem>
                 </DropdownSub>
                 <DropdownItem onClick={() => router.push('/dashboard/quotes/new')}>
