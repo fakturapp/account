@@ -155,6 +155,7 @@ const settingsNav: NavItem[] = [
         icon: FileCheck,
       },
       { href: '/dashboard/settings/documents/invoices/ai', label: 'Faktur AI', icon: Sparkles },
+      { href: '/dashboard/settings/documents/invoices/collaboration', label: 'Collaboration', icon: Users },
     ],
   },
   {
