@@ -38,6 +38,7 @@ export interface InvoiceSettings {
   invoiceFilenamePattern: string
   footerMode: 'company_info' | 'custom'
   logoBorderRadius: number
+  collaborationEnabled: boolean
   aiEnabled: boolean
   aiProvider: 'groq'
   aiModel: string
@@ -81,6 +82,7 @@ const defaultSettings: InvoiceSettings = {
   invoiceFilenamePattern: 'FAC-{numéro}',
   footerMode: 'company_info',
   logoBorderRadius: 0,
+  collaborationEnabled: false,
   aiEnabled: false,
   aiProvider: 'groq',
   aiModel: 'llama-3.3-70b-versatile',
