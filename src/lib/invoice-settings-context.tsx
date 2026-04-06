@@ -50,7 +50,10 @@ interface InvoiceSettingsContextType {
   loading: boolean
   saving: boolean
   saveError: string | null
+  hasChanges: boolean
   updateSettings: (partial: Partial<InvoiceSettings>) => void
+  save: () => Promise<void>
+  resetChanges: () => void
   uploadLogo: (file: File) => Promise<void>
   refreshCompanyLogo: () => Promise<void>
   refreshSettings: () => Promise<void>
@@ -96,7 +99,10 @@ const InvoiceSettingsContext = createContext<InvoiceSettingsContextType>({
   loading: true,
   saving: false,
   saveError: null,
+  hasChanges: false,
   updateSettings: () => {},
+  save: async () => {},
+  resetChanges: () => {},
   uploadLogo: async () => {},
   refreshCompanyLogo: async () => {},
   refreshSettings: async () => {},
@@ -108,20 +114,23 @@ export function useInvoiceSettings() {
 
 export function InvoiceSettingsProvider({ children }: { children: React.ReactNode }) {
   const [settings, setSettings] = useState<InvoiceSettings>(defaultSettings)
+  const [savedSettings, setSavedSettings] = useState<InvoiceSettings>(defaultSettings)
   const [companyLogoUrl, setCompanyLogoUrl] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const settingsRef = useRef(settings)
 
-  // Keep ref in sync
   settingsRef.current = settings
+
+  const hasChanges = JSON.stringify(settings) !== JSON.stringify(savedSettings)
 
   const loadSettings = useCallback(async () => {
     const { data } = await api.get<{ settings: InvoiceSettings; companyLogoUrl: string | null }>('/settings/invoices')
     if (data?.settings) {
-      setSettings({ ...data.settings, logoUrl: resolveLogoUrl(data.settings.logoUrl) })
+      const resolved = { ...data.settings, logoUrl: resolveLogoUrl(data.settings.logoUrl) }
+      setSettings(resolved)
+      setSavedSettings(resolved)
     }
     if (data?.companyLogoUrl) {
       setCompanyLogoUrl(resolveLogoUrl(data.companyLogoUrl))
@@ -133,29 +142,29 @@ export function InvoiceSettingsProvider({ children }: { children: React.ReactNod
     loadSettings()
   }, [loadSettings])
 
-  const saveSettings = useCallback(async (toSave: InvoiceSettings) => {
+  const save = useCallback(async () => {
     setSaving(true)
     setSaveError(null)
-    const { error } = await api.put('/settings/invoices', toSave)
+    const { error } = await api.put('/settings/invoices', settingsRef.current)
     setSaving(false)
-    if (error) setSaveError(error)
+    if (error) {
+      setSaveError(error)
+    } else {
+      setSavedSettings({ ...settingsRef.current })
+    }
   }, [])
+
+  const resetChanges = useCallback(() => {
+    setSettings({ ...savedSettings })
+    setSaveError(null)
+  }, [savedSettings])
 
   const updateSettings = useCallback(
     (partial: Partial<InvoiceSettings>) => {
-      setSettings((prev) => {
-        const next = { ...prev, ...partial }
-        // Debounce auto-save
-        if (debounceRef.current) {
-          clearTimeout(debounceRef.current)
-        }
-        debounceRef.current = setTimeout(() => {
-          saveSettings(next)
-        }, 800)
-        return next
-      })
+      setSaveError(null)
+      setSettings((prev) => ({ ...prev, ...partial }))
     },
-    [saveSettings]
+    []
   )
 
   const uploadLogo = useCallback(async (file: File) => {
@@ -174,19 +183,8 @@ export function InvoiceSettingsProvider({ children }: { children: React.ReactNod
     }
   }, [])
 
-  // Cleanup debounce on unmount
-  useEffect(() => {
-    return () => {
-      if (debounceRef.current) {
-        clearTimeout(debounceRef.current)
-        // Flush pending save
-        saveSettings(settingsRef.current)
-      }
-    }
-  }, [saveSettings])
-
   return (
-    <InvoiceSettingsContext.Provider value={{ settings, companyLogoUrl, loading, saving, saveError, updateSettings, uploadLogo, refreshCompanyLogo, refreshSettings: loadSettings }}>
+    <InvoiceSettingsContext.Provider value={{ settings, companyLogoUrl, loading, saving, saveError, hasChanges, updateSettings, save, resetChanges, uploadLogo, refreshCompanyLogo, refreshSettings: loadSettings }}>
       {children}
     </InvoiceSettingsContext.Provider>
   )
