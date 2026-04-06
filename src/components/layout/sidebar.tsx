@@ -400,10 +400,12 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
             {/* Faktur logo header */}
-            <div className="px-3 pt-3 pb-2">
-              <div className="flex items-center justify-center gap-2.5 px-2 py-1.5">
-                <img src="/logo.svg" alt="Faktur" className="h-9 w-9 shrink-0" />
-                <span className="text-[17px] font-medium text-foreground tracking-tight">Faktur</span>
+            <div className="px-4 pt-4 pb-3">
+              <div className="flex items-center justify-center gap-3">
+                <img src="/logo.svg" alt="Faktur" className="h-10 w-10 shrink-0 drop-shadow-sm" />
+                <span style={{ fontFamily: "'Lexend', sans-serif", letterSpacing: '-0.03em' }} className="text-[20px] font-semibold text-foreground">
+                  Faktur
+                </span>
               </div>
             </div>
           </motion.div>
