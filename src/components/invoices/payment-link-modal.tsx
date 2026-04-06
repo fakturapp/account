@@ -20,6 +20,7 @@ import {
   ArrowLeft,
   Banknote,
   Coins,
+  CreditCard,
   Clock,
   FileText,
   Calendar,
@@ -35,6 +36,7 @@ interface PaymentLinkModalProps {
   invoicePaymentMethod: string | null
   invoiceDueDate: string | null
   hasBankAccount: boolean
+  hasStripeConfigured: boolean
   onCreated: (link: { id: string; token: string; url: string; expiresAt: string | null }) => void
 }
 
@@ -114,6 +116,7 @@ export function PaymentLinkModal({
   invoicePaymentMethod,
   invoiceDueDate,
   hasBankAccount,
+  hasStripeConfigured,
   onCreated,
 }: PaymentLinkModalProps) {
   const { toast } = useToast()
@@ -166,7 +169,7 @@ export function PaymentLinkModal({
   async function handleGenerate() {
     setLoading(true)
     const body: Record<string, any> = {
-      paymentMethod: 'bank_transfer',
+      paymentMethod,
       paymentType: 'full',
       showIban,
       expirationType,
@@ -247,6 +250,44 @@ export function PaymentLinkModal({
                 </div>
               </label>
 
+              {/* Carte bancaire (Stripe) */}
+              {hasStripeConfigured ? (
+                <label
+                  className={`flex items-center gap-3 p-3.5 rounded-xl border-2 cursor-pointer transition-all ${
+                    paymentMethod === 'stripe'
+                      ? 'border-violet-500 bg-violet-500/5 shadow-sm shadow-violet-500/10'
+                      : 'border-border hover:border-muted-foreground/30 hover:bg-muted/20'
+                  }`}
+                >
+                  <input type="radio" name="method" value="stripe" checked={paymentMethod === 'stripe'} onChange={() => setPaymentMethod('stripe')} className="sr-only" />
+                  <div className={`h-9 w-9 rounded-lg flex items-center justify-center shrink-0 ${paymentMethod === 'stripe' ? 'bg-violet-500/15' : 'bg-muted/50'}`}>
+                    <CreditCard className={`h-4.5 w-4.5 ${paymentMethod === 'stripe' ? 'text-violet-500' : 'text-muted-foreground'}`} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-medium text-foreground">Carte bancaire</p>
+                      <svg className="h-3.5 w-auto text-muted-foreground" viewBox="0 0 60 25" fill="currentColor"><path d="M5 0h50a5 5 0 015 5v15a5 5 0 01-5 5H5a5 5 0 01-5-5V5a5 5 0 015-5zm18.2 16.8c0-.5.4-.8 1.1-1l1.6-.3c0 .7-.6 1.3-1.4 1.3-.8 0-1.3-.4-1.3-1zm3.9-4.4c0-2.2-1.3-3.7-3.8-3.7-2.6 0-4.2 1.6-4.2 4.3 0 2.8 1.6 4.2 4.4 4.2 1.3 0 2.3-.3 3.1-.8l-.7-1.5c-.6.3-1.3.5-2.1.5-1.2 0-2-.5-2.1-1.5h5.3c0-.2.1-.7.1-1.5zm-5.3-.5c.1-1 .7-1.7 1.7-1.7s1.5.6 1.5 1.7h-3.2zm-7.4 5.3h2.5V8.9h-2.5v1c-.6-.8-1.4-1.2-2.4-1.2-2.1 0-3.6 1.7-3.6 4.2s1.5 4.3 3.6 4.3c1 0 1.8-.4 2.4-1.3v1.3zm-1.8-2c-1.1 0-1.9-.9-1.9-2.3s.8-2.2 1.9-2.2 1.9.9 1.9 2.2-.8 2.3-1.9 2.3zm19.3 2h2.5v-1c.6.8 1.4 1.2 2.4 1.2 2.1 0 3.6-1.7 3.6-4.3s-1.5-4.2-3.6-4.2c-1 0-1.8.4-2.4 1.2V5h-2.5v12.2zm4.2-2c-1.1 0-1.9-.9-1.9-2.3s.8-2.2 1.9-2.2 1.9.9 1.9 2.2-.8 2.3-1.9 2.3zm11.8-5.8c-.5-.3-1.2-.6-2.1-.6-1.3 0-2.2.6-2.2 1.7 0 1 .7 1.4 1.7 1.5l.6.1c.6.1.9.3.9.6 0 .4-.4.7-1.2.7-.8 0-1.5-.3-1.9-.6l-.8 1.5c.7.5 1.7.8 2.7.8 1.7 0 2.6-.8 2.6-1.8 0-1-.7-1.4-1.7-1.6l-.6-.1c-.5-.1-.8-.2-.8-.5 0-.4.4-.6 1-.6.7 0 1.3.2 1.7.5l.7-1.5zm3 1.6v-1.2h1.2V7.8l-2.5.5v1.5h-1v2h1v3.2c0 1.5.6 2.4 2.4 2.4.7 0 1.2-.2 1.5-.3l-.5-1.8c-.2.1-.4.1-.7.1-.5 0-.7-.3-.7-.8V12h1.2V10zm4.8-1.3v-1c-.2 0-.3 0-.4 0-.9 0-1.5.5-1.8 1.1V8.9h-2.4v8.3h2.5V13c0-1.4.6-2 1.6-2 .2 0 .3 0 .5 0zm2.3-3.5c-.8 0-1.4.6-1.4 1.3s.6 1.3 1.4 1.3 1.4-.6 1.4-1.3-.6-1.3-1.4-1.3zm-1.2 11.5h2.5V8.9h-2.5v8.3z"/></svg>
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">Paiement sécurisé par carte</p>
+                  </div>
+                  <div className={`h-4 w-4 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'stripe' ? 'border-violet-500' : 'border-muted-foreground/30'}`}>
+                    {paymentMethod === 'stripe' && <div className="h-2 w-2 rounded-full bg-violet-500" />}
+                  </div>
+                </label>
+              ) : (
+                <div className="flex items-center gap-3 p-3.5 rounded-xl border-2 border-border opacity-35 cursor-not-allowed">
+                  <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                    <CreditCard className="h-4.5 w-4.5 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-muted-foreground">Carte bancaire</p>
+                    <p className="text-[11px] text-muted-foreground">Configurez Stripe dans les paramètres</p>
+                  </div>
+                  <Lock className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
+
+              {/* Espèces */}
               <div className="flex items-center gap-3 p-3.5 rounded-xl border-2 border-border opacity-35 cursor-not-allowed">
                 <div className="h-9 w-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                   <Coins className="h-4.5 w-4.5 text-muted-foreground" />

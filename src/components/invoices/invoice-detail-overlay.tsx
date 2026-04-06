@@ -125,6 +125,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
     expiresAt: string | null
   } | null>(null)
   const [paymentLinkUrl, setPaymentLinkUrl] = useState<string | null>(null)
+  const [hasStripeConfigured, setHasStripeConfigured] = useState(false)
   const { hasEmailConfigured } = useEmail()
   const commentTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
 
@@ -157,6 +158,11 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
       }
       if (compRes.data?.company) setCompany(compRes.data.company as CompanyInfo)
       setLoading(false)
+    })
+
+    // Check Stripe config
+    api.get<{ isConfigured: boolean }>('/settings/stripe').then(({ data: stripeData }) => {
+      if (stripeData) setHasStripeConfigured(stripeData.isConfigured)
     })
   }, [invoiceId])
 
@@ -758,6 +764,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
             invoicePaymentMethod={invoice.paymentMethod}
             invoiceDueDate={invoice.dueDate}
             hasBankAccount={!!invoice.bankAccountId}
+            hasStripeConfigured={hasStripeConfigured}
             onCreated={(link) => {
               setPaymentLinkInfo({
                 id: link.id,
