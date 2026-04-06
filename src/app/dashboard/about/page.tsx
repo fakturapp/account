@@ -2,63 +2,26 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import Image from 'next/image'
 import Link from 'next/link'
 import { api } from '@/lib/api'
 import { APP_VERSION } from '@/lib/version'
+import { type Variants } from 'framer-motion'
 import {
   Code2, Globe, ExternalLink, Server, Database, Layout,
-  Layers, Paintbrush, Sparkles, Shield, Lock, FileText,
-  Scale, ScrollText, Cookie, Users, Zap, MousePointer2,
-  Share2, RefreshCw, Fingerprint,
+  Layers, Paintbrush, Sparkles, Shield, Lock, Scale,
+  ScrollText, Cookie, Zap, Fingerprint, Heart,
 } from 'lucide-react'
 
-const links = [
-  { label: 'GitHub', href: 'https://github.com/faktur/fakturapp', icon: Code2 },
-  { label: 'Site web', href: 'https://fakturapp.cc', icon: Globe },
-  { label: 'Dashboard', href: 'https://dash.fakturapp.cc', icon: Layout },
-  { label: 'API', href: 'https://api.fakturapp.cc', icon: Server },
-]
-
-const stack = [
-  { name: 'Next.js 16', description: 'App Router & Turbopack', icon: Layout },
-  { name: 'AdonisJS 7', description: 'Backend & API REST', icon: Server },
-  { name: 'PostgreSQL', description: 'Base de donn\u00e9es relationnelle', icon: Database },
-  { name: 'Turborepo', description: 'Monorepo & builds', icon: Layers },
-  { name: 'Tailwind CSS v4', description: 'Styles & design system', icon: Paintbrush },
-  { name: 'Framer Motion', description: 'Animations fluides', icon: Sparkles },
-  { name: 'Socket.io', description: 'Collaboration temps r\u00e9el', icon: Zap },
-]
-
-const features = [
-  'Factures, devis et avoirs avec \u00e9diteur visuel',
-  'Chiffrement zero-access (AES-256-GCM)',
-  'Authentification passkeys (WebAuthn)',
-  'Double authentification (2FA TOTP)',
-  '\u00c9quipes multi-membres avec r\u00f4les',
-  'Collaboration en temps r\u00e9el (b\u00eata)',
-  'G\u00e9n\u00e9ration PDF et FacturX',
-  'Int\u00e9gration email (Gmail, SMTP, Resend)',
-  'Facturation r\u00e9currente',
-  'Relances automatiques',
-  'Gestion des d\u00e9penses avec OCR',
-  'Catalogue produits',
-  'Export chiffr\u00e9 des donn\u00e9es',
-  'Analyse par IA (Groq)',
-  'Th\u00e8me clair / sombre / syst\u00e8me',
-  'Politique de cookies RGPD',
-]
-
-const legalLinks = [
-  { label: 'Mentions l\u00e9gales', href: '/legal/mentions', icon: Scale },
-  { label: 'Conditions g\u00e9n\u00e9rales', href: '/legal/terms', icon: ScrollText },
-  { label: 'Politique de confidentialit\u00e9', href: '/legal/privacy', icon: Lock },
-  { label: 'Politique de s\u00e9curit\u00e9', href: '/legal/security', icon: Shield },
-  { label: 'Politique de cookies', href: '/legal/cookies', icon: Cookie },
-]
+const fadeUp = {
+  hidden: { opacity: 0, y: 12 },
+  visible: (i: number) => ({
+    opacity: 1, y: 0,
+    transition: { delay: i * 0.06, duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] },
+  }),
+} satisfies Variants
 
 export default function AboutPage() {
   const [apiInfo, setApiInfo] = useState<{ name: string; version: string; status: string } | null>(null)
@@ -71,163 +34,189 @@ export default function AboutPage() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="space-y-6 px-4 lg:px-6 py-4 md:py-6 max-w-3xl mx-auto"
+      initial="hidden"
+      animate="visible"
+      className="max-w-2xl mx-auto px-4 lg:px-6 py-6 md:py-8 space-y-8"
     >
-      {/* Header */}
-      <div className="flex flex-col items-center text-center gap-4 py-6">
-        <Image src="/logo.svg" alt="Faktur" width={64} height={64} className="h-16 w-auto" />
+      {/* Hero */}
+      <motion.div variants={fadeUp} custom={0} className="flex flex-col items-center text-center gap-5 py-4">
+        <Image src="/logo.svg" alt="Faktur" width={72} height={72} className="h-[72px] w-auto drop-shadow-lg" />
         <div>
           <h1 className="text-3xl font-bold text-foreground font-lexend tracking-tight">Faktur</h1>
-          <p className="text-sm text-muted-foreground mt-1.5 max-w-md">
-            Logiciel de facturation gratuit, s\u00e9curis\u00e9 et collaboratif
-            avec chiffrement zero-access.
+          <p className="text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">
+            Logiciel de facturation gratuit, s&eacute;curis&eacute; et collaboratif avec chiffrement zero-access.
           </p>
-          <div className="flex items-center justify-center gap-2 mt-3">
-            <Badge variant="muted">Frontend v{APP_VERSION}</Badge>
-            {apiInfo && <Badge variant="muted">API v{apiInfo.version}</Badge>}
-            {apiInfo && (
-              <Badge variant={apiInfo.status === 'healthy' ? 'success' : 'muted'}>
-                {apiInfo.status === 'healthy' ? 'En ligne' : apiInfo.status}
-              </Badge>
-            )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap justify-center">
+          <Badge variant="muted" className="text-xs">Frontend v{APP_VERSION}</Badge>
+          {apiInfo && <Badge variant="muted" className="text-xs">API v{apiInfo.version}</Badge>}
+          {apiInfo && (
+            <Badge variant={apiInfo.status === 'healthy' ? 'success' : 'muted'} className="text-xs">
+              {apiInfo.status === 'healthy' ? 'En ligne' : apiInfo.status}
+            </Badge>
+          )}
+        </div>
+      </motion.div>
+
+      <Separator />
+
+      {/* Cr&eacute;ateur */}
+      <motion.div variants={fadeUp} custom={1}>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">&Eacute;quipe</h2>
+        <div className="flex items-center gap-4">
+          <img
+            src="https://danbenba.dev/profile.png"
+            alt="danbenba"
+            className="h-14 w-14 rounded-full object-cover ring-2 ring-primary/20"
+          />
+          <div>
+            <p className="text-sm font-semibold text-foreground">danbenba</p>
+            <p className="text-xs text-muted-foreground">Cr&eacute;ateur & D&eacute;veloppeur</p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* \u00c9quipe */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-4">\u00c9quipe</h2>
-          <div className="flex items-center gap-4">
-            <img
-              src="https://danbenba.dev/profile.png"
-              alt="danbenba"
-              className="h-12 w-12 rounded-full object-cover ring-2 ring-primary/20"
-            />
+      <Separator />
+
+      {/* S&eacute;curit&eacute; */}
+      <motion.div variants={fadeUp} custom={2}>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">S&eacute;curit&eacute;</h2>
+        <div className="space-y-3">
+          <div className="flex items-start gap-3.5 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" />
             <div>
-              <p className="text-sm font-medium text-foreground">danbenba</p>
-              <p className="text-xs text-muted-foreground">Cr\u00e9ateur & D\u00e9veloppeur</p>
+              <p className="text-sm font-semibold text-foreground">Chiffrement zero-access</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Vos donn&eacute;es sont chiffr&eacute;es avec votre mot de passe via AES-256-GCM.
+                M&ecirc;me avec un acc&egrave;s complet au serveur, personne ne peut lire vos informations.
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* S\u00e9curit\u00e9 */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-3">S\u00e9curit\u00e9</h2>
-          <div className="space-y-3">
-            <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-              <Shield className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Chiffrement zero-access</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Vos donn\u00e9es sont chiffr\u00e9es avec votre mot de passe via AES-256-GCM.
-                  M\u00eame avec un acc\u00e8s complet au serveur, personne ne peut lire vos informations.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl border border-border p-4">
-              <Fingerprint className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
-              <div>
-                <p className="text-sm font-medium text-foreground">Passkeys & 2FA</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Connexion sans mot de passe via WebAuthn (empreinte, Face ID) et double authentification TOTP.
-                </p>
-              </div>
+          <div className="flex items-start gap-3.5 rounded-xl border border-border p-4">
+            <Fingerprint className="h-5 w-5 text-muted-foreground mt-0.5 shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-foreground">Passkeys & 2FA</p>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Connexion sans mot de passe via WebAuthn (empreinte, Face ID) et double authentification TOTP.
+              </p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </motion.div>
 
-      {/* Fonctionnalit\u00e9s */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-4">Fonctionnalit\u00e9s</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
-            {features.map((f) => (
-              <div key={f} className="flex items-center gap-2 py-1">
-                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
-                <p className="text-xs text-muted-foreground">{f}</p>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <Separator />
 
-      {/* Stack technique */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-4">Stack technique</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {stack.map((tech) => (
-              <div key={tech.name} className="flex items-center gap-3 rounded-xl border border-border p-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <tech.icon className="h-4 w-4 text-primary" />
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-foreground">{tech.name}</p>
-                  <p className="text-xs text-muted-foreground">{tech.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      {/* Fonctionnalit&eacute;s */}
+      <motion.div variants={fadeUp} custom={3}>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Fonctionnalit&eacute;s</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">
+          {[
+            'Factures, devis et avoirs',
+            'Chiffrement zero-access',
+            'Passkeys (WebAuthn)',
+            'Double authentification',
+            '&Eacute;quipes multi-membres',
+            'Collaboration temps r&eacute;el',
+            'G&eacute;n&eacute;ration PDF & FacturX',
+            'Email (Gmail, SMTP, Resend)',
+            'Facturation r&eacute;currente',
+            'Relances automatiques',
+            'D&eacute;penses & OCR',
+            'Catalogue produits',
+            'Export chiffr&eacute;',
+            'Analyse par IA',
+            'Th&egrave;me clair / sombre',
+            'Cookies RGPD',
+          ].map((f) => (
+            <div key={f} className="flex items-center gap-2 py-1.5">
+              <div className="h-1 w-1 rounded-full bg-primary shrink-0" />
+              <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: f }} />
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      <Separator />
+
+      {/* Stack */}
+      <motion.div variants={fadeUp} custom={4}>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Stack technique</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          {[
+            { name: 'Next.js 16', icon: Layout },
+            { name: 'AdonisJS 7', icon: Server },
+            { name: 'PostgreSQL', icon: Database },
+            { name: 'Turborepo', icon: Layers },
+            { name: 'Tailwind v4', icon: Paintbrush },
+            { name: 'Framer Motion', icon: Sparkles },
+            { name: 'Socket.io', icon: Zap },
+          ].map((tech) => (
+            <div key={tech.name} className="flex items-center gap-2.5 rounded-lg border border-border p-2.5">
+              <tech.icon className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-xs font-medium text-foreground">{tech.name}</span>
+            </div>
+          ))}
+        </div>
+      </motion.div>
+
+      <Separator />
 
       {/* Liens */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-4">Liens</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {links.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-3 rounded-xl border border-border p-3 hover:bg-muted/50 transition-colors group"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                  <link.icon className="h-4 w-4 text-primary" />
-                </div>
-                <span className="text-sm font-medium text-foreground flex-1">{link.label}</span>
-                <ExternalLink className="h-3.5 w-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-              </a>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <motion.div variants={fadeUp} custom={5}>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Liens</h2>
+        <div className="grid grid-cols-2 gap-3">
+          {[
+            { label: 'GitHub', href: 'https://github.com/faktur/fakturapp', icon: Code2 },
+            { label: 'Site web', href: 'https://fakturapp.cc', icon: Globe },
+            { label: 'Dashboard', href: 'https://dash.fakturapp.cc', icon: Layout },
+            { label: 'API', href: 'https://api.fakturapp.cc', icon: Server },
+          ].map((link) => (
+            <a
+              key={link.href}
+              href={link.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 rounded-lg border border-border p-2.5 hover:bg-muted/50 transition-colors group"
+            >
+              <link.icon className="h-4 w-4 text-primary shrink-0" />
+              <span className="text-xs font-medium text-foreground flex-1">{link.label}</span>
+              <ExternalLink className="h-3 w-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            </a>
+          ))}
+        </div>
+      </motion.div>
 
-      {/* Informations l\u00e9gales */}
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-sm font-semibold text-foreground mb-4">Informations l\u00e9gales</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {legalLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex items-center gap-3 rounded-xl border border-border p-3 hover:bg-muted/50 transition-colors"
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted">
-                  <link.icon className="h-4 w-4 text-muted-foreground" />
-                </div>
-                <span className="text-sm font-medium text-foreground flex-1">{link.label}</span>
-              </Link>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <Separator />
+
+      {/* L&eacute;gal */}
+      <motion.div variants={fadeUp} custom={6}>
+        <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-4">Informations l&eacute;gales</h2>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          {[
+            { label: 'Mentions l\u00e9gales', href: '/legal/mentions', icon: Scale },
+            { label: 'CGU', href: '/legal/terms', icon: ScrollText },
+            { label: 'Confidentialit\u00e9', href: '/legal/privacy', icon: Lock },
+            { label: 'S\u00e9curit\u00e9', href: '/legal/security', icon: Shield },
+            { label: 'Cookies', href: '/legal/cookies', icon: Cookie },
+          ].map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="flex items-center gap-2 rounded-lg border border-border p-2.5 hover:bg-muted/50 transition-colors text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <link.icon className="h-3.5 w-3.5 shrink-0" />
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </motion.div>
 
       {/* Footer */}
-      <div className="text-center pb-4">
-        <p className="text-xs text-muted-foreground">
-          Personal Use License &mdash; Copyright &copy; 2025-2026 danbenba
+      <motion.div variants={fadeUp} custom={7} className="text-center pb-4 pt-2">
+        <p className="text-[11px] text-muted-foreground/50 flex items-center justify-center gap-1">
+          Fait avec <Heart className="h-3 w-3 text-red-400" /> par danbenba &mdash; 2025-2026
         </p>
-      </div>
+      </motion.div>
     </motion.div>
   )
 }
