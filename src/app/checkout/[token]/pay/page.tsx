@@ -223,7 +223,7 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
     if (!d?.hasPdf) return null
     return (
       <button onClick={dl} disabled={dling} className={`w-full flex items-center justify-center gap-2.5 h-11 rounded-xl border border-zinc-200 dark:border-white/[0.06] bg-zinc-50 dark:bg-white/[0.03] text-sm text-zinc-500 dark:text-white/50 hover:text-zinc-700 dark:hover:text-white/80 hover:bg-zinc-100 dark:hover:bg-white/[0.06] hover:border-zinc-300 dark:hover:border-white/[0.1] transition-all disabled:opacity-40 ${className}`}>
-        {dling ? <Spinner className="text-white/50" /> : <IconDownload className="h-4 w-4" />}
+        {dling ? <Spinner /> : <IconDownload className="h-4 w-4" />}
         {dling ? 'Téléchargement...' : 'Télécharger la facture'}
       </button>
     )
