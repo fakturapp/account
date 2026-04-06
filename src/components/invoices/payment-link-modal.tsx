@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,10 +17,11 @@ import {
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
-  Send,
   Banknote,
   Coins,
   Clock,
+  FileText,
+  Calendar,
 } from 'lucide-react'
 
 interface PaymentLinkModalProps {
@@ -31,6 +32,28 @@ interface PaymentLinkModalProps {
   invoicePaymentMethod: string | null
   invoiceDueDate: string | null
   onCreated: (link: { id: string; token: string; url: string; expiresAt: string | null }) => void
+}
+
+function formatDateFr(dateStr: string): string {
+  try {
+    const d = new Date(dateStr)
+    if (isNaN(d.getTime())) return dateStr
+    return d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+  } catch {
+    return dateStr
+  }
+}
+
+function isDatePassed(dateStr: string | null): boolean {
+  if (!dateStr) return false
+  try {
+    const d = new Date(dateStr)
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    return d < today
+  } catch {
+    return false
+  }
 }
 
 export function PaymentLinkModal({
@@ -55,9 +78,10 @@ export function PaymentLinkModal({
   const [showIban, setShowIban] = useState(true)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [expirationType, setExpirationType] = useState<'due_date' | 'custom' | 'days'>('due_date')
+  const [expirationType, setExpirationType] = useState<'due_date' | 'custom' | 'days'>('days')
   const [expiresAt, setExpiresAt] = useState('')
   const [expirationDays, setExpirationDays] = useState(30)
+  const [includePdf, setIncludePdf] = useState(true)
 
   // Step 3
   const [generatedLink, setGeneratedLink] = useState<{
@@ -68,6 +92,10 @@ export function PaymentLinkModal({
   } | null>(null)
 
   const isCash = paymentMethod === 'cash' || paymentMethod === 'especes'
+  const dueDatePassed = useMemo(() => isDatePassed(invoiceDueDate), [invoiceDueDate])
+
+  // Preset days options
+  const daysPresets = [10, 30, 60, 90]
 
   function handleClose() {
     setStep(1)
@@ -75,9 +103,11 @@ export function PaymentLinkModal({
     setPaymentType('full')
     setShowIban(true)
     setPassword('')
-    setExpirationType('due_date')
+    setShowPassword(false)
+    setExpirationType('days')
     setExpiresAt('')
     setExpirationDays(30)
+    setIncludePdf(true)
     setGeneratedLink(null)
     setCopied(false)
     onClose()
@@ -91,6 +121,7 @@ export function PaymentLinkModal({
       paymentType: 'full',
       showIban,
       expirationType,
+      includePdf,
     }
 
     if (password) body.password = password
@@ -253,18 +284,49 @@ export function PaymentLinkModal({
               </button>
             </label>
 
+            {/* Include PDF toggle */}
+            <label className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText className="h-4 w-4 text-muted-foreground" />
+                <div>
+                  <span className="text-sm font-medium text-foreground">
+                    Inclure la facture en PDF
+                  </span>
+                  <p className="text-xs text-muted-foreground">
+                    Hébergé sur Cloudflare, supprimé à la clôture du lien
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIncludePdf(!includePdf)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ${
+                  includePdf ? 'bg-primary' : 'bg-muted-foreground/30'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ${
+                    includePdf ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </label>
+
             {/* Password */}
             <div>
-              <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+              <label className="text-sm font-medium text-foreground mb-1 flex items-center gap-2">
                 <Lock className="h-4 w-4 text-muted-foreground" />
-                Mot de passe (optionnel)
+                Ajouter un mot de passe
               </label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Laisser vide pour un lien accessible sans mot de passe
+              </p>
               <div className="relative">
                 <Input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Laisser vide pour un lien public"
+                  placeholder="Mot de passe..."
                   className="pr-10"
                 />
                 <button
@@ -281,15 +343,18 @@ export function PaymentLinkModal({
             <div>
               <label className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
                 <Clock className="h-4 w-4 text-muted-foreground" />
-                Expiration
+                Expiration du lien
               </label>
               <div className="space-y-2">
+                {/* Due date option */}
                 {invoiceDueDate && (
                   <label
-                    className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                      expirationType === 'due_date'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:bg-muted/30'
+                    className={`flex items-center gap-3 p-3 rounded-lg border transition-colors ${
+                      dueDatePassed
+                        ? 'border-border opacity-40 cursor-not-allowed'
+                        : expirationType === 'due_date'
+                          ? 'border-primary bg-primary/5 cursor-pointer'
+                          : 'border-border hover:bg-muted/30 cursor-pointer'
                     }`}
                   >
                     <input
@@ -297,44 +362,77 @@ export function PaymentLinkModal({
                       name="expiration"
                       value="due_date"
                       checked={expirationType === 'due_date'}
-                      onChange={() => setExpirationType('due_date')}
+                      onChange={() => !dueDatePassed && setExpirationType('due_date')}
+                      disabled={dueDatePassed}
                       className="sr-only"
                     />
-                    <span className="text-sm text-foreground">
-                      Date d&apos;échéance ({invoiceDueDate})
-                    </span>
+                    <Calendar className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <div className="flex-1">
+                      <span className="text-sm text-foreground">
+                        Date d&apos;échéance
+                      </span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        {formatDateFr(invoiceDueDate)}
+                      </span>
+                    </div>
+                    {dueDatePassed && (
+                      <span className="text-[10px] font-semibold text-red-400 bg-red-400/10 px-2 py-0.5 rounded-full">
+                        Passée
+                      </span>
+                    )}
                   </label>
                 )}
-                <label
-                  className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+
+                {/* Days presets */}
+                <div
+                  className={`p-3 rounded-lg border transition-colors ${
                     expirationType === 'days'
                       ? 'border-primary bg-primary/5'
-                      : 'border-border hover:bg-muted/30'
+                      : 'border-border'
                   }`}
                 >
-                  <input
-                    type="radio"
-                    name="expiration"
-                    value="days"
-                    checked={expirationType === 'days'}
-                    onChange={() => setExpirationType('days')}
-                    className="sr-only"
-                  />
-                  <span className="text-sm text-foreground">Dans</span>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={365}
-                    value={expirationDays}
-                    onChange={(e) => setExpirationDays(Number(e.target.value))}
-                    className="w-20 h-8 text-center"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      setExpirationType('days')
-                    }}
-                  />
-                  <span className="text-sm text-foreground">jours</span>
-                </label>
+                  <div
+                    className="flex items-center gap-2 mb-2 cursor-pointer"
+                    onClick={() => setExpirationType('days')}
+                  >
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-foreground">Dans un nombre de jours</span>
+                  </div>
+                  <div className="flex gap-2">
+                    {daysPresets.map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => {
+                          setExpirationType('days')
+                          setExpirationDays(d)
+                        }}
+                        className={`flex-1 h-8 rounded-lg text-xs font-semibold transition-colors ${
+                          expirationType === 'days' && expirationDays === d
+                            ? 'bg-primary text-white'
+                            : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {d}j
+                      </button>
+                    ))}
+                    <Input
+                      type="number"
+                      min={1}
+                      max={365}
+                      value={expirationType === 'days' ? expirationDays : ''}
+                      onChange={(e) => {
+                        setExpirationType('days')
+                        setExpirationDays(Number(e.target.value))
+                      }}
+                      placeholder="..."
+                      className="w-16 h-8 text-center text-xs"
+                      onClick={() => setExpirationType('days')}
+                    />
+                  </div>
+                </div>
+
+                {/* Custom date */}
                 <label
                   className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
                     expirationType === 'custom'
@@ -350,12 +448,17 @@ export function PaymentLinkModal({
                     onChange={() => setExpirationType('custom')}
                     className="sr-only"
                   />
+                  <Calendar className="h-4 w-4 text-muted-foreground" />
                   <span className="text-sm text-foreground">Date personnalisée</span>
                   <Input
                     type="date"
                     value={expiresAt}
-                    onChange={(e) => setExpiresAt(e.target.value)}
-                    className="w-40 h-8"
+                    min={new Date().toISOString().split('T')[0]}
+                    onChange={(e) => {
+                      setExpiresAt(e.target.value)
+                      setExpirationType('custom')
+                    }}
+                    className="w-40 h-8 ml-auto"
                     onClick={(e) => {
                       e.stopPropagation()
                       setExpirationType('custom')
@@ -406,11 +509,7 @@ export function PaymentLinkModal({
             {generatedLink.expiresAt && (
               <p className="text-xs text-muted-foreground">
                 Expire le{' '}
-                {new Date(generatedLink.expiresAt).toLocaleDateString('fr-FR', {
-                  day: 'numeric',
-                  month: 'long',
-                  year: 'numeric',
-                })}
+                {formatDateFr(generatedLink.expiresAt)}
               </p>
             )}
           </div>

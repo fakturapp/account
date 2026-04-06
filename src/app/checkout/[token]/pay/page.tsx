@@ -34,6 +34,7 @@ interface CheckoutData {
   paymentMethod?: string
   isPasswordProtected?: boolean
   showIban?: boolean
+  hasPdf?: boolean
 }
 
 interface IbanData {
@@ -358,14 +359,16 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
             </div>
 
             {/* Download button */}
-            <button
-              onClick={handleDownloadPdf}
-              disabled={downloading}
-              className="mt-6 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              {downloading ? 'Téléchargement...' : 'Télécharger la facture'}
-            </button>
+            {checkoutData.hasPdf && (
+              <button
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                className="mt-6 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                {downloading ? 'Téléchargement...' : 'Télécharger la facture'}
+              </button>
+            )}
           </motion.div>
         )}
 
@@ -456,14 +459,16 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
             </div>
 
             {/* Download */}
-            <button
-              onClick={handleDownloadPdf}
-              disabled={downloading}
-              className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              {downloading ? 'Téléchargement...' : 'Télécharger la facture'}
-            </button>
+            {checkoutData?.hasPdf && (
+              <button
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                className="mt-3 w-full flex items-center justify-center gap-2 h-10 rounded-xl border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                {downloading ? 'Téléchargement...' : 'Télécharger la facture'}
+              </button>
+            )}
           </motion.div>
         )}
 
@@ -524,14 +529,16 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
               Il est en attente de confirmation par l&apos;émetteur.
             </p>
 
-            <button
-              onClick={handleDownloadPdf}
-              disabled={downloading}
-              className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
-            >
-              <Download className="h-4 w-4" />
-              {downloading ? 'Téléchargement...' : 'Télécharger la facture'}
-            </button>
+            {checkoutData.hasPdf && (
+              <button
+                onClick={handleDownloadPdf}
+                disabled={downloading}
+                className="w-full flex items-center justify-center gap-2 h-11 rounded-xl border border-zinc-700 text-sm text-zinc-300 hover:text-white hover:border-zinc-600 transition-colors"
+              >
+                <Download className="h-4 w-4" />
+                {downloading ? 'Téléchargement...' : 'Télécharger la facture'}
+              </button>
+            )}
           </motion.div>
         )}
 
