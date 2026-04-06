@@ -963,12 +963,12 @@ export function A4Sheet({
   const errorBorder = '#ef4444'
 
   const gridCols = billingType === 'detailed'
-    ? 'minmax(180px, 1fr) 60px 60px 90px 55px 90px 32px'
-    : 'minmax(200px, 1fr) 100px 32px'
+    ? 'minmax(120px, 1fr) 45px 50px 75px 45px 80px 28px'
+    : 'minmax(150px, 1fr) 90px 28px'
 
   const gridColsPreview = billingType === 'detailed'
-    ? 'minmax(180px, 1fr) 60px 60px 90px 55px 90px'
-    : 'minmax(200px, 1fr) 100px'
+    ? 'minmax(120px, 1fr) 45px 50px 75px 45px 80px'
+    : 'minmax(150px, 1fr) 90px'
 
   const cols = isPreview ? gridColsPreview : gridCols
 
@@ -1324,15 +1324,15 @@ export function A4Sheet({
               <div className="mb-3" style={(hasError('Désignation') || hasError('Prix')) ? { outline: `2px solid ${errorBorder}`, outlineOffset: '-1px', borderRadius: T.borderRadius } : undefined}>
                 {/* Header */}
                 <div className="overflow-hidden" style={{ display: 'grid', gridTemplateColumns: cols, borderTopLeftRadius: T.borderRadius, borderTopRightRadius: T.borderRadius }}>
-                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.5px]"
+                  <div className="px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.5px] truncate"
                     style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.designation}</div>
                   {billingType === 'detailed' && (<>
-                    <div className="px-1.5 py-2 text-[10px] font-semibold text-center" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.qty}</div>
-                    <div className="px-1.5 py-2 text-[10px] font-semibold text-center" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unit}</div>
-                    <div className="px-1.5 py-2 text-[10px] font-semibold text-right" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unitPriceHT}</div>
-                    <div className="px-1.5 py-2 text-[10px] font-semibold text-center" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.vat}</div>
+                    <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.qty}</div>
+                    <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unit}</div>
+                    <div className="px-1 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unitPriceHT}</div>
+                    <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.vat}</div>
                   </>)}
-                  <div className="px-3 py-2 text-[10px] font-semibold text-right" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.amountHT}</div>
+                  <div className="px-2 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.amountHT}</div>
                   {ed && <div className="py-2" style={{ backgroundColor: accentColor }} />}
                 </div>
 
@@ -1382,8 +1382,8 @@ export function A4Sheet({
                                 className="w-full bg-transparent text-[11px] text-center focus:outline-none"
                                 style={{ color: T.textMuted }} />}
                         </div>
-                        <div className="px-1.5 py-2 text-right">
-                          {isPreview ? <span className="text-[12px]">{fmtCurrency(line.unitPrice, lang)}</span>
+                        <div className="px-1 py-2 text-right overflow-hidden">
+                          {isPreview ? <span className="text-[11px] truncate block">{fmtCurrency(line.unitPrice, lang)}</span>
                             : <input type="number" min="0" step="0.01" value={line.unitPrice}
                                 onChange={(e) => onUpdateLine(idx, { unitPrice: parseFloat(e.target.value) || 0 })}
                                 className="w-full bg-transparent text-[12px] text-right focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
