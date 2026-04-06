@@ -135,7 +135,7 @@ export function PaymentLinkCard({
           <Link2 className="h-4 w-4 text-primary" />
           <span className="text-sm font-semibold text-foreground">Lien de paiement actif</span>
           {paymentLink.isPasswordProtected && (
-            <Lock className="h-3 w-3 text-muted-foreground ml-auto" title="Protégé par mot de passe" />
+            <Lock className="h-3 w-3 text-muted-foreground ml-auto" />
           )}
         </div>
 
