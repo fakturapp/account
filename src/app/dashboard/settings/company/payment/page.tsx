@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
@@ -11,16 +11,66 @@ import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/components/ui/toast'
 import { Spinner } from '@/components/ui/spinner'
 import { Select } from '@/components/ui/select'
+import { Badge } from '@/components/ui/badge'
 import { useCompanySettings } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
-import { Receipt, Banknote, Coins, PenLine, Lock, CreditCard, Info } from 'lucide-react'
+import { StripeActivationModal } from '@/components/settings/stripe-activation-modal'
+import { Receipt, Banknote, Coins, PenLine, Lock, CreditCard, Info, CheckCircle, Trash2, AlertTriangle } from 'lucide-react'
 
 export default function PaymentPage() {
   const { toast } = useToast()
   const { loading, noCompany, paymentForm, setPaymentForm } = useCompanySettings()
   const [saving, setSaving] = useState(false)
 
+  // Stripe state
+  const [stripeLoading, setStripeLoading] = useState(true)
+  const [stripeConfigured, setStripeConfigured] = useState(false)
+  const [stripeTestMode, setStripeTestMode] = useState(false)
+  const [stripeMaskedPk, setStripeMaskedPk] = useState('')
+  const [stripeMaskedSk, setStripeMaskedSk] = useState('')
+  const [stripeModalOpen, setStripeModalOpen] = useState(false)
+  const [webhookUrl, setWebhookUrl] = useState('')
+  const [deletingStripe, setDeletingStripe] = useState(false)
+
+  useEffect(() => {
+    loadStripeConfig()
+  }, [])
+
+  async function loadStripeConfig() {
+    setStripeLoading(true)
+    const { data } = await api.get<{
+      isConfigured: boolean
+      publishableKeyMasked?: string
+      secretKeyMasked?: string
+      isTestMode?: boolean
+      webhookUrl?: string
+    }>('/settings/stripe')
+    if (data) {
+      setStripeConfigured(data.isConfigured)
+      setStripeMaskedPk(data.publishableKeyMasked || '')
+      setStripeMaskedSk(data.secretKeyMasked || '')
+      setStripeTestMode(data.isTestMode || false)
+      setWebhookUrl(data.webhookUrl || '')
+    }
+    setStripeLoading(false)
+  }
+
+  async function handleDeleteStripe() {
+    setDeletingStripe(true)
+    const { error } = await api.delete('/settings/stripe')
+    setDeletingStripe(false)
+    if (error) return toast(error, 'error')
+    toast('Configuration Stripe supprimée', 'success')
+    setStripeConfigured(false)
+    setStripeMaskedPk('')
+    setStripeMaskedSk('')
+  }
+
   function togglePaymentMethod(method: string) {
+    if (method === 'stripe' && !stripeConfigured) {
+      setStripeModalOpen(true)
+      return
+    }
     setPaymentForm((p) => {
       const methods = p.paymentMethods.includes(method)
         ? p.paymentMethods.filter((m) => m !== method)
@@ -164,19 +214,61 @@ export default function PaymentPage() {
 
                 <Separator className="my-2" />
 
-                <h3 className="font-semibold text-muted-foreground text-sm">Paiement en ligne</h3>
-                <div className="space-y-3 opacity-50">
-                  <div className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-not-allowed">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
-                      <CreditCard className="h-5 w-5 text-muted-foreground" />
+                <h3 className="font-semibold text-foreground">Paiement en ligne</h3>
+
+                <div className="space-y-3">
+                  {/* Stripe */}
+                  {stripeLoading ? (
+                    <Skeleton className="h-20 w-full rounded-xl" />
+                  ) : stripeConfigured ? (
+                    <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-4">
+                      <div className="flex items-center gap-4">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
+                          <CreditCard className="h-5 w-5 text-violet-500" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <p className="text-sm font-medium text-foreground">Stripe</p>
+                            <CheckCircle className="h-3.5 w-3.5 text-green-500" />
+                            {stripeTestMode && (
+                              <Badge variant="warning" className="text-[10px]">Mode test</Badge>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {stripeMaskedPk}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Button variant="outline" size="sm" onClick={() => setStripeModalOpen(true)}>
+                            Modifier
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={handleDeleteStripe} disabled={deletingStripe}>
+                            {deletingStripe ? <Spinner /> : <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />}
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2 rounded-lg bg-amber-500/5 border border-amber-500/10 px-3 py-2">
+                        <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                        <p className="text-[11px] text-amber-400">Des frais Stripe peuvent s&apos;appliquer sur chaque transaction</p>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-muted-foreground">Stripe</p>
-                      <p className="text-xs text-muted-foreground">Carte bancaire, Apple Pay, Google Pay</p>
+                  ) : (
+                    <div className="flex items-center gap-4 rounded-xl border border-border p-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
+                        <CreditCard className="h-5 w-5 text-violet-500" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">Stripe</p>
+                        <p className="text-xs text-muted-foreground">Carte bancaire, Apple Pay, Google Pay</p>
+                      </div>
+                      <Button size="sm" onClick={() => setStripeModalOpen(true)}>
+                        Activer
+                      </Button>
                     </div>
-                    <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-                  </div>
-                  <div className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-not-allowed">
+                  )}
+
+                  {/* PayPal placeholder */}
+                  <div className="flex items-center gap-4 rounded-xl border border-border p-4 opacity-50 cursor-not-allowed">
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-muted">
                       <CreditCard className="h-5 w-5 text-muted-foreground" />
                     </div>
@@ -188,13 +280,6 @@ export default function PaymentPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
-                  <Info className="h-5 w-5 text-primary shrink-0" />
-                  <p className="text-sm text-foreground">
-                    L&apos;intégration des paiements en ligne (Stripe, PayPal) arrive bientôt.
-                  </p>
-                </div>
-
                 <Button type="submit" disabled={saving}>
                   {saving ? <><Spinner className="text-primary-foreground" /> Enregistrement...</> : 'Enregistrer'}
                 </Button>
@@ -203,6 +288,14 @@ export default function PaymentPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Stripe activation modal */}
+      <StripeActivationModal
+        open={stripeModalOpen}
+        onClose={() => setStripeModalOpen(false)}
+        onActivated={() => loadStripeConfig()}
+        webhookUrl={webhookUrl || `${window.location.origin.replace('dash.', 'api.')}/webhooks/stripe`}
+      />
     </motion.div>
   )
 }

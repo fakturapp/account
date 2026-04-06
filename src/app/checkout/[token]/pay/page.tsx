@@ -4,8 +4,9 @@ import { useState, useEffect, useCallback, use } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import confetti from 'canvas-confetti'
 import { Spinner } from '@/components/ui/spinner'
+import { StripePaymentForm } from '@/components/checkout/stripe-payment-form'
 
-type Step = 'loading' | 'error' | 'expired' | 'password' | 'method' | 'iban' | 'confirm' | 'pending' | 'done'
+type Step = 'loading' | 'error' | 'expired' | 'password' | 'method' | 'iban' | 'confirm' | 'pending' | 'done' | 'stripe'
 
 interface Data {
   status: 'active' | 'paid_pending' | 'confirmed'
@@ -18,6 +19,7 @@ interface Data {
   companyName?: string | null
   maskedEmail?: string | null
   hasPdf?: boolean
+  hasStripe?: boolean
 }
 
 interface Iban {
@@ -217,7 +219,7 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
   function cp() { if (!ib?.ibanRaw) return; navigator.clipboard.writeText(ib.ibanRaw); setCopied(true); setTimeout(() => setCopied(false), 2000) }
 
   const amt = d ? new Intl.NumberFormat('fr-FR', { style: 'currency', currency: d.currency }).format(d.amount) : ''
-  const si = step === 'method' ? 0 : step === 'iban' ? 1 : step === 'confirm' ? 2 : -1
+  const si = step === 'method' ? 0 : (step === 'iban' || step === 'stripe') ? 1 : step === 'confirm' ? 2 : -1
 
   function DlBtn() {
     if (!d?.hasPdf) return null
@@ -317,13 +319,27 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
               )}
             </motion.button>
 
-            <div className="flex items-center gap-4 p-4 rounded-xl border border-zinc-100 dark:border-white/[0.04] opacity-25 cursor-not-allowed mb-6">
-              <div className="h-11 w-11 rounded-xl bg-zinc-100 dark:bg-white/[0.04] flex items-center justify-center shrink-0">
-                <svg className="h-5 w-5 text-zinc-400 dark:text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            {d.hasStripe ? (
+              <motion.button whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.98 }} onClick={() => setStep('stripe')}
+                className="w-full flex items-center gap-4 p-4 rounded-xl border border-zinc-200 dark:border-white/[0.06] bg-zinc-50 dark:bg-white/[0.03] hover:bg-indigo-50 dark:hover:bg-indigo-500/5 hover:border-indigo-300 dark:hover:border-indigo-500/20 transition-all text-left group mb-6">
+                <div className="h-11 w-11 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0 group-hover:bg-violet-500/15 transition-colors">
+                  <svg className="h-5 w-5 text-violet-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-zinc-900 dark:text-white">Carte bancaire</p>
+                  <p className="text-[11px] text-zinc-400 dark:text-white/35 mt-0.5">Paiement sécurisé par Stripe</p>
+                </div>
+                <svg className="h-4 w-4 text-zinc-300 dark:text-white/20 group-hover:text-zinc-500 dark:group-hover:text-white/40 transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m9 18 6-6-6-6"/></svg>
+              </motion.button>
+            ) : (
+              <div className="flex items-center gap-4 p-4 rounded-xl border border-zinc-100 dark:border-white/[0.04] opacity-25 cursor-not-allowed mb-6">
+                <div className="h-11 w-11 rounded-xl bg-zinc-100 dark:bg-white/[0.04] flex items-center justify-center shrink-0">
+                  <svg className="h-5 w-5 text-zinc-400 dark:text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                </div>
+                <div className="flex-1"><p className="text-sm text-zinc-400 dark:text-white/40">Carte bancaire</p><p className="text-[11px] text-zinc-300 dark:text-white/20">Bientôt disponible</p></div>
+                <IconLock className="h-3.5 w-3.5 text-zinc-300 dark:text-white/15" />
               </div>
-              <div className="flex-1"><p className="text-sm text-zinc-400 dark:text-white/40">Carte bancaire</p><p className="text-[11px] text-zinc-300 dark:text-white/20">Bientôt disponible</p></div>
-              <IconLock className="h-3.5 w-3.5 text-zinc-300 dark:text-white/15" />
-            </div>
+            )}
 
             <DlBtn />
 
@@ -387,6 +403,23 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
           </motion.div>
         )}
 
+        {/* Stripe */}
+        {step === 'stripe' && d && (
+          <motion.div key="s" {...slide} className="rounded-2xl border border-zinc-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] backdrop-blur-2xl p-8 shadow-xl dark:shadow-2xl">
+            <StripePaymentForm
+              token={token}
+              amount={amt}
+              invoiceNumber={d.invoiceNumber}
+              onSuccess={() => { setStep('done'); boom() }}
+              onError={() => {}}
+            />
+            <motion.button whileTap={{ scale: 0.97 }} onClick={() => setStep('method')}
+              className="w-full mt-4 h-10 rounded-xl border border-zinc-200 dark:border-white/[0.06] text-sm font-medium text-zinc-500 dark:text-white/50 hover:text-zinc-900 dark:hover:text-white transition-all flex items-center justify-center gap-2">
+              <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="m15 18-6-6 6-6"/></svg> Retour
+            </motion.button>
+          </motion.div>
+        )}
+
         {/* Confirm */}
         {step === 'confirm' && (
           <motion.div key="c" {...slide} className="rounded-2xl border border-zinc-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] backdrop-blur-2xl p-8 shadow-xl dark:shadow-2xl">
@@ -418,7 +451,7 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
                 className="h-16 w-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center mb-5"><IconClock className="h-8 w-8 text-indigo-400" /></motion.div>
               <h2 className="text-lg font-semibold text-zinc-900 dark:text-white mb-2">Paiement envoyé</h2>
               <p className="text-sm text-zinc-500 dark:text-white/50 leading-relaxed mb-2">
-                Facture <strong className="text-zinc-900 dark:text-white">{d.invoiceNumber}</strong> — le paiement a été signalé et est en attente de confirmation par l&apos;émetteur.
+                Facture <strong className="text-zinc-900 dark:text-white">{d.invoiceNumber}</strong> le paiement a été signalé et est en attente de confirmation par l&apos;émetteur.
               </p>
               {d.maskedEmail && (
                 <div className="flex items-center gap-2 text-zinc-400 dark:text-white/30 mb-6">
