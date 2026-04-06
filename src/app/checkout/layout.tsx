@@ -17,7 +17,6 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
           warpAmount={0.3}
           resolutionScale={0.5}
         />
-        {/* Dark overlay for readability */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
       </div>
 
@@ -29,9 +28,24 @@ export default function CheckoutLayout({ children }: { children: React.ReactNode
         </header>
 
         {/* Main */}
-        <main className="flex-1 flex items-start justify-center px-4 pb-12">
+        <main className="flex-1 flex items-start justify-center px-4 pb-6">
           {children}
         </main>
+
+        {/* Footer */}
+        <footer className="py-4 text-center">
+          <p className="text-[11px] text-zinc-500">
+            Propulsé par{' '}
+            <a
+              href="https://fakturapp.cc"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-indigo-400 hover:text-indigo-300 transition-colors font-medium"
+            >
+              Faktur
+            </a>
+          </p>
+        </footer>
       </div>
     </div>
   )
