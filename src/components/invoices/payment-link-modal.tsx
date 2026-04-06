@@ -25,7 +25,6 @@ import {
   Calendar,
   Shield,
   CheckCircle,
-  Sparkles,
 } from 'lucide-react'
 
 interface PaymentLinkModalProps {
@@ -574,7 +573,7 @@ export function PaymentLinkModal({
               </Button>
             ) : (
               <Button size="sm" disabled={loading || (usePassword && password.length < 4)} onClick={handleGenerate} className="gap-1.5">
-                {loading ? <Spinner className="h-4 w-4" /> : <Sparkles className="h-3.5 w-3.5" />}
+                {loading ? <Spinner className="h-4 w-4" /> : <Link2 className="h-3.5 w-3.5" />}
                 Générer le lien
               </Button>
             )}
