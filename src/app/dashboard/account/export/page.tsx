@@ -13,7 +13,7 @@ import { api } from '@/lib/api'
 import { useToast } from '@/components/ui/toast'
 import {
   ChevronRight, ChevronLeft, Lock, Download, Shield,
-  CheckCircle2, FileArchive, Landmark, ArrowRight,
+  CheckCircle2, FileArchive, Landmark, ArrowRight, CreditCard,
 } from 'lucide-react'
 
 interface TeamInfo {
@@ -46,6 +46,7 @@ export default function ExportPage() {
   const [fileName, setFileName] = useState('')
   const [encrypt, setEncrypt] = useState(false)
   const [includeBankAccounts, setIncludeBankAccounts] = useState(false)
+  const [includeStripeKeys, setIncludeStripeKeys] = useState(false)
   const [encryptionPassword, setEncryptionPassword] = useState('')
   const [encryptionConfirm, setEncryptionConfirm] = useState('')
   const [accountPassword, setAccountPassword] = useState('')
@@ -97,6 +98,7 @@ export default function ExportPage() {
     const body: Record<string, string | boolean> = { password: accountPassword }
     if (encrypt && encryptionPassword) body.encryptionPassword = encryptionPassword
     if (includeBankAccounts) body.includeBankAccounts = true
+    if (includeStripeKeys) body.includeStripeKeys = true
 
     const { blob, filename: serverFilename, error } = await api.postBlob('/team/export', body)
 
@@ -313,6 +315,21 @@ export default function ExportPage() {
                 </div>
 
                 <Separator />
+
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
+                      <CreditCard className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium text-foreground">Inclure les cl&eacute;s Stripe</p>
+                      <p className="text-xs text-muted-foreground">Cl&eacute;s API, webhook secrets</p>
+                    </div>
+                  </div>
+                  <Switch checked={includeStripeKeys} onChange={setIncludeStripeKeys} />
+                </div>
+
+                <Separator />
                 <div className="flex justify-between">
                   <Button variant="outline" onClick={goBack}><ChevronLeft className="h-4 w-4 mr-1" /> Retour</Button>
                   <Button onClick={goNext} disabled={!canProceedStep1}>Continuer <ArrowRight className="h-4 w-4 ml-2" /></Button>
@@ -391,6 +408,10 @@ export default function ExportPage() {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Comptes bancaires</span>
                         <span className="font-medium">{includeBankAccounts ? <span className="text-primary flex items-center gap-1"><Landmark className="h-3.5 w-3.5" /> Inclus</span> : 'Non'}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Cl&eacute;s Stripe</span>
+                        <span className="font-medium">{includeStripeKeys ? <span className="text-primary flex items-center gap-1"><CreditCard className="h-3.5 w-3.5" /> Inclus</span> : 'Non'}</span>
                       </div>
                     </div>
 
