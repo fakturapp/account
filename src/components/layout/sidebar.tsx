@@ -404,12 +404,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             <div className="px-4 pt-4 pb-3">
               <div className="flex items-center justify-center gap-2.5">
                 <img src="/logo.svg" alt="Faktur" className="h-10 w-10 shrink-0 drop-shadow-sm" />
-                <span className="text-[18px] font-semibold text-foreground font-lexend tracking-tight">
-                  Faktur
-                </span>
-                <span className="text-[10px] text-muted-foreground/40 font-medium self-end mb-0.5">
-                  v{APP_VERSION}
-                </span>
+                <div className="flex flex-col items-start">
+                  <span className="text-[18px] font-semibold text-foreground font-lexend tracking-tight leading-tight">
+                    Faktur
+                  </span>
+                  <span className="text-[9px] text-muted-foreground/40 font-medium leading-none">
+                    v{APP_VERSION}
+                  </span>
+                </div>
               </div>
             </div>
           </motion.div>
