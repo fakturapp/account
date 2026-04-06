@@ -76,6 +76,7 @@ export function PaymentLinkModal({
 
   // Step 2
   const [showIban, setShowIban] = useState(true)
+  const [usePassword, setUsePassword] = useState(false)
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [expirationType, setExpirationType] = useState<'due_date' | 'custom' | 'days'>('days')
@@ -102,6 +103,7 @@ export function PaymentLinkModal({
     setPaymentMethod(invoicePaymentMethod || 'bank_transfer')
     setPaymentType('full')
     setShowIban(true)
+    setUsePassword(false)
     setPassword('')
     setShowPassword(false)
     setExpirationType('days')
@@ -124,7 +126,7 @@ export function PaymentLinkModal({
       includePdf,
     }
 
-    if (password) body.password = password
+    if (usePassword && password) body.password = password
     if (expirationType === 'custom' && expiresAt) body.expiresAt = expiresAt
     if (expirationType === 'days') body.expirationDays = expirationDays
 
@@ -314,29 +316,45 @@ export function PaymentLinkModal({
 
             {/* Password */}
             <div>
-              <label className="text-sm font-medium text-foreground mb-1 flex items-center gap-2">
-                <Lock className="h-4 w-4 text-muted-foreground" />
-                Ajouter un mot de passe
-              </label>
-              <p className="text-xs text-muted-foreground mb-2">
-                Laisser vide pour un lien accessible sans mot de passe
-              </p>
-              <div className="relative">
-                <Input
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Mot de passe..."
-                  className="pr-10"
+              <label
+                className="flex items-center gap-3 cursor-pointer"
+                onClick={() => {
+                  setUsePassword(!usePassword)
+                  if (usePassword) setPassword('')
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={usePassword}
+                  onChange={() => {}}
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
+                <div className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">
+                    Ajouter un mot de passe
+                  </span>
+                </div>
+              </label>
+              {usePassword && (
+                <div className="mt-2 ml-7 relative">
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Mot de passe..."
+                    autoFocus
+                    className="pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Expiration */}

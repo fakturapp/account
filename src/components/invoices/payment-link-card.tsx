@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
@@ -47,6 +48,7 @@ export function PaymentLinkCard({
   const { toast } = useToast()
   const [deleting, setDeleting] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   if (!paymentLink) return null
 
@@ -59,6 +61,7 @@ export function PaymentLinkCard({
       return
     }
     toast('Lien de paiement supprimé', 'success')
+    setShowDeleteConfirm(false)
     onDeleted()
   }
 
@@ -113,11 +116,10 @@ export function PaymentLinkCard({
             Le lien de paiement a expiré. Supprimez-le pour en créer un nouveau.
           </p>
           <button
-            onClick={handleDelete}
-            disabled={deleting}
-            className="mt-2 px-3 py-1 rounded-full bg-card shadow-sm text-xs font-semibold text-red-400 border border-border hover:bg-muted/50 transition-colors disabled:opacity-40"
+            onClick={() => setShowDeleteConfirm(true)}
+            className="mt-2 px-3 py-1 rounded-full bg-card shadow-sm text-xs font-semibold text-red-400 border border-border hover:bg-muted/50 transition-colors"
           >
-            {deleting ? <Spinner className="h-3 w-3" /> : <Trash2 className="h-3 w-3 inline mr-1" />}
+            <Trash2 className="h-3 w-3 inline mr-1" />
             Supprimer
           </button>
         </div>
@@ -163,14 +165,30 @@ export function PaymentLinkCard({
         )}
 
         <button
-          onClick={handleDelete}
-          disabled={deleting}
-          className="px-3 py-1 rounded-full bg-card shadow-sm text-xs font-semibold text-red-400 border border-border hover:bg-muted/50 transition-colors disabled:opacity-40"
+          onClick={() => setShowDeleteConfirm(true)}
+          className="px-3 py-1 rounded-full bg-card shadow-sm text-xs font-semibold text-red-400 border border-border hover:bg-muted/50 transition-colors"
         >
-          {deleting ? <Spinner className="h-3 w-3" /> : <Trash2 className="h-3 w-3 inline mr-1" />}
+          <Trash2 className="h-3 w-3 inline mr-1" />
           Supprimer le lien
         </button>
       </div>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={showDeleteConfirm} onClose={() => setShowDeleteConfirm(false)} className="max-w-sm">
+        <DialogTitle>Supprimer le lien</DialogTitle>
+        <DialogDescription>
+          Le lien de paiement sera désactivé et les données sensibles (IBAN, PDF) seront supprimées. Cette action est irréversible.
+        </DialogDescription>
+        <DialogFooter>
+          <Button variant="outline" size="sm" onClick={() => setShowDeleteConfirm(false)}>
+            Annuler
+          </Button>
+          <Button variant="destructive" size="sm" disabled={deleting} onClick={handleDelete}>
+            {deleting ? <Spinner className="h-3.5 w-3.5" /> : <Trash2 className="h-3.5 w-3.5 mr-1" />}
+            Supprimer
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </div>
   )
 }
