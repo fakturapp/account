@@ -46,7 +46,7 @@ const fadeUp = {
 interface InvoiceListItem {
   id: string
   invoiceNumber: string
-  status: 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled'
+  status: 'draft' | 'sent' | 'paid' | 'paid_unconfirmed' | 'overdue' | 'cancelled'
   subject: string | null
   issueDate: string
   dueDate: string | null
@@ -57,6 +57,7 @@ interface InvoiceListItem {
   clientId: string | null
   sourceQuoteId: string | null
   createdAt: string
+  needsAction?: boolean
 }
 
 interface PaginationMeta {
@@ -365,6 +366,7 @@ export default function InvoicesPage() {
                         {invoice.status === 'draft' && <FileText className="h-5 w-5 text-muted-foreground" />}
                         {invoice.status === 'sent' && <Send className="h-5 w-5 text-blue-400" />}
                         {invoice.status === 'paid' && <CheckCircle2 className="h-5 w-5 text-green-400" />}
+                        {invoice.status === 'paid_unconfirmed' && <Clock className="h-5 w-5 text-amber-400" />}
                         {invoice.status === 'overdue' && <Clock className="h-5 w-5 text-red-400" />}
                         {invoice.status === 'cancelled' && <Ban className="h-5 w-5 text-orange-400" />}
                       </div>
@@ -381,7 +383,14 @@ export default function InvoicesPage() {
                             options={invoiceStatusOptions}
                             endpoint="invoices"
                             onStatusChange={handleStatusChange}
+                            readOnlyStatuses={['paid_unconfirmed']}
                           />
+                          {invoice.needsAction && (
+                            <span className="relative flex h-2.5 w-2.5 shrink-0">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+                            </span>
+                          )}
                         </div>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           {invoice.clientName && (
