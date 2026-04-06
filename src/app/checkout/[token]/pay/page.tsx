@@ -460,6 +460,10 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
                 </div>
               )}
               <DlBtn />
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-white/20 mt-4">
+                <IconClock className="h-3 w-3" />
+                <p className="text-[10px]">Ce lien s&apos;autodétruira dans 5 minutes</p>
+              </div>
             </div>
           </motion.div>
         )}
@@ -480,6 +484,10 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
                   <p className="text-xs">Une confirmation a été envoyée à <span className="text-zinc-700 dark:text-white/50 font-mono">{d.maskedEmail}</span></p>
                 </div>
               )}
+              <div className="flex items-center gap-2 text-zinc-400 dark:text-white/20 mt-4">
+                <IconClock className="h-3 w-3" />
+                <p className="text-[10px]">Ce lien s&apos;autodétruira dans 5 minutes</p>
+              </div>
             </div>
           </motion.div>
         )}
