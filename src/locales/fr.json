@@ -191,6 +191,27 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "welcome": {
+      "hello": "Bonjour",
+      "subtitle": "Voici un aperçu de votre activité."
+    },
+    "latestInvoice": "Dernière facture",
+    "noInvoiceYet": "Aucune facture pour l'instant",
+    "createFirst": "Créer la première",
+    "viewAll": "Tout voir",
+    "resetLayout": "Réinitialiser la disposition",
+    "addChart": "Ajouter un graphique",
+    "remove": "Retirer",
+    "charts": {
+      "revenue": "Chiffre d'affaires HT",
+      "revenueDesc": "CA hors taxes facturé par mois (12 mois)",
+      "collected": "Chiffre d'affaires encaissé",
+      "collectedDesc": "Paiements reçus par mois (12 mois)",
+      "micro": "Seuils de ma micro",
+      "microDesc": "CA cumulé vs seuils micro-entrepreneur",
+      "servicesThreshold": "Seuil services",
+      "goodsThreshold": "Seuil marchandises"
+    },
     "stats": {
       "revenue": "Chiffre d'affaires",
       "revenueDesc": "Total ce mois-ci",
@@ -201,7 +222,13 @@
       "clients": "Clients",
       "clientsDesc": "Clients actifs",
       "newThisMonth": "nouveaux ce mois",
-      "comparedToLast": "par rapport au mois dernier"
+      "comparedToLast": "par rapport au mois dernier",
+      "totalInvoiced": "Total facturé",
+      "outstanding": "Vos clients vous doivent",
+      "totalCollected": "Total encaissé",
+      "thisMonth": "Ce mois-ci",
+      "lastMonth": "Mois dernier",
+      "pendingInvoices": "Factures en attente"
     },
     "quickActions": {
       "title": "Actions rapides",

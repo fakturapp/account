@@ -191,6 +191,27 @@
   },
   "dashboard": {
     "title": "Dashboard",
+    "welcome": {
+      "hello": "Hello",
+      "subtitle": "Here's a quick look at your activity."
+    },
+    "latestInvoice": "Latest invoice",
+    "noInvoiceYet": "No invoice yet",
+    "createFirst": "Create your first",
+    "viewAll": "View all",
+    "resetLayout": "Reset layout",
+    "addChart": "Add chart",
+    "remove": "Remove",
+    "charts": {
+      "revenue": "Net revenue",
+      "revenueDesc": "Net revenue invoiced per month (12 months)",
+      "collected": "Collected revenue",
+      "collectedDesc": "Payments received per month (12 months)",
+      "micro": "Micro-entrepreneur thresholds",
+      "microDesc": "Cumulative revenue vs micro-entrepreneur limits",
+      "servicesThreshold": "Services threshold",
+      "goodsThreshold": "Goods threshold"
+    },
     "stats": {
       "revenue": "Revenue",
       "revenueDesc": "Total this month",
@@ -201,7 +222,13 @@
       "clients": "Clients",
       "clientsDesc": "Active clients",
       "newThisMonth": "new this month",
-      "comparedToLast": "compared to last month"
+      "comparedToLast": "compared to last month",
+      "totalInvoiced": "Total invoiced",
+      "outstanding": "Outstanding payments",
+      "totalCollected": "Total collected",
+      "thisMonth": "This month",
+      "lastMonth": "Last month",
+      "pendingInvoices": "Pending invoices"
     },
     "quickActions": {
       "title": "Quick actions",
