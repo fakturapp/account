@@ -27,7 +27,6 @@ import {
   FileText,
   Receipt,
   Clock,
-  Sparkles,
   Pencil,
   Check,
   Users,
@@ -896,7 +895,7 @@ export default function DashboardPage() {
     switch (id) {
       case 'welcome':
         return (
-          <div className="relative h-full p-6 flex items-center justify-between bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
+          <div className="relative h-full p-6 flex items-center bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
                 {t('dashboard.welcome.hello') || 'Bonjour'}
@@ -905,9 +904,6 @@ export default function DashboardPage() {
               <p className="mt-1 text-sm text-muted-foreground">
                 {t('dashboard.welcome.subtitle') || "Voici un aperçu de votre activité."}
               </p>
-            </div>
-            <div className="hidden md:flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/20">
-              <Sparkles className="h-6 w-6" />
             </div>
           </div>
         )
@@ -1079,7 +1075,7 @@ export default function DashboardPage() {
             exit={{ opacity: 0, y: -8 }}
             className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2 text-[12px] text-primary"
           >
-            <Sparkles className="h-3.5 w-3.5 shrink-0" />
+            <GripVertical className="h-3.5 w-3.5 shrink-0" />
             <span>{t('dashboard.editHint') || "Glissez-déposez les cartes pour réorganiser votre tableau de bord."}</span>
           </motion.div>
         )}
