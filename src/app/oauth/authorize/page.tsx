@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import {
   ShieldCheck,
-  ShieldAlert,
   Check,
   X,
   Smartphone,
@@ -21,11 +20,7 @@ import {
   User,
   FileText,
   Users,
-  KeyRound,
   Clock,
-  ExternalLink,
-  AlertTriangle,
-  Sparkles,
 } from 'lucide-react'
 
 interface ConsentData {
@@ -48,54 +43,36 @@ interface ConsentData {
 
 type PageState = 'loading' | 'ready' | 'approving' | 'denying' | 'error' | 'redirecting'
 
-const SCOPE_META: Record<
-  string,
-  { label: string; description: string; icon: any; dangerous?: boolean }
-> = {
-  profile: {
-    label: 'Votre profil',
-    description: "Consulter votre nom, email et photo de profil.",
-    icon: User,
-  },
-  'invoices:read': {
-    label: 'Lire vos factures',
-    description: "Consulter vos factures, devis et avoirs existants.",
-    icon: FileText,
-  },
-  'invoices:write': {
-    label: 'Créer et modifier vos factures',
-    description: 'Ajouter, éditer et supprimer vos documents.',
-    icon: FileText,
-    dangerous: true,
-  },
-  'clients:read': {
-    label: 'Lire votre carnet clients',
-    description: 'Voir la liste de vos clients et leurs coordonnées.',
-    icon: Users,
-  },
-  'clients:write': {
-    label: 'Gérer vos clients',
-    description: 'Ajouter, modifier et supprimer des clients.',
-    icon: Users,
-    dangerous: true,
-  },
-  'vault:unlock': {
-    label: 'Déverrouiller votre coffre-fort',
-    description: 'Accéder aux données chiffrées de votre compte.',
-    icon: Lock,
-    dangerous: true,
-  },
-  offline_access: {
-    label: 'Accès hors-ligne',
-    description: "Rester connecté via un refresh token — l'application pourra se reconnecter automatiquement sans vous redemander votre mot de passe.",
-    icon: Clock,
-  },
+const SCOPE_META: Record<string, { label: string; icon: any }> = {
+  profile: { label: 'Votre profil', icon: User },
+  'invoices:read': { label: 'Lire vos factures', icon: FileText },
+  'invoices:write': { label: 'Modifier vos factures', icon: FileText },
+  'clients:read': { label: 'Lire vos clients', icon: Users },
+  'clients:write': { label: 'Modifier vos clients', icon: Users },
+  'vault:unlock': { label: 'Déverrouiller votre coffre-fort', icon: Lock },
+  offline_access: { label: 'Rester connecté', icon: Clock },
 }
 
 const KIND_ICONS: Record<string, any> = {
   desktop: Smartphone,
   web: Globe,
   cli: Terminal,
+}
+
+/** Twitter-style blue verified tick for 1st-party apps */
+function VerifiedBadge({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 22 22"
+      aria-label="Vérifié"
+      className={cn('h-4 w-4 text-primary shrink-0', className)}
+    >
+      <path
+        fill="currentColor"
+        d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+      />
+    </svg>
+  )
 }
 
 function AuthorizeContent() {
@@ -107,24 +84,15 @@ function AuthorizeContent() {
   const [data, setData] = useState<ConsentData | null>(null)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
 
-  // Query params — memoised so we don't rebuild them on every render.
   const queryString = useMemo(() => searchParams.toString(), [searchParams])
-
   const params = useMemo(
     () => ({
       client_id: searchParams.get('client_id') ?? '',
       redirect_uri: searchParams.get('redirect_uri') ?? '',
-      response_type: searchParams.get('response_type') ?? 'code',
-      scope: searchParams.get('scope') ?? '',
-      state: searchParams.get('state') ?? '',
-      code_challenge: searchParams.get('code_challenge') ?? '',
-      code_challenge_method: searchParams.get('code_challenge_method') ?? '',
     }),
     [searchParams]
   )
 
-  // Auth guard — redirect to /login with a return_to so the user
-  // comes right back to the consent screen with the query preserved.
   useEffect(() => {
     if (authLoading) return
     if (!user) {
@@ -136,14 +104,12 @@ function AuthorizeContent() {
   const fetchConsent = useCallback(async () => {
     if (!user) return
     if (!params.client_id || !params.redirect_uri) {
-      setErrorMsg('Paramètres manquants dans la requête. client_id et redirect_uri sont requis.')
+      setErrorMsg('Paramètres manquants (client_id et redirect_uri requis).')
       setState('error')
       return
     }
     setState('loading')
-    const { data: resp, error } = await api.get<ConsentData>(
-      `/oauth/authorize?${queryString}`
-    )
+    const { data: resp, error } = await api.get<ConsentData>(`/oauth/authorize?${queryString}`)
     if (error) {
       setErrorMsg(error)
       setState('error')
@@ -184,124 +150,93 @@ function AuthorizeContent() {
       }
 
       setState('redirecting')
-      // Small delay so the user sees the state change flip visually
-      // before the browser actually navigates out.
       setTimeout(() => {
         window.location.href = resp.redirect
-      }, 200)
+      }, 150)
     },
     [data]
   )
 
-  // Auto-approve — if the user has already granted these exact scopes
-  // once before, the backend tells us so and we can skip the screen
-  // entirely. This happens for the desktop app on restart after the
-  // refresh token has died but the consent is still on file.
   useEffect(() => {
-    if (data?.autoApprove && state === 'ready') {
-      submitDecision('allow')
-    }
+    if (data?.autoApprove && state === 'ready') submitDecision('allow')
   }, [data, state, submitDecision])
 
-  // Not authenticated yet — spinner while the redirect happens.
-  if (authLoading || !user) {
-    return <CenteredSpinner label="Chargement…" />
+  if (authLoading || !user || state === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Spinner size="lg" className="text-primary" />
+      </div>
+    )
   }
 
-  // Loading the consent metadata.
-  if (state === 'loading') {
-    return <CenteredSpinner label="Chargement de l'application…" />
-  }
-
-  // Error state.
   if (state === 'error' || !data) {
-    return <ErrorCard message={errorMsg} onRetry={fetchConsent} />
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-background">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm rounded-2xl border border-border bg-card p-8 text-center"
+        >
+          <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
+            <X className="h-6 w-6 text-destructive" />
+          </div>
+          <h2 className="text-base font-semibold text-foreground mb-1">Autorisation impossible</h2>
+          <p className="text-sm text-muted-foreground mb-5">
+            {errorMsg || 'Une erreur est survenue.'}
+          </p>
+          <Button className="w-full" onClick={fetchConsent}>
+            Réessayer
+          </Button>
+        </motion.div>
+      </div>
+    )
   }
 
-  const KindIcon = KIND_ICONS[data.client.id === 'desktop' ? 'desktop' : 'desktop']
-  const hasDangerousScope = data.scopes.some((s) => SCOPE_META[s]?.dangerous)
+  const KindIcon = KIND_ICONS[data.client.id] ?? Smartphone
   const isRedirecting = state === 'redirecting' || state === 'approving' || state === 'denying'
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-primary/5">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
       <AnimatePresence mode="wait">
         <motion.div
           key="consent"
-          initial={{ opacity: 0, y: 16, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -16, scale: 0.98 }}
-          transition={{ type: 'spring', stiffness: 260, damping: 26 }}
-          className="relative w-full max-w-lg"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          transition={{ duration: 0.25 }}
+          className="w-full max-w-sm"
         >
-          {/* Faktur logo */}
-          <div className="flex flex-col items-center mb-6">
-            <div className="h-12 w-12 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-lg shadow-primary/20 mb-3">
-              <span className="text-primary-foreground font-bold text-xl font-lexend">F</span>
-            </div>
-            <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">
-              Faktur
-            </p>
-          </div>
-
-          {/* Main card */}
-          <div className="rounded-2xl border border-border bg-card shadow-xl overflow-hidden">
-            {/* Hero with app info */}
-            <div className="relative p-6 bg-gradient-to-br from-primary/8 via-primary/4 to-transparent border-b border-border">
-              <h1 className="text-lg font-bold text-foreground tracking-tight mb-1">
-                Autoriser l&apos;accès à votre compte
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Vérifiez les permissions demandées avant de continuer.
-              </p>
-
-              {/* App card */}
-              <div className="mt-5 flex items-start gap-4 rounded-xl border border-border bg-card/80 backdrop-blur-sm p-4">
-                <div className="h-14 w-14 shrink-0 rounded-2xl bg-primary/10 flex items-center justify-center overflow-hidden">
-                  {data.client.iconUrl ? (
-                    <img
-                      src={data.client.iconUrl}
-                      alt={data.client.name}
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <KindIcon className="h-6 w-6 text-primary" />
-                  )}
+          <div className="rounded-2xl border border-border bg-card p-6">
+            {/* App card */}
+            <div className="flex items-center gap-3 pb-5 border-b border-border">
+              <div className="h-11 w-11 shrink-0 rounded-xl bg-muted/60 flex items-center justify-center overflow-hidden">
+                {data.client.iconUrl ? (
+                  <img
+                    src={data.client.iconUrl}
+                    alt={data.client.name}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <KindIcon className="h-5 w-5 text-muted-foreground" />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1">
+                  <h1 className="text-[15px] font-semibold text-foreground truncate">
+                    {data.client.name}
+                  </h1>
+                  {data.client.isFirstParty && <VerifiedBadge />}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h2 className="text-base font-semibold text-foreground truncate">
-                      {data.client.name}
-                    </h2>
-                    {data.client.isFirstParty && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wider border border-primary/20">
-                        <Sparkles className="h-2.5 w-2.5" /> Officielle
-                      </span>
-                    )}
-                  </div>
-                  {data.client.description && (
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                      {data.client.description}
-                    </p>
-                  )}
-                  {data.client.websiteUrl && (
-                    <a
-                      href={data.client.websiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 mt-2 text-[11px] text-primary hover:underline"
-                    >
-                      <ExternalLink className="h-3 w-3" />
-                      Site web de l&apos;application
-                    </a>
-                  )}
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  souhaite accéder à votre compte
+                </p>
               </div>
             </div>
 
-            {/* Current user pill */}
-            <div className="px-6 pt-5">
-              <div className="flex items-center gap-3 rounded-xl bg-muted/40 border border-border p-3">
-                <div className="h-9 w-9 shrink-0 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[12px] font-bold overflow-hidden">
+            {/* Current user */}
+            <div className="pt-4 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="h-7 w-7 shrink-0 rounded-full bg-primary/15 text-primary flex items-center justify-center text-[10px] font-bold overflow-hidden">
                   {user.avatarUrl ? (
                     <img
                       src={user.avatarUrl}
@@ -313,196 +248,82 @@ function AuthorizeContent() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[11px] text-muted-foreground">Connecté en tant que</p>
-                  <p className="text-[13px] font-medium text-foreground truncate">
+                  <p className="text-[12px] text-foreground truncate">
                     {user.fullName || user.email}
                   </p>
                 </div>
                 <Link
                   href="/login"
-                  className="text-[11px] text-muted-foreground hover:text-foreground"
+                  className="text-[10px] text-muted-foreground hover:text-foreground"
                 >
                   Changer
                 </Link>
               </div>
             </div>
 
-            {/* Scopes */}
-            <div className="px-6 py-5">
-              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
-                Permissions demandées
+            {/* Permissions — compact Discord-style */}
+            <div className="py-3 border-t border-border">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                Accès demandé
               </p>
-              <div className="space-y-2">
+              <div className="max-h-[180px] overflow-y-auto pr-1 space-y-1">
                 {data.scopes.map((scope) => {
-                  const meta = SCOPE_META[scope] ?? {
-                    label: scope,
-                    description: `Accès au scope ${scope}`,
-                    icon: ShieldCheck,
-                  }
+                  const meta = SCOPE_META[scope] ?? { label: scope, icon: ShieldCheck }
                   const Icon = meta.icon
                   return (
                     <div
                       key={scope}
-                      className="flex items-start gap-3 rounded-lg border border-border bg-background p-3"
+                      className="flex items-center gap-2 text-[12px] text-foreground py-1"
                     >
-                      <div
-                        className={cn(
-                          'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
-                          meta.dangerous
-                            ? 'bg-amber-500/10 text-amber-600 dark:text-amber-500'
-                            : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-500'
-                        )}
-                      >
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-semibold text-foreground leading-tight">
-                          {meta.label}
-                          {meta.dangerous && (
-                            <span className="inline-flex items-center gap-0.5 ml-1.5 text-[9px] font-bold uppercase text-amber-600 dark:text-amber-500">
-                              <AlertTriangle className="h-2.5 w-2.5" /> Écriture
-                            </span>
-                          )}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                          {meta.description}
-                        </p>
-                      </div>
+                      <Check className="h-3 w-3 text-emerald-500 shrink-0" />
+                      <Icon className="h-3 w-3 text-muted-foreground shrink-0" />
+                      <span className="truncate">{meta.label}</span>
                     </div>
                   )
                 })}
               </div>
-
-              {/* Dangerous scope warning */}
-              {hasDangerousScope && !data.client.isFirstParty && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 flex items-start gap-2.5 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3"
-                >
-                  <ShieldAlert className="h-4 w-4 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-amber-700 dark:text-amber-400 leading-snug">
-                    Cette application demande des permissions d&apos;écriture. Assurez-vous qu&apos;elle
-                    provient d&apos;une source de confiance avant de continuer.
-                  </p>
-                </motion.div>
-              )}
             </div>
 
             {/* Actions */}
-            <div className="px-6 py-4 bg-muted/20 border-t border-border">
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => submitDecision('deny')}
-                  disabled={isRedirecting}
-                >
-                  {state === 'denying' ? (
-                    <Spinner className="h-3.5 w-3.5" />
-                  ) : (
-                    <X className="h-3.5 w-3.5 mr-1.5" />
-                  )}
-                  Refuser
-                </Button>
-                <Button
-                  className="flex-1"
-                  onClick={() => submitDecision('allow')}
-                  disabled={isRedirecting}
-                >
-                  {state === 'approving' || state === 'redirecting' ? (
-                    <>
-                      <Spinner className="h-3.5 w-3.5 mr-1.5" />
-                      {state === 'redirecting' ? 'Redirection…' : 'Autorisation…'}
-                    </>
-                  ) : (
-                    <>
-                      <Check className="h-3.5 w-3.5 mr-1.5" />
-                      Autoriser
-                    </>
-                  )}
-                </Button>
-              </div>
-
-              {/* Redirect URI transparency */}
-              <div className="mt-4 flex items-start gap-2 text-[10px] text-muted-foreground/70">
-                <KeyRound className="h-3 w-3 shrink-0 mt-0.5" />
-                <p className="leading-snug break-all">
-                  Vous serez redirigé vers{' '}
-                  <code className="font-mono text-[9px] px-1 rounded bg-muted text-foreground">
-                    {data.redirectUri}
-                  </code>
-                </p>
-              </div>
+            <div className="pt-4 border-t border-border flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={() => submitDecision('deny')}
+                disabled={isRedirecting}
+              >
+                {state === 'denying' ? <Spinner className="h-3 w-3" /> : 'Refuser'}
+              </Button>
+              <Button
+                size="sm"
+                className="flex-1"
+                onClick={() => submitDecision('allow')}
+                disabled={isRedirecting}
+              >
+                {state === 'approving' || state === 'redirecting' ? (
+                  <Spinner className="h-3 w-3" />
+                ) : (
+                  'Autoriser'
+                )}
+              </Button>
             </div>
           </div>
-
-          {/* Footer */}
-          <p className="mt-5 text-center text-[10px] text-muted-foreground">
-            Vous pouvez révoquer cette autorisation à tout moment depuis{' '}
-            <Link href="/dashboard/account/oauth" className="text-primary hover:underline">
-              Mon compte → Applications connectées
-            </Link>
-            .
-          </p>
         </motion.div>
       </AnimatePresence>
     </div>
   )
 }
 
-/* ─────────────── Shared helpers ─────────────── */
-
-function CenteredSpinner({ label }: { label: string }) {
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center gap-4 bg-background">
-      <Spinner size="lg" className="text-primary" />
-      <p className="text-sm text-muted-foreground">{label}</p>
-    </div>
-  )
-}
-
-function ErrorCard({
-  message,
-  onRetry,
-}: {
-  message: string | null
-  onRetry: () => void
-}) {
-  return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-background">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-md rounded-2xl border border-destructive/20 bg-card p-8 shadow-xl"
-      >
-        <div className="flex flex-col items-center text-center">
-          <div className="h-14 w-14 rounded-2xl bg-destructive/10 flex items-center justify-center mb-4">
-            <X className="h-7 w-7 text-destructive" />
-          </div>
-          <h2 className="text-lg font-bold text-foreground mb-1">Autorisation impossible</h2>
-          <p className="text-sm text-muted-foreground leading-relaxed mb-5">
-            {message || 'Une erreur inconnue est survenue pendant la vérification de la requête.'}
-          </p>
-          <div className="flex gap-3 w-full">
-            <Button variant="outline" className="flex-1" onClick={() => (window.location.href = '/dashboard')}>
-              Retour au tableau de bord
-            </Button>
-            <Button className="flex-1" onClick={onRetry}>
-              Réessayer
-            </Button>
-          </div>
-        </div>
-      </motion.div>
-    </div>
-  )
-}
-
-/* ─────────────── Page wrapper ─────────────── */
-
 export default function OauthAuthorizePage() {
   return (
-    <Suspense fallback={<CenteredSpinner label="Chargement…" />}>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-background">
+          <Spinner size="lg" className="text-primary" />
+        </div>
+      }
+    >
       <AuthorizeContent />
     </Suspense>
   )

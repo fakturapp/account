@@ -200,6 +200,18 @@ function LoginContent() {
     }
   }
 
+  // Auto-bounce an already-signed-in user when they arrive with a
+  // ?redirect= param (e.g. coming from the OAuth consent screen).
+  // We don't show the 'Bon retour' card in that case — it would look
+  // like the flow got stuck.
+  useEffect(() => {
+    if (authLoading || !user) return
+    const redirectParam = searchParams.get('redirect')
+    if (redirectParam && redirectParam.startsWith('/')) {
+      router.replace(redirectParam)
+    }
+  }, [authLoading, user, searchParams, router])
+
   // Already logged in
   if (!authLoading && user) {
     const initials = user.fullName
@@ -230,7 +242,17 @@ function LoginContent() {
           </motion.div>
 
           <motion.div variants={fadeIn} custom={2} className="space-y-3">
-            <Button className="w-full h-11" onClick={() => router.push('/dashboard')}>
+            <Button
+              className="w-full h-11"
+              onClick={() => {
+                const redirectParam = searchParams.get('redirect')
+                if (redirectParam && redirectParam.startsWith('/')) {
+                  router.push(redirectParam)
+                } else {
+                  router.push('/dashboard')
+                }
+              }}
+            >
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Aller au Dashboard
             </Button>
