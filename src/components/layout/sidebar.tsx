@@ -201,7 +201,7 @@ function storeExpanded(expanded: string[]) {
   localStorage.setItem(SETTINGS_EXPANDED_KEY, JSON.stringify(expanded))
 }
 
-function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathname: string; badges?: Record<string, number>; persistKey?: string }) {
+function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavItem; pathname: string; badges?: Record<string, number>; persistKey?: string; collapsed?: boolean }) {
   const isActive = item.href === '/dashboard'
     ? pathname === '/dashboard'
     : pathname === item.href || pathname.startsWith(item.href + '/')
@@ -226,19 +226,32 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
     }
   }
 
+  // Layout classes that adapt to collapsed state. When collapsed, the row
+  // shrinks to a centered icon; on parent hover it expands back to the full
+  // pill via group-hover/sidebar variants.
+  const rowLayout = collapsed
+    ? 'justify-center px-0 gap-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2.5 group-hover/sidebar:gap-2.5'
+    : 'justify-start px-2.5 gap-2.5'
+
+  const labelClass = cn(
+    'whitespace-nowrap transition-opacity duration-200',
+    collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+  )
+
   if (!hasChildren) {
     return (
       <Link
         href={item.href}
         className={cn(
-          'flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200 relative',
+          'flex items-center rounded-lg py-[7px] text-[13px] font-medium transition-all duration-200 relative',
+          rowLayout,
           isActive
             ? 'bg-muted/60 dark:bg-white/[0.06] shadow-sm text-foreground'
             : 'text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground'
         )}
       >
         <item.icon className={cn('h-[15px] w-[15px] shrink-0', isActive ? 'text-primary' : 'opacity-70')} />
-        <span>{item.label}</span>
+        <span className={labelClass}>{item.label}</span>
       </Link>
     )
   }
@@ -248,17 +261,19 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
       <button
         onClick={handleToggle}
         className={cn(
-          'flex w-full items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13px] font-medium transition-all duration-200 relative',
+          'flex w-full items-center rounded-lg py-[7px] text-[13px] font-medium transition-all duration-200 relative',
+          rowLayout,
           isActive
             ? 'bg-muted/60 dark:bg-white/[0.06] shadow-sm text-foreground'
             : 'text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground'
         )}
       >
         <item.icon className={cn('h-[15px] w-[15px] shrink-0', isActive ? 'text-primary' : 'opacity-70')} />
-        <span className="flex-1 text-left">{item.label}</span>
+        <span className={cn('flex-1 text-left', labelClass)}>{item.label}</span>
         <motion.div
           animate={{ rotate: expanded ? 90 : 0 }}
           transition={{ duration: 0.15 }}
+          className={cn(collapsed && 'opacity-0 group-hover/sidebar:opacity-100 transition-opacity duration-200')}
         >
           <ChevronRight className="h-3 w-3 opacity-40" />
         </motion.div>
@@ -270,7 +285,10 @@ function NavLink({ item, pathname, badges, persistKey }: { item: NavItem; pathna
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className="overflow-hidden"
+            className={cn(
+              'overflow-hidden',
+              collapsed && 'hidden group-hover/sidebar:block'
+            )}
           >
             <div className="ml-[18px] border-l border-border/40 pl-2.5 py-0.5 space-y-0.5">
               {item.children!.map((child) => {
@@ -340,12 +358,24 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="px-3 pt-3 pb-1"
           >
-            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg bg-muted/60 dark:bg-white/[0.06] shadow-sm">
+            <div
+              className={cn(
+                'flex items-center gap-2.5 py-2 rounded-lg bg-muted/60 dark:bg-white/[0.06] shadow-sm transition-all duration-200',
+                collapsed
+                  ? 'justify-center px-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2'
+                  : 'justify-start px-2'
+              )}
+            >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-500/15 text-indigo-400">
                 <ShieldCheck className="h-3.5 w-3.5" />
               </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-semibold text-foreground leading-tight">
+              <div
+                className={cn(
+                  'flex-1 min-w-0 text-left transition-opacity duration-200',
+                  collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                )}
+              >
+                <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">
                   Administration
                 </p>
               </div>
@@ -360,7 +390,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="px-3 pt-3 pb-1"
           >
-            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg bg-muted/60 dark:bg-white/[0.06] shadow-sm">
+            <div
+              className={cn(
+                'flex items-center gap-2.5 py-2 rounded-lg bg-muted/60 dark:bg-white/[0.06] shadow-sm transition-all duration-200',
+                collapsed
+                  ? 'justify-center px-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2'
+                  : 'justify-start px-2'
+              )}
+            >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary text-[11px] font-bold overflow-hidden">
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt="" className="h-full w-full object-cover" />
@@ -368,8 +405,13 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   initials
                 )}
               </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-semibold text-foreground leading-tight">Mon compte</p>
+              <div
+                className={cn(
+                  'flex-1 min-w-0 text-left transition-opacity duration-200',
+                  collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                )}
+              >
+                <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">Mon compte</p>
               </div>
             </div>
           </motion.div>
@@ -382,12 +424,24 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             transition={{ duration: 0.25, ease: 'easeInOut' }}
             className="px-3 pt-3 pb-1"
           >
-            <div className="flex items-center gap-2.5 px-2 py-2 rounded-lg bg-muted/60 dark:bg-white/[0.06] shadow-sm">
+            <div
+              className={cn(
+                'flex items-center gap-2.5 py-2 rounded-lg bg-muted/60 dark:bg-white/[0.06] shadow-sm transition-all duration-200',
+                collapsed
+                  ? 'justify-center px-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2'
+                  : 'justify-start px-2'
+              )}
+            >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
                 <Settings className="h-3.5 w-3.5" />
               </div>
-              <div className="flex-1 min-w-0 text-left">
-                <p className="text-[13px] font-semibold text-foreground leading-tight">Paramètres</p>
+              <div
+                className={cn(
+                  'flex-1 min-w-0 text-left transition-opacity duration-200',
+                  collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                )}
+              >
+                <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">Paramètres</p>
               </div>
             </div>
           </motion.div>
@@ -401,13 +455,23 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           >
             {/* Faktur logo header */}
             <div className="px-3 pt-4 pb-3">
-              <div className="flex items-center gap-2.5">
+              <div
+                className={cn(
+                  'flex items-center gap-2.5 transition-all duration-200',
+                  collapsed && 'justify-center group-hover/sidebar:justify-start'
+                )}
+              >
                 <img src="/logo.svg" alt="Faktur" className="h-10 w-10 shrink-0 drop-shadow-sm" />
-                <div className="flex flex-col items-start min-w-0">
-                  <span className="text-[18px] font-semibold text-foreground font-lexend tracking-tight leading-tight">
+                <div
+                  className={cn(
+                    'flex flex-col items-start min-w-0 transition-opacity duration-200',
+                    collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                  )}
+                >
+                  <span className="text-[18px] font-semibold text-foreground font-lexend tracking-tight leading-tight whitespace-nowrap">
                     Faktur
                   </span>
-                  <span className="text-[9px] text-muted-foreground/40 font-medium leading-none">
+                  <span className="text-[9px] text-muted-foreground/40 font-medium leading-none whitespace-nowrap">
                     v{APP_VERSION}
                   </span>
                 </div>
@@ -433,10 +497,22 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             <div className="px-3 pt-2 pb-1">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all"
+                className={cn(
+                  'flex items-center rounded-lg py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+                  collapsed
+                    ? 'justify-center px-0 gap-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2.5 group-hover/sidebar:gap-2'
+                    : 'justify-start px-2.5 gap-2'
+                )}
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Retour au dashboard
+                <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+                <span
+                  className={cn(
+                    'whitespace-nowrap transition-opacity duration-200',
+                    collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                  )}
+                >
+                  Retour au dashboard
+                </span>
               </Link>
             </div>
 
@@ -445,18 +521,22 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <NavLink
                 item={{ href: '/dashboard/admin', label: "Vue d'ensemble", icon: LayoutDashboard }}
                 pathname={pathname}
+                collapsed={collapsed}
               />
               <NavLink
                 item={{ href: '/dashboard/admin/feedbacks', label: 'Avis', icon: Star }}
                 pathname={pathname}
+                collapsed={collapsed}
               />
               <NavLink
                 item={{ href: '/dashboard/admin/bugs', label: 'Rapports de bugs', icon: Bug }}
                 pathname={pathname}
+                collapsed={collapsed}
               />
               <NavLink
                 item={{ href: '/dashboard/admin/analytics', label: 'Analytiques', icon: BarChart3 }}
                 pathname={pathname}
+                collapsed={collapsed}
               />
             </nav>
           </motion.div>
@@ -473,17 +553,29 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             <div className="px-3 pt-2 pb-1">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all"
+                className={cn(
+                  'flex items-center rounded-lg py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+                  collapsed
+                    ? 'justify-center px-0 gap-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2.5 group-hover/sidebar:gap-2'
+                    : 'justify-start px-2.5 gap-2'
+                )}
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Retour au dashboard
+                <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+                <span
+                  className={cn(
+                    'whitespace-nowrap transition-opacity duration-200',
+                    collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                  )}
+                >
+                  Retour au dashboard
+                </span>
               </Link>
             </div>
 
             {/* Account navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
               {accountNav.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} persistKey="account" />
+                <NavLink key={item.href} item={item} pathname={pathname} persistKey="account" collapsed={collapsed} />
               ))}
             </nav>
           </motion.div>
@@ -500,17 +592,29 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             <div className="px-3 pt-2 pb-1">
               <Link
                 href="/dashboard"
-                className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all"
+                className={cn(
+                  'flex items-center rounded-lg py-2 text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+                  collapsed
+                    ? 'justify-center px-0 gap-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2.5 group-hover/sidebar:gap-2'
+                    : 'justify-start px-2.5 gap-2'
+                )}
               >
-                <ArrowLeft className="h-3.5 w-3.5" />
-                Retour au dashboard
+                <ArrowLeft className="h-3.5 w-3.5 shrink-0" />
+                <span
+                  className={cn(
+                    'whitespace-nowrap transition-opacity duration-200',
+                    collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                  )}
+                >
+                  Retour au dashboard
+                </span>
               </Link>
             </div>
 
             {/* Settings navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
               {settingsNav.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} persistKey="settings" />
+                <NavLink key={item.href} item={item} pathname={pathname} persistKey="settings" collapsed={collapsed} />
               ))}
             </nav>
           </motion.div>
@@ -529,8 +633,15 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 align="left"
                 trigger={
                   <div className="flex items-center justify-center gap-2 rounded-lg px-2.5 py-2 text-[13px] font-semibold hover:bg-muted/40 dark:hover:bg-white/[0.04] transition-all group cursor-pointer">
-                    <CirclePlus className="h-3.5 w-3.5 text-primary" />
-                    <span className="text-primary">Créer</span>
+                    <CirclePlus className="h-3.5 w-3.5 text-primary shrink-0" />
+                    <span
+                      className={cn(
+                        'text-primary whitespace-nowrap transition-opacity duration-200',
+                        collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                      )}
+                    >
+                      Créer
+                    </span>
                   </div>
                 }
                 className="min-w-[220px]"
@@ -560,12 +671,13 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             {/* Navigation */}
             <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
               {mainNav.map((item) => (
-                <NavLink key={item.href} item={item} pathname={pathname} badges={badges} />
+                <NavLink key={item.href} item={item} pathname={pathname} badges={badges} collapsed={collapsed} />
               ))}
               <div className="mx-2 my-2 h-px bg-border" />
               <NavLink
                 item={{ href: '/dashboard/settings', label: 'Paramètres', icon: Settings }}
                 pathname={pathname}
+                collapsed={collapsed}
               />
             </nav>
           </motion.div>
@@ -583,14 +695,26 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           alignOffset={8}
           className="min-w-[260px]"
           trigger={
-            <div className="flex items-center gap-2.5 rounded-lg px-2 py-2 hover:bg-muted/40 dark:hover:bg-white/[0.04] transition-all duration-200 w-full">
+            <div
+              className={cn(
+                'flex items-center rounded-lg py-2 hover:bg-muted/40 dark:hover:bg-white/[0.04] transition-all duration-200 w-full',
+                collapsed
+                  ? 'justify-center px-0 gap-0 group-hover/sidebar:justify-start group-hover/sidebar:px-2 group-hover/sidebar:gap-2.5'
+                  : 'justify-start px-2 gap-2.5'
+              )}
+            >
               <Avatar
                 src={user.avatarUrl}
                 alt={user.fullName || user.email}
                 fallback={initials}
                 size="sm"
               />
-              <div className="flex-1 min-w-0 text-left">
+              <div
+                className={cn(
+                  'flex-1 min-w-0 text-left transition-opacity duration-200',
+                  collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                )}
+              >
                 <p className="text-[13px] font-medium text-foreground truncate leading-tight">
                   {user.fullName || user.email}
                 </p>
@@ -604,7 +728,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   const next = theme === 'system' ? 'light' : theme === 'light' ? 'dark' : 'system'
                   setTheme(next)
                 }}
-                className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+                className={cn(
+                  'p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-black/5 dark:hover:bg-white/5 transition-opacity duration-200',
+                  collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                )}
                 title={theme === 'system' ? 'Systeme' : theme === 'dark' ? 'Sombre' : 'Clair'}
               >
                 {theme === 'system' ? (
@@ -616,7 +743,12 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 )}
               </button>
 
-              <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+              <MoreHorizontal
+                className={cn(
+                  'h-3.5 w-3.5 text-muted-foreground shrink-0 transition-opacity duration-200',
+                  collapsed && 'opacity-0 group-hover/sidebar:opacity-100'
+                )}
+              />
             </div>
           }
         >
