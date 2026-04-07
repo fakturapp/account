@@ -34,8 +34,10 @@ import {
   Files,
   Zap,
   Calendar,
+  Gift,
 } from 'lucide-react'
 import { AiDashboardSummary } from '@/components/ai/ai-dashboard-summary'
+import { CheckoutFeatureModal, CHECKOUT_FEATURE_SEEN_KEY } from '@/components/dashboard/checkout-feature-modal'
 
 interface DashboardStats {
   totalInvoiced: { value: number; trend: number; previousValue: number }
@@ -697,6 +699,7 @@ export default function DashboardPage() {
   const [layout, setLayout] = useState<BlockId[]>(loadLayout)
   const [editMode, setEditMode] = useState(false)
   const [sidebarCounts, setSidebarCounts] = useState<{ invoiceDrafts: number; quoteDrafts: number }>({ invoiceDrafts: 0, quoteDrafts: 0 })
+  const [featureModalOpen, setFeatureModalOpen] = useState(false)
 
   // Drag-and-drop state
   const [draggingId, setDraggingId] = useState<BlockId | null>(null)
@@ -713,6 +716,19 @@ export default function DashboardPage() {
     api.get<{ invoiceDrafts: number; quoteDrafts: number }>('/dashboard/sidebar-counts').then(({ data }) => {
       if (data) setSidebarCounts(data)
     })
+  }, [])
+
+  // Auto-open the checkout feature announcement once per user.
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const seen = localStorage.getItem(CHECKOUT_FEATURE_SEEN_KEY)
+      if (!seen) {
+        // Small delay so it doesn't land before the skeleton fades out.
+        const t = window.setTimeout(() => setFeatureModalOpen(true), 800)
+        return () => window.clearTimeout(t)
+      }
+    } catch {}
   }, [])
 
   // Ensure dynamic chart blocks appear in the layout when toggled on
@@ -1032,6 +1048,14 @@ export default function DashboardPage() {
     <div className="px-4 lg:px-6 py-4 md:py-6 space-y-4">
       {/* Action bar */}
       <div className="flex items-center justify-end gap-2">
+        <button
+          onClick={() => setFeatureModalOpen(true)}
+          className="flex items-center gap-1.5 h-8 px-3 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-[12px] text-primary transition-colors"
+          title={t('dashboard.whatsNew') || 'Nouveautés'}
+        >
+          <Gift className="h-3.5 w-3.5" />
+          <span className="hidden md:inline">{t('dashboard.whatsNew') || 'Nouveautés'}</span>
+        </button>
         {editMode && (
           <button
             onClick={handleResetLayout}
@@ -1110,6 +1134,8 @@ export default function DashboardPage() {
         onAddChart={handleAddChart}
         activeCharts={activeCharts}
       />
+
+      <CheckoutFeatureModal open={featureModalOpen} onClose={() => setFeatureModalOpen(false)} />
     </div>
   )
 }
