@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
@@ -157,8 +158,19 @@ export default function AccountOauthAppsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="flex items-center justify-center py-20">
-          <Spinner size="lg" className="text-primary" />
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="rounded-2xl border border-border bg-card p-5">
+              <div className="flex items-center gap-4">
+                <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-40" />
+                  <Skeleton className="h-3 w-64" />
+                </div>
+                <Skeleton className="h-4 w-4 rounded" />
+              </div>
+            </div>
+          ))}
         </div>
       ) : apps.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card/50 p-12 text-center">

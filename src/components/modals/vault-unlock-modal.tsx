@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-import { Lock, Eye, EyeOff, KeyRound } from 'lucide-react'
+import { Lock, Eye, EyeOff, KeyRound, ExternalLink, LogOut } from 'lucide-react'
 import { api, onVaultLocked } from '@/lib/api'
+import { isFakturDesktop } from '@/lib/is-desktop'
+import { useAuth } from '@/lib/auth'
 
 type UnlockMode = 'password' | 'recoveryKey'
 
@@ -17,6 +19,7 @@ function formatRecoveryKeyInput(value: string): string {
 }
 
 export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean }) {
+  const { logout } = useAuth()
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<UnlockMode>('password')
   const [password, setPassword] = useState('')
@@ -24,6 +27,11 @@ export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean })
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [isDesktop, setIsDesktop] = useState(false)
+
+  useEffect(() => {
+    setIsDesktop(isFakturDesktop())
+  }, [])
 
   // Proactive trigger from auth provider (vaultLocked in /auth/me)
   useEffect(() => {
@@ -77,6 +85,55 @@ export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean })
   const isValid = mode === 'password' ? !!password : !!recoveryKey.trim()
 
   if (!open) return null
+
+  // Desktop-specific flow — the password field doesn't exist here so
+  // we can't unlock in-place. Instead, offer to open the browser where
+  // the user can unlock the vault, OR disconnect the desktop shell
+  // entirely and go through a fresh OAuth flow.
+  if (isDesktop) {
+    return (
+      <Dialog open={open} onClose={() => {}}>
+        <div className="flex flex-col items-center gap-3 mb-5">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/10 border border-amber-500/20">
+            <Lock className="h-7 w-7 text-amber-500" />
+          </div>
+          <DialogTitle className="text-center">Coffre-fort verrouillé</DialogTitle>
+          <DialogDescription className="text-center">
+            Votre coffre-fort est verrouillé. Pour le déverrouiller depuis Faktur Desktop,
+            déconnectez-vous et reconnectez-vous via le flow OAuth — votre mot de passe ne
+            transite jamais par l&apos;application.
+          </DialogDescription>
+        </div>
+
+        <div className="flex flex-col gap-2">
+          <Button
+            className="w-full"
+            onClick={async () => {
+              await logout()
+            }}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            Se déconnecter et se reconnecter
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              const url = `${window.location.origin}/dashboard/account/security`
+              if (typeof window !== 'undefined' && (window as any).fakturDesktop?.openExternal) {
+                ;(window as any).fakturDesktop.openExternal(url)
+              } else {
+                window.open(url, '_blank')
+              }
+            }}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            Déverrouiller dans le navigateur
+          </Button>
+        </div>
+      </Dialog>
+    )
+  }
 
   return (
     <Dialog open={open} onClose={() => {}}>

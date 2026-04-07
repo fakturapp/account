@@ -10,11 +10,12 @@ import { Field, FieldDescription, FieldGroup, FieldLabel, FieldError } from '@/c
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth'
+import { isFakturDesktop } from '@/lib/is-desktop'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { startAuthentication } from '@simplewebauthn/browser'
-import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Smartphone } from 'lucide-react'
+import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Smartphone, Lock } from 'lucide-react'
 
 const fadeIn = {
   hidden: { opacity: 0, y: 12 },
@@ -64,10 +65,18 @@ function LoginContent() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [passkeyLoading, setPasskeyLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
+  const [isDesktop, setIsDesktop] = useState(false)
   const turnstileRef = useRef<TurnstileInstance>(null)
   const resetTurnstile = useCallback(() => {
     setTurnstileToken('')
     turnstileRef.current?.reset()
+  }, [])
+
+  // Detect Faktur Desktop runtime on mount — the shell_window injects
+  // both a user-agent suffix and a localStorage flag before the first
+  // React render, so this is reliable.
+  useEffect(() => {
+    setIsDesktop(isFakturDesktop())
   }, [])
 
   // Handle ?token= from Google OAuth callback
@@ -211,6 +220,42 @@ function LoginContent() {
       router.replace(redirectParam)
     }
   }, [authLoading, user, searchParams, router])
+
+  // Desktop shell detected — the email/password login form is a
+  // dead end here (no keychain, no 2FA flow, no Turnstile). Show a
+  // blocker card that explains how to connect instead.
+  if (isDesktop && !authLoading && !user) {
+    return (
+      <motion.div initial="hidden" animate="visible" className="w-full max-w-sm mx-auto">
+        <div className="rounded-2xl border border-border bg-card p-6 text-center">
+          <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Lock className="h-6 w-6 text-primary" />
+          </div>
+          <h1 className="text-base font-semibold text-foreground mb-1">
+            Connexion via Faktur Desktop
+          </h1>
+          <p className="text-sm text-muted-foreground mb-5">
+            La connexion par email et mot de passe n&apos;est pas disponible dans l&apos;application de
+            bureau. Retournez à l&apos;écran d&apos;accueil et cliquez sur «&nbsp;Se connecter avec
+            Faktur&nbsp;» pour lancer le flow OAuth sécurisé.
+          </p>
+          <Button
+            className="w-full"
+            onClick={() => {
+              // Tell the main process to close this webview and bring
+              // back the login window. We post a message the shell
+              // preload can forward via IPC.
+              if (typeof window !== 'undefined' && (window as any).fakturDesktop?.logout) {
+                ;(window as any).fakturDesktop.logout()
+              }
+            }}
+          >
+            Retour à l&apos;écran de connexion
+          </Button>
+        </div>
+      </motion.div>
+    )
+  }
 
   // Already logged in
   if (!authLoading && user) {
