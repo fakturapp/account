@@ -413,3 +413,13 @@ body {
 .dark .liquid-separator {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
+
+/* Hide scrollbars entirely (used in the collapsed sidebar so the vertical
+   scroll gutter doesn't steal space from the 40px mini rows). */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}

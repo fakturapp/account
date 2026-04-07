@@ -191,6 +191,16 @@ const accountNav: NavItem[] = [
 
 const SETTINGS_EXPANDED_KEY = 'zenvoice_settings_expanded'
 
+// Fade + slide animation played when a label, chevron or anything else
+// renders alongside an already-animating width transition on the aside.
+// Small delay lets the sidebar start expanding first so the text "slots in"
+// instead of fighting the container for space.
+const labelFade = {
+  initial: { opacity: 0, x: -8 },
+  animate: { opacity: 1, x: 0 },
+  transition: { duration: 0.22, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number] },
+}
+
 function getStoredExpanded(): string[] {
   if (typeof window === 'undefined') return []
   try { return JSON.parse(localStorage.getItem(SETTINGS_EXPANDED_KEY) || '[]') }
@@ -248,7 +258,11 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
     return (
       <Link href={item.href} className={rowClass}>
         <item.icon className={iconClass} />
-        {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+        {!collapsed && (
+          <motion.span {...labelFade} className="whitespace-nowrap">
+            {item.label}
+          </motion.span>
+        )}
       </Link>
     )
   }
@@ -259,10 +273,13 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
         <item.icon className={iconClass} />
         {!collapsed && (
           <>
-            <span className="flex-1 text-left whitespace-nowrap">{item.label}</span>
+            <motion.span {...labelFade} className="flex-1 text-left whitespace-nowrap">
+              {item.label}
+            </motion.span>
             <motion.div
-              animate={{ rotate: expanded ? 90 : 0 }}
-              transition={{ duration: 0.15 }}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0, rotate: expanded ? 90 : 0 }}
+              transition={{ duration: 0.22, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
             >
               <ChevronRight className="h-3 w-3 opacity-40" />
             </motion.div>
@@ -365,11 +382,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 <ShieldCheck className="h-3.5 w-3.5" />
               </div>
               {!collapsed && (
-                <div className="flex-1 min-w-0 text-left">
+                <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
                   <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">
                     Administration
                   </p>
-                </div>
+                </motion.div>
               )}
             </div>
           </motion.div>
@@ -396,9 +413,9 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 )}
               </div>
               {!collapsed && (
-                <div className="flex-1 min-w-0 text-left">
+                <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
                   <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">Mon compte</p>
-                </div>
+                </motion.div>
               )}
             </div>
           </motion.div>
@@ -421,9 +438,9 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 <Settings className="h-3.5 w-3.5" />
               </div>
               {!collapsed && (
-                <div className="flex-1 min-w-0 text-left">
+                <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
                   <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">Paramètres</p>
-                </div>
+                </motion.div>
               )}
             </div>
           </motion.div>
@@ -441,14 +458,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <div className="flex items-center justify-center gap-2.5">
                 <img src="/logo.svg" alt="Faktur" className="h-10 w-10 shrink-0 drop-shadow-sm" />
                 {!collapsed && (
-                  <div className="flex flex-col items-start min-w-0">
+                  <motion.div {...labelFade} className="flex flex-col items-start min-w-0">
                     <span className="text-[18px] font-semibold text-foreground font-lexend tracking-tight leading-tight whitespace-nowrap">
                       Faktur
                     </span>
                     <span className="text-[9px] text-muted-foreground/40 font-medium leading-none whitespace-nowrap">
                       v{APP_VERSION}
                     </span>
-                  </div>
+                  </motion.div>
                 )}
               </div>
             </div>
@@ -478,12 +495,16 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 )}
               >
                 <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
-                {!collapsed && <span className="whitespace-nowrap">Retour au dashboard</span>}
+                {!collapsed && (
+                  <motion.span {...labelFade} className="whitespace-nowrap">
+                    Retour au dashboard
+                  </motion.span>
+                )}
               </Link>
             </div>
 
             {/* Admin navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
+            <nav className={cn('flex-1 overflow-y-auto overflow-x-hidden px-3 py-1 space-y-0.5', collapsed && 'scrollbar-hidden')}>
               <NavLink
                 item={{ href: '/dashboard/admin', label: "Vue d'ensemble", icon: LayoutDashboard }}
                 pathname={pathname}
@@ -525,12 +546,16 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 )}
               >
                 <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
-                {!collapsed && <span className="whitespace-nowrap">Retour au dashboard</span>}
+                {!collapsed && (
+                  <motion.span {...labelFade} className="whitespace-nowrap">
+                    Retour au dashboard
+                  </motion.span>
+                )}
               </Link>
             </div>
 
             {/* Account navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
+            <nav className={cn('flex-1 overflow-y-auto overflow-x-hidden px-3 py-1 space-y-0.5', collapsed && 'scrollbar-hidden')}>
               {accountNav.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} persistKey="account" collapsed={collapsed} />
               ))}
@@ -555,12 +580,16 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                 )}
               >
                 <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
-                {!collapsed && <span className="whitespace-nowrap">Retour au dashboard</span>}
+                {!collapsed && (
+                  <motion.span {...labelFade} className="whitespace-nowrap">
+                    Retour au dashboard
+                  </motion.span>
+                )}
               </Link>
             </div>
 
             {/* Settings navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
+            <nav className={cn('flex-1 overflow-y-auto overflow-x-hidden px-3 py-1 space-y-0.5', collapsed && 'scrollbar-hidden')}>
               {settingsNav.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} persistKey="settings" collapsed={collapsed} />
               ))}
@@ -587,7 +616,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     )}
                   >
                     <CirclePlus className={cn('text-primary shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
-                    {!collapsed && <span className="text-primary whitespace-nowrap">Créer</span>}
+                    {!collapsed && (
+                      <motion.span {...labelFade} className="text-primary whitespace-nowrap">
+                        Créer
+                      </motion.span>
+                    )}
                   </div>
                 }
                 className="min-w-[220px]"
@@ -615,7 +648,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-0.5">
+            <nav className={cn('flex-1 overflow-y-auto overflow-x-hidden px-3 py-1 space-y-0.5', collapsed && 'scrollbar-hidden')}>
               {mainNav.map((item) => (
                 <NavLink key={item.href} item={item} pathname={pathname} badges={badges} collapsed={collapsed} />
               ))}
@@ -655,14 +688,15 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               />
               {!collapsed && (
                 <>
-                  <div className="flex-1 min-w-0 text-left">
+                  <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
                     <p className="text-[13px] font-medium text-foreground truncate leading-tight">
                       {user.fullName || user.email}
                     </p>
                     <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
-                  </div>
+                  </motion.div>
 
-                  <button
+                  <motion.button
+                    {...labelFade}
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation()
@@ -679,9 +713,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     ) : (
                       <Sun className="h-3.5 w-3.5" />
                     )}
-                  </button>
+                  </motion.button>
 
-                  <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <motion.div {...labelFade}>
+                    <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  </motion.div>
                 </>
               )}
             </div>
