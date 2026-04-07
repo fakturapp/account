@@ -38,8 +38,15 @@ export function HealthCheckProvider({ children }: { children: React.ReactNode })
     }
   }, [])
 
-  // Check on mount + route changes
+  // Check on mount + route changes. Skip on public checkout pages: those
+  // run on a dedicated subdomain where the API origin may differ and CORS
+  // preflight for /health is not guaranteed — we don't want a false-positive
+  // "Services indisponibles" modal blocking a legitimate customer.
   useEffect(() => {
+    const isCheckoutPath =
+      pathname.startsWith('/checkout') ||
+      /^\/[a-zA-Z0-9_-]{16,}\/pay\/?$/.test(pathname)
+    if (isCheckoutPath) return
     checkHealth()
   }, [pathname, checkHealth])
 

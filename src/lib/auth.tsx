@@ -48,13 +48,21 @@ export function useAuth() {
 
 const publicPaths = ['/login', '/register', '/forgot-password', '/reset-password', '/verify-email', '/2fa', '/invite', '/legal', '/oauth', '/share', '/checkout']
 
+// Short-form checkout URL served by the dedicated checkout subdomain, e.g.
+// https://checkout.example.com/<token>/pay — the middleware rewrites these
+// internally to /checkout/<token>/pay but usePathname() returns the browser
+// URL, so we must recognise the short form as public here as well.
+const SHORT_CHECKOUT_PATH = /^\/[a-zA-Z0-9_-]{16,}\/pay\/?$/
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
 
-  const isPublicPath = publicPaths.some((p) => pathname.startsWith(p))
+  const isPublicPath =
+    publicPaths.some((p) => pathname.startsWith(p)) ||
+    SHORT_CHECKOUT_PATH.test(pathname)
 
   const refreshUser = useCallback(async () => {
     const token = localStorage.getItem('faktur_token')
@@ -88,7 +96,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (user && isPublicPath) {
       // Let these pages handle their own "already logged in" state
-      if (pathname === '/login' || pathname.startsWith('/verify-email') || pathname.startsWith('/invite') || pathname.startsWith('/legal') || pathname.startsWith('/share') || pathname.startsWith('/checkout')) {
+      if (
+        pathname === '/login' ||
+        pathname.startsWith('/verify-email') ||
+        pathname.startsWith('/invite') ||
+        pathname.startsWith('/legal') ||
+        pathname.startsWith('/share') ||
+        pathname.startsWith('/checkout') ||
+        SHORT_CHECKOUT_PATH.test(pathname)
+      ) {
         return
       }
       if (!user.onboardingCompleted) {
