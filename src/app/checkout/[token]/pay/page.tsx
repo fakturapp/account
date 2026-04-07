@@ -336,7 +336,7 @@ export default function CheckoutPayPage({ params }: { params: Promise<{ token: s
                 <div className="h-11 w-11 rounded-xl bg-zinc-100 dark:bg-white/[0.04] flex items-center justify-center shrink-0">
                   <svg className="h-5 w-5 text-zinc-400 dark:text-white/30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                 </div>
-                <div className="flex-1"><p className="text-sm text-zinc-400 dark:text-white/40">Carte bancaire</p><p className="text-[11px] text-zinc-300 dark:text-white/20">Bientôt disponible</p></div>
+                <div className="flex-1"><p className="text-sm text-zinc-400 dark:text-white/40">Carte bancaire</p><p className="text-[11px] text-zinc-300 dark:text-white/20">Non disponible</p></div>
                 <IconLock className="h-3.5 w-3.5 text-zinc-300 dark:text-white/15" />
               </div>
             )}
