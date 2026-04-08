@@ -2,6 +2,15 @@
 // Triple check: preload bridge (most reliable), UA stamp, and localStorage
 // flag set by the shell bootstrap script.
 
+export interface FakturDesktopUpdateInfo {
+  version: string
+  currentVersion: string
+  downloadUrl: string
+  size: number
+  releaseNotes?: string
+  publishedAt?: string
+}
+
 export interface FakturDesktopBridge {
   isDesktop: true
   version: string
@@ -12,6 +21,11 @@ export interface FakturDesktopBridge {
   openVaultUnlock?: () => Promise<{ ok: boolean }>
   openExternal?: (url: string) => Promise<{ ok: boolean }>
   onSessionChange?: (cb: (payload: unknown) => void) => () => void
+
+  getPendingUpdate?: () => Promise<FakturDesktopUpdateInfo | null>
+  checkForUpdate?: () => Promise<FakturDesktopUpdateInfo | null>
+  beginUpdate?: () => Promise<{ ok: boolean }>
+  onUpdateAvailable?: (cb: (info: FakturDesktopUpdateInfo) => void) => () => void
 }
 
 export function isFakturDesktop(): boolean {
