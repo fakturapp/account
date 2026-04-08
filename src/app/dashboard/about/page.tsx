@@ -12,8 +12,9 @@ import { type Variants } from 'framer-motion'
 import {
   Code2, Globe, ExternalLink, Server, Database, Layout,
   Layers, Paintbrush, Sparkles, Shield, Lock, Scale,
-  ScrollText, Cookie, Zap, Fingerprint, Heart,
+  ScrollText, Cookie, Zap, Fingerprint, Heart, Monitor,
 } from 'lucide-react'
+import { isFakturDesktop, getFakturDesktopVersion } from '@/lib/is-desktop'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 12 },
@@ -25,11 +26,22 @@ const fadeUp = {
 
 export default function AboutPage() {
   const [apiInfo, setApiInfo] = useState<{ name: string; version: string; status: string } | null>(null)
+  const [desktop, setDesktop] = useState<{ is: boolean; version: string | null; platform: string | null }>({
+    is: false, version: null, platform: null,
+  })
 
   useEffect(() => {
     api.get<{ name: string; version: string; status: string }>('/').then(({ data }) => {
       if (data) setApiInfo(data)
     })
+    if (typeof window !== 'undefined') {
+      const bridge = (window as any).fakturDesktop
+      setDesktop({
+        is: isFakturDesktop(),
+        version: getFakturDesktopVersion(),
+        platform: bridge?.platform ?? null,
+      })
+    }
   }, [])
 
   return (
@@ -38,16 +50,21 @@ export default function AboutPage() {
       animate="visible"
       className="max-w-2xl mx-auto px-4 lg:px-6 py-6 md:py-8 space-y-8"
     >
-      {/* Hero */}
+      {/* ---------- Hero ---------- */}
       <motion.div variants={fadeUp} custom={0} className="flex flex-col items-center text-center gap-5 py-4">
         <Image src="/logo.svg" alt="Faktur" width={72} height={72} className="h-[72px] w-auto drop-shadow-lg" />
         <div>
-          <h1 className="text-3xl font-bold text-foreground font-lexend tracking-tight">Faktur</h1>
+          <h1 className="text-3xl font-bold text-foreground font-lexend tracking-tight">
+            {desktop.is ? 'Faktur Desktop' : 'Faktur'}
+          </h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-sm leading-relaxed">
             Logiciel de facturation gratuit, s&eacute;curis&eacute; et collaboratif avec chiffrement zero-access.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap justify-center">
+          {desktop.is && desktop.version && (
+            <Badge variant="muted" className="text-xs">Desktop v{desktop.version}</Badge>
+          )}
           <Badge variant="muted" className="text-xs">Frontend v{APP_VERSION}</Badge>
           {apiInfo && <Badge variant="muted" className="text-xs">API v{apiInfo.version}</Badge>}
           {apiInfo && (
@@ -57,6 +74,43 @@ export default function AboutPage() {
           )}
         </div>
       </motion.div>
+
+      {/* ---------- Faktur Desktop info card ---------- */}
+      {desktop.is && (
+        <motion.div variants={fadeUp} custom={1}>
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-5">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 shrink-0 rounded-xl bg-primary/15 text-primary flex items-center justify-center">
+                <Monitor className="h-5 w-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-foreground">Faktur Desktop</p>
+                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                  Vous utilisez l&apos;application native Faktur Desktop, un client Electron qui
+                  embarque le tableau de bord Faktur avec authentification OAuth2 + PKCE via
+                  votre navigateur syst&egrave;me. Vos jetons sont chiffr&eacute;s au niveau du
+                  syst&egrave;me d&apos;exploitation (Keychain, DPAPI ou libsecret) et ne sont
+                  jamais stock&eacute;s en clair sur disque.
+                </p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[11px]">
+                  <div className="rounded-md bg-background/40 border border-border/60 px-2 py-1.5">
+                    <span className="text-muted-foreground">Version</span>
+                    <div className="font-semibold text-foreground">
+                      {desktop.version ?? '—'}
+                    </div>
+                  </div>
+                  <div className="rounded-md bg-background/40 border border-border/60 px-2 py-1.5">
+                    <span className="text-muted-foreground">Plateforme</span>
+                    <div className="font-semibold text-foreground">
+                      {desktop.platform ?? 'inconnue'}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      )}
 
       <Separator />
 
