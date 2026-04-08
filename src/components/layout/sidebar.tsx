@@ -865,6 +865,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
 
           <DropdownSeparator />
 
+          <Link href="/dashboard/download">
+            <DropdownItem>
+              <Download className="h-4 w-4" /> Installer l&apos;application
+            </DropdownItem>
+          </Link>
+
+          <DropdownSeparator />
+
           <DropdownItem destructive onClick={onLogout}>
             <LogOut className="h-4 w-4" /> Deconnexion
           </DropdownItem>
