@@ -256,7 +256,7 @@ function AuthorizeContent() {
                   href="/login"
                   className="text-[10px] text-muted-foreground hover:text-foreground"
                 >
-                  Ce n'est pas toi ?
+                  Ce n'est pas toi
                 </Link>
               </div>
             </div>
