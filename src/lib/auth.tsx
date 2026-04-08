@@ -49,20 +49,17 @@ const AUTH_LOCAL_KEYS = [
   'faktur_vault_locked',
 ] as const
 
-// ---------- Keys explicitly preserved during a partial wipe ----------
-// Used by the "tout effacer" full-wipe option to know what to skip.
-const PRESERVE_LOCAL_KEYS = new Set<string>([
-  'faktur_theme',
-  'faktur_locale',
+// ---------- Keys ALWAYS preserved, even during full wipe ----------
+// User-experience flags that should never be reset by a logout. The
+// user can still clear them manually from the browser dev tools or by
+// uninstalling the app.
+const ALWAYS_PRESERVE_KEYS = new Set<string>([
   'faktur_cookie_consent',
   'faktur_cookie_pos',
   'faktur_visitor_id',
-  'faktur_doc_zoom',
-  'faktur_logo_size',
   'faktur_seen_checkout_feature_v1',
-  'zenvoice_dashboard_layout_v2',
-  'zenvoice_active_charts',
-  'zenvoice_settings_expanded',
+  'faktur_theme',
+  'faktur_locale',
 ])
 
 const AuthContext = createContext<AuthContextType>({
@@ -236,11 +233,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const wipeAll = options.wipeAll === true
 
     // ---------- Selective vs full localStorage wipe ----------
+    // Both modes ALWAYS preserve the keys in ALWAYS_PRESERVE_KEYS so
+    // that the cookie consent banner and the "what's new" modal don't
+    // pop up again after every reconnection.
     function clearLocalStorageState() {
       try {
         if (wipeAll) {
           const keys = Object.keys(localStorage)
           for (const key of keys) {
+            if (ALWAYS_PRESERVE_KEYS.has(key)) continue
             localStorage.removeItem(key)
           }
           try {
@@ -252,9 +253,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           for (const key of AUTH_LOCAL_KEYS) {
             localStorage.removeItem(key)
           }
-          // Also wipe any other ephemeral session keys that aren't in
-          // the explicit preserve set, EXCEPT user-data caches.
-          // We keep this conservative: only the 4 known auth keys go.
         }
       } catch {
         /* ignore */
@@ -285,9 +283,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     router.replace('/login')
   }
-
-  // Keep PRESERVE_LOCAL_KEYS referenced so tree-shakers don't drop it.
-  void PRESERVE_LOCAL_KEYS
 
   async function handleCryptoRecovered() {
     await refreshUser()
