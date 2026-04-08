@@ -23,6 +23,7 @@ import {
   ChevronRight,
   AlertTriangle,
   MapPin,
+  BadgeCheck,
 } from 'lucide-react'
 
 interface Session {
@@ -93,6 +94,8 @@ export default function AccountOauthAppsPage() {
     app: AuthorizedApp
     session: Session
   } | null>(null)
+  const [revokingApp, setRevokingApp] = useState(false)
+  const [revokingSession, setRevokingSession] = useState(false)
 
   const load = useCallback(async () => {
     const { data, error } = await api.get<{ apps: AuthorizedApp[] }>('/account/oauth-apps')
@@ -118,6 +121,7 @@ export default function AccountOauthAppsPage() {
   }
 
   async function handleRevokeApp(app: AuthorizedApp) {
+    setRevokingApp(true)
     const { data, error } = await api.post<{ message: string; revokedCount: number }>(
       `/account/oauth-apps/${app.authorizationId}/revoke`,
       {}
@@ -128,10 +132,12 @@ export default function AccountOauthAppsPage() {
       toast(data?.message || 'Application révoquée', 'success')
       await load()
     }
+    setRevokingApp(false)
     setConfirmRevokeApp(null)
   }
 
   async function handleRevokeSession(app: AuthorizedApp, session: Session) {
+    setRevokingSession(true)
     const { data, error } = await api.post<{ message: string }>(
       `/account/oauth-apps/sessions/${session.id}/revoke`,
       {}
@@ -142,6 +148,7 @@ export default function AccountOauthAppsPage() {
       toast(data?.message || 'Session révoquée', 'success')
       await load()
     }
+    setRevokingSession(false)
     setConfirmRevokeSession(null)
   }
 
@@ -228,8 +235,9 @@ export default function AccountOauthAppsPage() {
                         {app.app.name}
                       </h3>
                       {app.app.isFirstParty && (
-                        <Badge variant="default" className="text-[10px]">
-                          Officielle
+                        <Badge variant="default" className="text-[10px] gap-0.5">
+                          <BadgeCheck className="h-3 w-3" />
+                          Officiel
                         </Badge>
                       )}
                     </div>
@@ -378,18 +386,20 @@ export default function AccountOauthAppsPage() {
             variant="outline"
             size="sm"
             onClick={() => setConfirmRevokeSession(null)}
+            disabled={revokingSession}
           >
             Annuler
           </Button>
           <Button
             variant="destructive"
             size="sm"
+            disabled={revokingSession}
             onClick={() =>
               confirmRevokeSession &&
               handleRevokeSession(confirmRevokeSession.app, confirmRevokeSession.session)
             }
           >
-            Déconnecter
+            {revokingSession ? <><Spinner size="sm" /> Déconnection...</> : 'Déconnecter'}
           </Button>
         </DialogFooter>
       </Dialog>
@@ -413,15 +423,17 @@ export default function AccountOauthAppsPage() {
             variant="outline"
             size="sm"
             onClick={() => setConfirmRevokeApp(null)}
+            disabled={revokingApp}
           >
             Annuler
           </Button>
           <Button
             variant="destructive"
             size="sm"
+            disabled={revokingApp}
             onClick={() => confirmRevokeApp && handleRevokeApp(confirmRevokeApp)}
           >
-            Révoquer l&apos;application
+            {revokingApp ? <><Spinner size="sm" /> Révocation...</> : <>Révoquer l&apos;application</>}
           </Button>
         </DialogFooter>
       </Dialog>
