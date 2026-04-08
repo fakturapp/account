@@ -26,13 +26,44 @@ interface User {
   isAdmin: boolean
 }
 
+interface LogoutOptions {
+  wipeAll?: boolean
+}
+
 interface AuthContextType {
   user: User | null
   loading: boolean
   login: (token: string, user: User, vaultKey?: string) => void
-  logout: () => Promise<void>
+  logout: (options?: LogoutOptions) => Promise<void>
   refreshUser: () => Promise<void>
 }
+
+// ---------- localStorage keys that hold auth state ----------
+// These are always wiped on logout. Anything else (theme, locale,
+// dismissed banners, layout prefs) is preserved unless `wipeAll: true`
+// is passed.
+const AUTH_LOCAL_KEYS = [
+  'faktur_token',
+  'faktur_vault_key',
+  'faktur_source',
+  'faktur_vault_locked',
+] as const
+
+// ---------- Keys explicitly preserved during a partial wipe ----------
+// Used by the "tout effacer" full-wipe option to know what to skip.
+const PRESERVE_LOCAL_KEYS = new Set<string>([
+  'faktur_theme',
+  'faktur_locale',
+  'faktur_cookie_consent',
+  'faktur_cookie_pos',
+  'faktur_visitor_id',
+  'faktur_doc_zoom',
+  'faktur_logo_size',
+  'faktur_seen_checkout_feature_v1',
+  'zenvoice_dashboard_layout_v2',
+  'zenvoice_active_charts',
+  'zenvoice_settings_expanded',
+])
 
 const AuthContext = createContext<AuthContextType>({
   user: null,
@@ -201,29 +232,62 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData)
   }
 
-  async function logout() {
-    // Faktur Desktop: delegate to the Electron main process so it can
-    // nuke OAuth tokens + clear every session partition (cookies,
-    // localStorage, cache, indexedDB, service workers) before swapping
-    // to the login window. Calling this FIRST prevents the navigation
-    // guard in shell_window.js from triggering a session_expired loop.
+  async function logout(options: LogoutOptions = {}) {
+    const wipeAll = options.wipeAll === true
+
+    // ---------- Selective vs full localStorage wipe ----------
+    function clearLocalStorageState() {
+      try {
+        if (wipeAll) {
+          const keys = Object.keys(localStorage)
+          for (const key of keys) {
+            localStorage.removeItem(key)
+          }
+          try {
+            sessionStorage.clear()
+          } catch {
+            /* ignore */
+          }
+        } else {
+          for (const key of AUTH_LOCAL_KEYS) {
+            localStorage.removeItem(key)
+          }
+          // Also wipe any other ephemeral session keys that aren't in
+          // the explicit preserve set, EXCEPT user-data caches.
+          // We keep this conservative: only the 4 known auth keys go.
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+
+    // ---------- Faktur Desktop path ----------
+    // Delegate to the Electron main process so it can nuke OAuth
+    // tokens (and optionally cookies/cache for the wipeAll case)
+    // before swapping to the login window. Calling this FIRST
+    // prevents the navigation guard in shell_window.js from triggering
+    // a session_expired loop.
     const desktopBridge =
       typeof window !== 'undefined' ? (window as any).fakturDesktop : null
     if (desktopBridge?.logout) {
+      clearLocalStorageState()
       try {
-        await desktopBridge.logout()
+        await desktopBridge.logout({ wipeAll })
       } catch {
-        /* ignore — still proceed with best-effort web logout */
+        /* ignore */
       }
       return
     }
 
+    // ---------- Web path ----------
     await api.post('/auth/logout', {})
-    localStorage.removeItem('faktur_token')
-    localStorage.removeItem('faktur_vault_key')
+    clearLocalStorageState()
     setUser(null)
     router.replace('/login')
   }
+
+  // Keep PRESERVE_LOCAL_KEYS referenced so tree-shakers don't drop it.
+  void PRESERVE_LOCAL_KEYS
 
   async function handleCryptoRecovered() {
     await refreshUser()

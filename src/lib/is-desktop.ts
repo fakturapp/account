@@ -27,7 +27,7 @@ export interface FakturDesktopBridge {
   getSessionState?: () => Promise<{ state: string }>
   getAppInfo?: () => Promise<{ version: string; platform: string; isDesktop: boolean }>
   getCertificationStatus?: () => Promise<FakturDesktopCertificationStatus>
-  logout?: () => Promise<{ ok: boolean }>
+  logout?: (opts?: { wipeAll?: boolean }) => Promise<{ ok: boolean }>
   openVaultUnlock?: () => Promise<{ ok: boolean }>
   openExternal?: (url: string) => Promise<{ ok: boolean }>
   onSessionChange?: (cb: (payload: unknown) => void) => () => void
