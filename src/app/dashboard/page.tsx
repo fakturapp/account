@@ -38,6 +38,49 @@ import {
 } from 'lucide-react'
 import { AiDashboardSummary } from '@/components/ai/ai-dashboard-summary'
 import { CheckoutFeatureModal, CHECKOUT_FEATURE_SEEN_KEY } from '@/components/dashboard/checkout-feature-modal'
+import { SplitText } from '@/components/ui/split-text'
+
+function pickAdaptiveGreeting(firstName: string | undefined): string {
+  const name = firstName ? `, ${firstName}` : ''
+  const hour = new Date().getHours()
+  let pool: string[]
+  if (hour < 5) {
+    pool = [
+      `Bonne nuit${name}`,
+      `Encore au travail${name} ?`,
+      `Vous brûlez la chandelle${name}`,
+    ]
+  } else if (hour < 12) {
+    pool = [
+      `Bonjour${name}`,
+      `Bon retour${name}`,
+      `Content de vous revoir${name}`,
+      `Heureux de vous voir${name}`,
+      `Belle matinée${name}`,
+    ]
+  } else if (hour < 18) {
+    pool = [
+      `Bon après-midi${name}`,
+      `Content de vous revoir${name}`,
+      `Heureux de vous voir${name}`,
+      `Bon retour${name}`,
+    ]
+  } else if (hour < 22) {
+    pool = [
+      `Bonsoir${name}`,
+      `Bon retour${name}`,
+      `Heureux de vous revoir${name}`,
+      `Belle soirée${name}`,
+    ]
+  } else {
+    pool = [
+      `Bonsoir${name}`,
+      `Vous travaillez tard${name}`,
+      `Encore là${name} ?`,
+    ]
+  }
+  return pool[Math.floor(Math.random() * pool.length)] + ' !'
+}
 
 interface DashboardStats {
   totalInvoiced: { value: number; trend: number; previousValue: number }
@@ -700,6 +743,11 @@ export default function DashboardPage() {
   const [editMode, setEditMode] = useState(false)
   const [sidebarCounts, setSidebarCounts] = useState<{ invoiceDrafts: number; quoteDrafts: number }>({ invoiceDrafts: 0, quoteDrafts: 0 })
   const [featureModalOpen, setFeatureModalOpen] = useState(false)
+  const [greeting, setGreeting] = useState<string>(' ')
+
+  useEffect(() => {
+    setGreeting(pickAdaptiveGreeting(user?.fullName?.split(' ')[0]))
+  }, [user?.fullName])
 
   // Drag-and-drop state
   const [draggingId, setDraggingId] = useState<BlockId | null>(null)
@@ -911,15 +959,22 @@ export default function DashboardPage() {
     switch (id) {
       case 'welcome':
         return (
-          <div className="relative h-full p-6 flex items-center bg-gradient-to-r from-primary/10 via-primary/5 to-transparent">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground tracking-tight">
-                {t('dashboard.welcome.hello') || 'Bonjour'}
-                {user?.fullName ? `, ${user.fullName.split(' ')[0]}` : ''} !
-              </h1>
+          <div className="relative h-full p-6 flex items-center bg-gradient-to-r from-primary/10 via-primary/5 to-transparent overflow-hidden">
+            <div className="relative z-10">
+              <SplitText
+                key={greeting}
+                text={greeting}
+                tag="h1"
+                delay={45}
+                duration={0.9}
+                className="text-2xl md:text-3xl font-bold text-foreground tracking-tight"
+              />
               <p className="mt-1 text-sm text-muted-foreground">
                 {t('dashboard.welcome.subtitle') || "Voici un aperçu de votre activité."}
               </p>
+            </div>
+            <div className="absolute -right-6 -bottom-6 h-28 w-28 rounded-2xl bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center opacity-25 rotate-12">
+              <img src="/logo.svg" alt="" className="h-20 w-20" aria-hidden="true" />
             </div>
           </div>
         )
