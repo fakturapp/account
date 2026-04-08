@@ -1,8 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
-import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -22,6 +21,7 @@ const KNOWN_ERRORS: Record<string, string> = {
 }
 
 function ErrorContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const errorCode = searchParams.get('error') ?? 'unknown'
   const errorDescription =
@@ -49,8 +49,13 @@ function ErrorContent() {
             {errorCode}
           </code>
           <div className="flex gap-2">
-            <Button variant="outline" size="sm" className="flex-1" asChild>
-              <Link href="/dashboard">Tableau de bord</Link>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => router.push('/dashboard')}
+            >
+              Tableau de bord
             </Button>
             <Button
               size="sm"
