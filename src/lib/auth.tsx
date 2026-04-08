@@ -188,9 +188,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (user && isPublicPath) {
-      // Let these pages handle their own "already logged in" state
+      // Let these pages handle their own "already logged in" state.
+      // /register is included so it can honor its own ?redirect=
+      // param (Faktur Desktop → /register?redirect=/oauth/authorize…).
       if (
         pathname === '/login' ||
+        pathname === '/register' ||
         pathname.startsWith('/verify-email') ||
         pathname.startsWith('/invite') ||
         pathname.startsWith('/legal') ||
