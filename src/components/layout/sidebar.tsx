@@ -11,6 +11,7 @@ import { Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, DropdownSub }
 import { CreateInvoiceModal } from '@/components/invoices/create-invoice-modal'
 import { useTheme } from '@/lib/theme'
 import { APP_VERSION } from '@/lib/version'
+import { isFakturDesktop, getFakturDesktopVersion } from '@/lib/is-desktop'
 import {
   LayoutDashboard,
   FileText,
@@ -339,6 +340,17 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
   const [convertModalOpen, setConvertModalOpen] = useState(false)
   const [isHovered, setIsHovered] = useState(false)
 
+  // Desktop detection (hydrated client-side so SSR stays stable)
+  const [desktop, setDesktop] = useState<{ is: boolean; version: string | null }>({
+    is: false,
+    version: null,
+  })
+  React.useEffect(() => {
+    setDesktop({ is: isFakturDesktop(), version: getFakturDesktopVersion() })
+  }, [])
+  const brandName = desktop.is ? 'Faktur Desktop' : 'Faktur'
+  const brandVersion = desktop.is && desktop.version ? desktop.version : APP_VERSION
+
   // Effective collapsed state: the user manually collapsed the sidebar AND
   // they are not currently hovering it. On hover, we temporarily switch
   // back to the full layout via React (not CSS) so that everything — icon
@@ -453,18 +465,17 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             exit={{ opacity: 0, x: 20 }}
             transition={{ duration: 0.25, ease: 'easeInOut' }}
           >
-            {/* Faktur logo header — logo always centered; the wordmark +
-                version slot in next to it only in expanded mode. */}
+            {/* ---------- Brand header ---------- */}
             <div className="px-3 pt-4 pb-3">
               <div className="flex items-center justify-center gap-2.5">
-                <img src="/logo.svg" alt="Faktur" className="h-10 w-10 shrink-0 drop-shadow-sm" />
+                <img src="/logo.svg" alt={brandName} className="h-10 w-10 shrink-0 drop-shadow-sm" />
                 {!collapsed && (
                   <motion.div {...labelFade} className="flex flex-col items-start min-w-0">
                     <span className="text-[18px] font-semibold text-foreground font-lexend tracking-tight leading-tight whitespace-nowrap">
-                      Faktur
+                      {brandName}
                     </span>
                     <span className="text-[9px] text-muted-foreground/40 font-medium leading-none whitespace-nowrap">
-                      v{APP_VERSION}
+                      v{brandVersion}
                     </span>
                   </motion.div>
                 )}
