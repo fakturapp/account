@@ -31,6 +31,7 @@ import {
   Key,
   Eye,
   EyeOff,
+  Pencil,
 } from 'lucide-react'
 
 interface OauthApp {
@@ -41,10 +42,12 @@ interface OauthApp {
   websiteUrl: string | null
   clientId: string
   redirectUris: string[]
+  allowedOrigins: string[]
+  allowAllOrigins: boolean
   scopes: string[]
   webhookUrl: string | null
   webhookEvents: string[] | null
-  kind: 'desktop' | 'web' | 'cli'
+  kind: 'desktop' | 'web' | 'cli' | 'mobile'
   isActive: boolean
   isFirstParty: boolean
   activeSessions: number
@@ -74,9 +77,10 @@ const AVAILABLE_EVENTS = [
 ]
 
 const KIND_META: Record<OauthApp['kind'], { label: string; icon: any; color: string }> = {
-  desktop: { label: 'Bureau', icon: Smartphone, color: 'bg-indigo-500/10 text-indigo-500' },
+  desktop: { label: 'Bureau', icon: Terminal, color: 'bg-indigo-500/10 text-indigo-500' },
   web: { label: 'Web', icon: Globe, color: 'bg-emerald-500/10 text-emerald-500' },
   cli: { label: 'CLI', icon: Terminal, color: 'bg-amber-500/10 text-amber-500' },
+  mobile: { label: 'Mobile', icon: Smartphone, color: 'bg-sky-500/10 text-sky-500' },
 }
 
 export default function AdminOauthAppsPage() {
@@ -96,6 +100,7 @@ export default function AdminOauthAppsPage() {
   const [confirmDelete, setConfirmDelete] = useState<OauthApp | null>(null)
   const [confirmRevokeAll, setConfirmRevokeAll] = useState<OauthApp | null>(null)
   const [rotatingApp, setRotatingApp] = useState<OauthApp | null>(null)
+  const [editingApp, setEditingApp] = useState<OauthApp | null>(null)
 
   useEffect(() => {
     if (user && !user.isAdmin) {
@@ -265,6 +270,7 @@ export default function AdminOauthAppsPage() {
                 key={app.id}
                 app={app}
                 index={i}
+                onEdit={() => setEditingApp(app)}
                 onDelete={() => setConfirmDelete(app)}
                 onRevokeAll={() => setConfirmRevokeAll(app)}
                 onToggleActive={() => handleToggleActive(app)}
@@ -276,12 +282,25 @@ export default function AdminOauthAppsPage() {
       )}
 
       {/* Create modal */}
-      <CreateAppModal
+      <OauthAppFormModal
+        mode="create"
         open={createOpen}
         onClose={() => setCreateOpen(false)}
         onCreated={(payload) => {
           setCreatedSecrets(payload)
           setCreateOpen(false)
+          loadApps()
+        }}
+      />
+
+      {/* Edit modal */}
+      <OauthAppFormModal
+        mode="edit"
+        open={!!editingApp}
+        existingApp={editingApp}
+        onClose={() => setEditingApp(null)}
+        onCreated={() => {
+          setEditingApp(null)
           loadApps()
         }}
       />
@@ -431,6 +450,7 @@ function StatBlock({
 function AppRow({
   app,
   index,
+  onEdit,
   onDelete,
   onRevokeAll,
   onToggleActive,
@@ -438,6 +458,7 @@ function AppRow({
 }: {
   app: OauthApp
   index: number
+  onEdit: () => void
   onDelete: () => void
   onRevokeAll: () => void
   onToggleActive: () => void
@@ -529,8 +550,16 @@ function AppRow({
             {/* Redirect URIs */}
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <Link2 className="h-3 w-3" />
-              {app.redirectUris.length} URL{app.redirectUris.length !== 1 ? 's' : ''}
+              {app.redirectUris.length + app.allowedOrigins.length} URL
+              {app.redirectUris.length + app.allowedOrigins.length !== 1 ? 's' : ''}
             </div>
+
+            {app.allowAllOrigins && (
+              <div className="flex items-center gap-1.5 text-[11px] text-destructive font-semibold">
+                <AlertTriangle className="h-3 w-3" />
+                TOUTES ORIGINES
+              </div>
+            )}
 
             {app.webhookUrl && (
               <div className="flex items-center gap-1.5 text-[11px] text-violet-500">
@@ -560,6 +589,14 @@ function AppRow({
                   transition={{ duration: 0.15 }}
                   className="absolute right-0 top-10 w-56 rounded-xl border border-border bg-card shadow-2xl p-1.5 z-20"
                 >
+                  <MenuItem
+                    icon={Pencil}
+                    label="Éditer"
+                    onClick={() => {
+                      onEdit()
+                      setMenuOpen(false)
+                    }}
+                  />
                   <MenuItem
                     icon={app.isActive ? EyeOff : Eye}
                     label={app.isActive ? 'Désactiver' : 'Activer'}
@@ -636,13 +673,18 @@ function MenuItem({
   )
 }
 
-/* ─────────────── Create modal ─────────────── */
+/* ─────────────── Form modal (create + edit) ─────────────── */
 
-function CreateAppModal({
+type OauthAppFormMode = 'create' | 'edit'
+
+function OauthAppFormModal({
+  mode,
   open,
   onClose,
   onCreated,
+  existingApp = null,
 }: {
+  mode: OauthAppFormMode
   open: boolean
   onClose: () => void
   onCreated: (payload: {
@@ -651,6 +693,7 @@ function CreateAppModal({
     webhookSecret: string | null
     appName: string
   }) => void
+  existingApp?: OauthApp | null
 }) {
   const { toast } = useToast()
   const [saving, setSaving] = useState(false)
@@ -659,20 +702,24 @@ function CreateAppModal({
     description: '',
     websiteUrl: '',
     redirectUris: 'http://127.0.0.1/callback',
+    allowedOrigins: '',
+    allowAllOrigins: false,
     scopes: ['profile', 'invoices:read', 'offline_access'] as string[],
     allScopes: false,
-    kind: 'desktop' as 'desktop' | 'web' | 'cli',
+    kind: 'desktop' as OauthApp['kind'],
     webhookUrl: '',
     webhookEvents: [] as string[],
     isFirstParty: false,
   })
 
-  function reset() {
+  function resetToDefaults() {
     setForm({
       name: '',
       description: '',
       websiteUrl: '',
       redirectUris: 'http://127.0.0.1/callback',
+      allowedOrigins: '',
+      allowAllOrigins: false,
       scopes: ['profile', 'invoices:read', 'offline_access'],
       allScopes: false,
       kind: 'desktop',
@@ -681,6 +728,31 @@ function CreateAppModal({
       isFirstParty: false,
     })
   }
+
+  useEffect(() => {
+    if (!open) return
+    if (mode === 'edit' && existingApp) {
+      const isAllScopes =
+        existingApp.scopes.length === ALL_SCOPE_IDS.length &&
+        ALL_SCOPE_IDS.every((s) => existingApp.scopes.includes(s))
+      setForm({
+        name: existingApp.name,
+        description: existingApp.description ?? '',
+        websiteUrl: existingApp.websiteUrl ?? '',
+        redirectUris: existingApp.redirectUris.join('\n'),
+        allowedOrigins: existingApp.allowedOrigins.join('\n'),
+        allowAllOrigins: existingApp.allowAllOrigins,
+        scopes: isAllScopes ? ALL_SCOPE_IDS : existingApp.scopes,
+        allScopes: isAllScopes,
+        kind: existingApp.kind,
+        webhookUrl: existingApp.webhookUrl ?? '',
+        webhookEvents: existingApp.webhookEvents ?? [],
+        isFirstParty: existingApp.isFirstParty,
+      })
+    } else if (mode === 'create') {
+      resetToDefaults()
+    }
+  }, [open, mode, existingApp])
 
   function toggleScope(id: string) {
     setForm((f) => ({
@@ -707,10 +779,14 @@ function CreateAppModal({
       .split('\n')
       .map((s) => s.trim())
       .filter(Boolean)
-    if (redirects.length === 0) {
+    if (redirects.length === 0 && !form.allowAllOrigins) {
       toast('Au moins un redirect URI est requis', 'error')
       return
     }
+    const origins = form.allowedOrigins
+      .split('\n')
+      .map((s) => s.trim())
+      .filter(Boolean)
     const scopes = form.allScopes ? ALL_SCOPE_IDS : form.scopes
     if (scopes.length === 0) {
       toast('Au moins un scope est requis', 'error')
@@ -722,45 +798,77 @@ function CreateAppModal({
       name: form.name.trim(),
       description: form.description.trim() || null,
       websiteUrl: form.websiteUrl.trim() || null,
-      redirectUris: redirects,
+      redirectUris: redirects.length > 0 ? redirects : ['http://127.0.0.1/callback'],
+      allowedOrigins: origins,
+      allowAllOrigins: form.allowAllOrigins,
       scopes,
       kind: form.kind,
-      isFirstParty: form.isFirstParty,
+    }
+    if (mode === 'create') {
+      body.isFirstParty = form.isFirstParty
     }
     if (form.webhookUrl.trim()) {
       body.webhookUrl = form.webhookUrl.trim()
       body.webhookEvents = form.webhookEvents
+    } else if (mode === 'edit') {
+      body.webhookUrl = null
+      body.webhookEvents = []
     }
 
-    const { data, error } = await api.post<{
-      app: { clientId: string; name: string }
-      clientSecret: string
-      webhookSecret: string | null
-    }>('/admin/oauth-apps', body)
+    if (mode === 'create') {
+      const { data, error } = await api.post<{
+        app: { clientId: string; name: string }
+        clientSecret: string
+        webhookSecret: string | null
+      }>('/admin/oauth-apps', body)
 
+      setSaving(false)
+
+      if (error) {
+        toast(error, 'error')
+        return
+      }
+
+      if (data) {
+        onCreated({
+          clientId: data.app.clientId,
+          clientSecret: data.clientSecret,
+          webhookSecret: data.webhookSecret,
+          appName: data.app.name,
+        })
+        resetToDefaults()
+      }
+      return
+    }
+
+    if (!existingApp) {
+      setSaving(false)
+      return
+    }
+    const { error } = await api.put(`/admin/oauth-apps/${existingApp.id}`, body)
     setSaving(false)
-
     if (error) {
       toast(error, 'error')
       return
     }
-
-    if (data) {
-      onCreated({
-        clientId: data.app.clientId,
-        clientSecret: data.clientSecret,
-        webhookSecret: data.webhookSecret,
-        appName: data.app.name,
-      })
-      reset()
-    }
+    toast('Application mise à jour', 'success')
+    onCreated({
+      clientId: existingApp.clientId,
+      clientSecret: '',
+      webhookSecret: null,
+      appName: form.name.trim(),
+    })
   }
 
   return (
     <Dialog open={open} onClose={onClose} className="max-w-xl">
-      <DialogTitle>Nouvelle application OAuth</DialogTitle>
+      <DialogTitle>
+        {mode === 'create' ? 'Nouvelle application OAuth' : 'Éditer l’application OAuth'}
+      </DialogTitle>
       <DialogDescription className="mt-1">
-        Configurez une application tierce qui pourra se connecter à Faktur via OAuth2.
+        {mode === 'create'
+          ? 'Configurez une application tierce qui pourra se connecter à Faktur via OAuth2.'
+          : 'Modifiez les redirect URIs, les origines autorisées et les scopes de cette application.'}
       </DialogDescription>
 
       <div className="mt-5 space-y-4 max-h-[60vh] overflow-y-auto pr-1 -mr-1">
@@ -793,8 +901,8 @@ function CreateAppModal({
           <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
             Type
           </label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['desktop', 'web', 'cli'] as const).map((k) => {
+          <div className="grid grid-cols-4 gap-2">
+            {(['desktop', 'mobile', 'web', 'cli'] as const).map((k) => {
               const meta = KIND_META[k]
               const Icon = meta.icon
               const selected = form.kind === k
@@ -820,21 +928,77 @@ function CreateAppModal({
         {/* Redirect URIs */}
         <div>
           <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-            Redirect URIs *
+            Redirect URIs {form.allowAllOrigins ? '' : '*'}
           </label>
           <textarea
             value={form.redirectUris}
             onChange={(e) => setForm({ ...form, redirectUris: e.target.value })}
             rows={3}
-            className="w-full rounded-lg border border-border bg-background px-3 py-2 text-[13px] font-mono text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/15 outline-none transition-all"
-            placeholder="http://127.0.0.1/callback&#10;https://example.com/callback"
+            disabled={form.allowAllOrigins}
+            className={cn(
+              'w-full rounded-lg border border-border bg-background px-3 py-2 text-[13px] font-mono text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/15 outline-none transition-all',
+              form.allowAllOrigins && 'opacity-40'
+            )}
+            placeholder="http://127.0.0.1/callback&#10;https://example.com/callback&#10;faktur-mobile://oauth/callback"
           />
           <p className="text-[11px] text-muted-foreground mt-1.5">
-            Un par ligne. Pour le bureau, utilisez{' '}
+            Un par ligne, match exact. Pour le bureau, utilisez{' '}
             <code className="text-[10px] px-1 rounded bg-muted">http://127.0.0.1/callback</code> —
             le port est auto-assigné au runtime.
           </p>
         </div>
+
+        {/* Allowed origins (wildcards) */}
+        <div>
+          <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+            Origines autorisées (wildcards)
+          </label>
+          <textarea
+            value={form.allowedOrigins}
+            onChange={(e) => setForm({ ...form, allowedOrigins: e.target.value })}
+            rows={3}
+            disabled={form.allowAllOrigins}
+            className={cn(
+              'w-full rounded-lg border border-border bg-background px-3 py-2 text-[13px] font-mono text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/15 outline-none transition-all',
+              form.allowAllOrigins && 'opacity-40'
+            )}
+            placeholder="exp://*/--/oauth/callback&#10;faktur-mobile://*&#10;http://127.0.0.1:*/callback"
+          />
+          <p className="text-[11px] text-muted-foreground mt-1.5 leading-relaxed">
+            Un par ligne. Supporte les wildcards <code className="text-[10px] px-1 rounded bg-muted">*</code> (segment) et <code className="text-[10px] px-1 rounded bg-muted">**</code> (chemin complet). Utile pour Expo Go (<code className="text-[10px] px-1 rounded bg-muted">exp://*/--/oauth/callback</code>) ou les ports loopback dynamiques.
+          </p>
+        </div>
+
+        {/* DANGER ZONE: allow all origins */}
+        <button
+          type="button"
+          onClick={() => setForm({ ...form, allowAllOrigins: !form.allowAllOrigins })}
+          className={cn(
+            'w-full flex items-start gap-3 rounded-lg border-2 p-3 transition-all text-left',
+            form.allowAllOrigins
+              ? 'border-destructive/70 bg-destructive/5'
+              : 'border-border bg-card hover:bg-muted/40'
+          )}
+        >
+          <div
+            className={cn(
+              'h-5 w-5 shrink-0 rounded border-2 flex items-center justify-center mt-0.5 transition-colors',
+              form.allowAllOrigins ? 'bg-destructive border-destructive' : 'border-muted-foreground/40'
+            )}
+          >
+            {form.allowAllOrigins && <Check className="h-3 w-3 text-white" />}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-destructive" />
+              Autoriser TOUTES les origines
+              <Badge variant="destructive" className="text-[9px]">DÉV UNIQUEMENT</Badge>
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+              N&apos;importe quel <code className="text-[10px] px-1 rounded bg-muted">redirect_uri</code> sera accepté sans validation — tout attaquant avec le client_id pourra détourner le code d&apos;autorisation. À n&apos;utiliser <strong>que</strong> pendant le développement local.
+            </p>
+          </div>
+        </button>
 
         {/* Scopes */}
         <div>
@@ -964,21 +1128,23 @@ function CreateAppModal({
           </AnimatePresence>
         </div>
 
-        {/* First party */}
-        <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer hover:bg-muted/40 transition-colors">
-          <input
-            type="checkbox"
-            checked={form.isFirstParty}
-            onChange={(e) => setForm({ ...form, isFirstParty: e.target.checked })}
-            className="mt-0.5"
-          />
-          <div>
-            <p className="text-[13px] font-medium text-foreground">Application 1st-party</p>
-            <p className="text-[11px] text-muted-foreground">
-              Cochez pour les apps officielles (le badge sera affiché sur l&apos;écran de consentement).
-            </p>
-          </div>
-        </label>
+        {/* First party (create only) */}
+        {mode === 'create' && (
+          <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer hover:bg-muted/40 transition-colors">
+            <input
+              type="checkbox"
+              checked={form.isFirstParty}
+              onChange={(e) => setForm({ ...form, isFirstParty: e.target.checked })}
+              className="mt-0.5"
+            />
+            <div>
+              <p className="text-[13px] font-medium text-foreground">Application 1st-party</p>
+              <p className="text-[11px] text-muted-foreground">
+                Cochez pour les apps officielles (le badge sera affiché sur l&apos;écran de consentement).
+              </p>
+            </div>
+          </label>
+        )}
       </div>
 
       <DialogFooter className="mt-5">
@@ -987,7 +1153,7 @@ function CreateAppModal({
         </Button>
         <Button size="sm" onClick={handleSubmit} disabled={saving}>
           {saving ? <Spinner className="h-3.5 w-3.5 mr-1.5" /> : null}
-          Créer l&apos;application
+          {mode === 'create' ? "Créer l'application" : 'Enregistrer les modifications'}
         </Button>
       </DialogFooter>
     </Dialog>
