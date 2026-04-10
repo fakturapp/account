@@ -36,7 +36,7 @@ export function DatePicker({
   onChange,
   lang = 'fr',
   className,
-  accentColor = '#6366f1',
+  accentColor = '#5957e8',
 }: {
   value: string
   onChange?: (v: string) => void
@@ -137,23 +137,23 @@ export function DatePicker({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -4, scale: 0.97 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className="fixed z-[9999] bg-white rounded-xl shadow-xl border border-gray-200 p-3 w-[280px] select-none"
+          className="fixed z-[9999] bg-overlay rounded-xl shadow-overlay p-3 w-[280px] select-none"
           style={{ top: pos.top, left: pos.left, fontFamily: 'inherit' }}
         >
           {/* Header */}
           <div className="flex items-center justify-between mb-2">
             <button
               onClick={prevMonth}
-              className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-surface-hover transition-colors"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="text-sm font-semibold text-gray-900">
+            <span className="text-sm font-semibold text-foreground">
               {months[viewMonth]} {viewYear}
             </span>
             <button
               onClick={nextMonth}
-              className="h-7 w-7 rounded-lg flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors"
+              className="h-7 w-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-surface-hover transition-colors"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -162,7 +162,7 @@ export function DatePicker({
           {/* Day names */}
           <div className="grid grid-cols-7 mb-1">
             {days.map((d) => (
-              <div key={d} className="text-center text-[10px] font-medium text-gray-400 py-1">{d}</div>
+              <div key={d} className="text-center text-[10px] font-medium text-muted-secondary py-1">{d}</div>
             ))}
           </div>
 
@@ -184,12 +184,11 @@ export function DatePicker({
                   className={cn(
                     'h-8 w-8 mx-auto rounded-lg text-xs font-medium transition-all',
                     isSelected
-                      ? 'text-white font-semibold'
+                      ? 'bg-accent text-accent-foreground font-semibold'
                       : isToday
-                        ? 'font-semibold text-gray-900 ring-1 ring-inset ring-gray-300'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        ? 'font-semibold text-foreground ring-1 ring-inset ring-surface-tertiary'
+                        : 'text-foreground hover:bg-surface-hover'
                   )}
-                  style={isSelected ? { backgroundColor: accentColor } : undefined}
                 >
                   {day}
                 </button>
@@ -203,8 +202,7 @@ export function DatePicker({
               onChange?.(todayStr)
               setOpen(false)
             }}
-            className="w-full mt-2 text-xs font-medium text-center py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-            style={{ color: accentColor }}
+            className="w-full mt-2 text-xs font-medium text-center py-1.5 rounded-lg text-accent hover:bg-surface-hover transition-colors"
           >
             {lang === 'en' ? 'Today' : "Aujourd'hui"}
           </button>

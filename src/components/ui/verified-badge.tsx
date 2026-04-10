@@ -14,7 +14,7 @@ export function VerifiedBadge({ className, label = 'Vérifié' }: Props) {
       viewBox="0 0 22 22"
       aria-label={label}
       role="img"
-      className={cn('h-4 w-4 text-primary shrink-0', className)}
+      className={cn('h-4 w-4 text-accent shrink-0', className)}
     >
       <path
         fill="currentColor"

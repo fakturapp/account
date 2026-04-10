@@ -257,7 +257,7 @@ function Tip({ label, children }: { label: string; children: React.ReactNode }) 
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 3, scale: 0.95 }}
             transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 rounded-md bg-zinc-900 border border-zinc-700/80 text-[10px] text-zinc-300 whitespace-nowrap pointer-events-none z-10 shadow-lg"
+            className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 px-2 py-0.5 rounded-md bg-overlay shadow-overlay text-[10px] text-muted-foreground whitespace-nowrap pointer-events-none z-10"
           >
             {label}
           </motion.div>
@@ -380,7 +380,7 @@ function FloatingToolbar({
       onMouseDown={(e) => { e.preventDefault(); onClick() }}
       className={cn(
         'flex items-center justify-center h-7 w-7 rounded-md transition-colors',
-        active ? 'bg-indigo-500/20 text-indigo-400' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+        active ? 'bg-accent-soft text-accent' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
       )}
     >
       {children}
@@ -398,7 +398,7 @@ function FloatingToolbar({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 4, scale: 0.96 }}
           transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed z-[9999] flex flex-col rounded-lg border border-border/80 bg-card shadow-xl shadow-black/10 backdrop-blur-xl"
+          className="fixed z-[9999] flex flex-col rounded-xl bg-overlay shadow-overlay backdrop-blur-xl"
           style={{ top: state.y, left: state.x }}
           onMouseDown={(e) => {
             // Allow clicks on link input
@@ -447,7 +447,7 @@ function FloatingToolbar({
                 onMouseDown={(e) => { e.preventDefault(); setPanel(panel === 'size' ? null : 'size') }}
                 className={cn(
                   'flex items-center gap-1 h-7 px-1.5 rounded-md transition-colors text-[11px]',
-                  panel === 'size' ? 'bg-indigo-500/20 text-indigo-400' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  panel === 'size' ? 'bg-accent-soft text-accent' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
                 <ALargeSmall className="h-3.5 w-3.5 shrink-0" />
@@ -460,7 +460,7 @@ function FloatingToolbar({
                 onMouseDown={(e) => { e.preventDefault(); setPanel(panel === 'font' ? null : 'font') }}
                 className={cn(
                   'flex items-center gap-1 h-7 px-1.5 rounded-md transition-colors text-[11px]',
-                  panel === 'font' ? 'bg-indigo-500/20 text-indigo-400' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  panel === 'font' ? 'bg-accent-soft text-accent' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                 )}
               >
                 <Type className="h-3.5 w-3.5 shrink-0" />
@@ -564,7 +564,7 @@ function FloatingToolbar({
                       className={cn(
                         'px-2.5 py-1 text-[11px] rounded-md transition-colors',
                         s.value === state.fontSize
-                          ? 'bg-indigo-500/20 text-indigo-400'
+                          ? 'bg-accent-soft text-accent'
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                     >
@@ -591,7 +591,7 @@ function FloatingToolbar({
                       className={cn(
                         'flex items-center gap-2 px-2.5 py-1.5 text-[11px] rounded-md text-left transition-colors',
                         f.value === state.fontName || (f.value === 'inherit' && !state.fontName)
-                          ? 'bg-indigo-500/20 text-indigo-400'
+                          ? 'bg-accent-soft text-accent'
                           : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                       )}
                       style={{ fontFamily: f.value === 'inherit' ? undefined : f.value }}
@@ -625,7 +625,7 @@ function FloatingToolbar({
                       if (e.key === 'Escape') { e.preventDefault(); handleLinkCancel() }
                     }}
                     placeholder="https://..."
-                    className="flex-1 min-w-0 h-7 px-2 rounded-md bg-muted/50 border border-border/60 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-indigo-500/50"
+                    className="flex-1 min-w-0 h-7 px-2 rounded-md bg-surface shadow-field text-xs text-foreground placeholder:text-muted-secondary focus:outline-none focus:ring-1 focus:ring-accent/40"
                   />
                   <button
                     onMouseDown={(e) => { e.preventDefault(); handleLinkConfirm() }}

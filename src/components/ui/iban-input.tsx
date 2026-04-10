@@ -64,9 +64,9 @@ const IbanInput = React.forwardRef<HTMLInputElement, IbanInputProps>(
           required={required}
           disabled={disabled}
           className={cn(
-            'flex h-10 w-full rounded-lg border border-input bg-background/50 px-3 py-2 text-sm text-foreground font-mono tracking-wider',
-            'placeholder:text-muted-foreground placeholder:font-mono',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-transparent',
+            'flex h-10 w-full rounded-field bg-field px-4 py-2.5 text-sm text-field-foreground shadow-field font-mono tracking-wider',
+            'placeholder:text-field-placeholder placeholder:font-mono',
+            'focus-visible:outline-none focus-visible:border-field-border-focus focus-visible:bg-field-focus',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'transition-all duration-200 pr-10',
             className

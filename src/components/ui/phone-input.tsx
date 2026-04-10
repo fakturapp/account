@@ -149,10 +149,10 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
           onClick={() => !disabled && (setOpen(!open), setSearch(''))}
           disabled={disabled}
           className={cn(
-            'flex items-center gap-1.5 px-2.5 h-10 rounded-l-lg border border-r-0 border-input bg-muted/50 text-sm',
-            'hover:bg-muted transition-colors shrink-0',
+            'flex items-center gap-1.5 px-2.5 h-10 rounded-l-field bg-surface text-sm shadow-field',
+            'hover:bg-surface-hover transition-colors shrink-0',
             'disabled:cursor-not-allowed disabled:opacity-50',
-            open && 'bg-muted ring-2 ring-ring border-transparent'
+            open && 'bg-surface-hover ring-2 ring-accent/40'
           )}
         >
           <span className="text-base leading-none">{selectedCountry.flag}</span>
@@ -172,9 +172,9 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
           required={required}
           disabled={disabled}
           className={cn(
-            'flex h-10 w-full rounded-r-lg border border-input bg-background/50 px-3 py-2 text-sm text-foreground',
-            'placeholder:text-muted-foreground',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:border-transparent',
+            'flex h-10 w-full rounded-r-field bg-field px-4 py-2.5 text-sm text-field-foreground shadow-field',
+            'placeholder:text-field-placeholder',
+            'focus-visible:outline-none focus-visible:border-field-border-focus focus-visible:bg-field-focus',
             'disabled:cursor-not-allowed disabled:opacity-50',
             'transition-all duration-200',
             className
@@ -182,8 +182,8 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
         />
 
         {open && (
-          <div className="absolute top-full left-0 z-50 mt-1.5 w-72 rounded-xl border border-border bg-zinc-900 shadow-xl animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150">
-            <div className="p-2 border-b border-border">
+          <div className="absolute top-full left-0 z-50 mt-1.5 w-72 rounded-xl bg-overlay shadow-overlay animate-in fade-in-0 zoom-in-95 slide-in-from-top-2 duration-150">
+            <div className="p-2 border-b border-separator">
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                 <input
@@ -192,7 +192,7 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                   placeholder="Rechercher un pays..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full h-8 pl-8 pr-3 text-sm rounded-lg bg-muted/50 border border-border/50 text-foreground focus:outline-none focus:ring-1 focus:ring-ring placeholder:text-muted-foreground"
+                  className="w-full h-8 pl-8 pr-3 text-sm rounded-lg bg-surface text-foreground shadow-field focus:outline-none focus:ring-1 focus:ring-accent/40 placeholder:text-muted-secondary"
                 />
               </div>
             </div>
@@ -208,14 +208,14 @@ const PhoneInput = React.forwardRef<HTMLInputElement, PhoneInputProps>(
                   className={cn(
                     'flex items-center gap-2.5 w-full px-2.5 py-2 text-sm rounded-lg transition-colors',
                     selectedCountry.code === c.code
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'hover:bg-muted/50 text-foreground'
+                      ? 'bg-accent-soft text-accent font-medium'
+                      : 'hover:bg-surface-hover text-foreground'
                   )}
                 >
                   <span className="text-base leading-none">{c.flag}</span>
                   <span className="flex-1 text-left truncate">{c.name}</span>
                   <span className="text-muted-foreground text-xs tabular-nums">+{c.dial}</span>
-                  {selectedCountry.code === c.code && <Check className="h-3.5 w-3.5 text-primary shrink-0" />}
+                  {selectedCountry.code === c.code && <Check className="h-3.5 w-3.5 text-accent shrink-0" />}
                 </button>
               ))}
             </div>

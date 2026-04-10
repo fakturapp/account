@@ -53,24 +53,24 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
             const isInline = !codeClassName
             if (isInline) {
               return (
-                <code className="px-1 py-0.5 rounded bg-muted/80 text-[10px] font-mono text-foreground">
+                <code className="px-1 py-0.5 rounded bg-surface text-[10px] font-mono text-foreground">
                   {children}
                 </code>
               )
             }
             return (
-              <code className={cn('block rounded-lg bg-muted/60 p-2 text-[10px] font-mono overflow-x-auto my-1.5', codeClassName)} {...props}>
+              <code className={cn('block rounded-lg bg-surface p-2 text-[10px] font-mono overflow-x-auto my-1.5', codeClassName)} {...props}>
                 {children}
               </code>
             )
           },
           pre: ({ children }) => (
-            <pre className="rounded-lg bg-muted/60 p-2 overflow-x-auto my-1.5 text-[10px]">
+            <pre className="rounded-lg bg-surface p-2 overflow-x-auto my-1.5 text-[10px]">
               {children}
             </pre>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-2 border-primary/40 pl-2 my-1.5 text-xs text-muted-foreground italic">
+            <blockquote className="border-l-2 border-accent/40 pl-2 my-1.5 text-xs text-muted-foreground italic">
               {children}
             </blockquote>
           ),
@@ -82,7 +82,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="bg-muted/40 border-b border-border/60">{children}</thead>
+            <thead className="bg-surface border-b border-border/60">{children}</thead>
           ),
           th: ({ children }) => (
             <th className="px-2 py-1 text-left font-semibold text-foreground">{children}</th>
@@ -92,7 +92,7 @@ export function MarkdownRenderer({ content, className, compact = false }: Markdo
           ),
           hr: () => <hr className="my-2 border-border/40" />,
           a: ({ href, children }) => (
-            <a href={href} target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2 hover:text-primary/80">
+            <a href={href} target="_blank" rel="noopener noreferrer" className="text-accent underline underline-offset-2 hover:text-accent/80">
               {children}
             </a>
           ),
