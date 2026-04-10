@@ -1,80 +1,112 @@
-import * as React from 'react'
-import { cn } from '@/lib/utils'
+﻿import { forwardRef, type HTMLAttributes } from "react";
 
-function Card({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+import { cn } from "@/lib/cn";
+
+import { cardVariants, type CardVariants } from "./card.styles";
+
+interface CardProps extends HTMLAttributes<HTMLDivElement>, CardVariants {}
+
+const CardRoot = forwardRef<HTMLDivElement, CardProps>(
+  ({ className, size, variant, isInteractive, ...props }, ref) => (
     <div
+      ref={ref}
       data-slot="card"
       className={cn(
-        'group/card flex flex-col gap-4 overflow-hidden rounded-xl bg-card py-4 text-sm text-card-foreground ring-1 ring-foreground/5 shadow-sm dark:ring-foreground/10 dark:shadow-none has-data-[slot=card-footer]:pb-0',
-        className
+        cardVariants({ size, variant, isInteractive }),
+        className,
       )}
       {...props}
     />
-  )
-}
+  ),
+);
+CardRoot.displayName = "Card";
 
-function CardHeader({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+const CardHeader = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
+      ref={ref}
       data-slot="card-header"
-      className={cn(
-        'grid auto-rows-min items-start gap-1 px-4 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto]',
-        className
-      )}
+      className={cn("card__header", className)}
       {...props}
     />
-  )
-}
+  ),
+);
+CardHeader.displayName = "Card.Header";
 
-function CardTitle({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+const CardTitle = forwardRef<
+  HTMLHeadingElement,
+  HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    data-slot="card-title"
+    className={cn("card__title", className)}
+    {...props}
+  />
+));
+CardTitle.displayName = "Card.Title";
+
+const CardDescription = forwardRef<
+  HTMLParagraphElement,
+  HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    data-slot="card-description"
+    className={cn("card__description", className)}
+    {...props}
+  />
+));
+CardDescription.displayName = "Card.Description";
+
+const CardBody = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      data-slot="card-title"
-      className={cn('text-base leading-snug font-medium', className)}
+      ref={ref}
+      data-slot="card-body"
+      className={cn("card__body", className)}
       {...props}
     />
-  )
-}
+  ),
+);
+CardBody.displayName = "Card.Body";
 
-function CardDescription({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+const CardFooter = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
     <div
-      data-slot="card-description"
-      className={cn('text-sm text-muted-foreground', className)}
-      {...props}
-    />
-  )
-}
-
-function CardAction({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-action"
-      className={cn('col-start-2 row-span-2 row-start-1 self-start justify-self-end', className)}
-      {...props}
-    />
-  )
-}
-
-function CardContent({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
-      data-slot="card-content"
-      className={cn('px-4', className)}
-      {...props}
-    />
-  )
-}
-
-function CardFooter({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
-    <div
+      ref={ref}
       data-slot="card-footer"
-      className={cn('flex items-center rounded-b-xl border-t bg-muted/50 p-4', className)}
+      className={cn("card__footer", className)}
       {...props}
     />
-  )
-}
+  ),
+);
+CardFooter.displayName = "Card.Footer";
 
-export { Card, CardHeader, CardTitle, CardDescription, CardAction, CardContent, CardFooter }
+const CardAction = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
+  ({ className, ...props }, ref) => (
+    <div
+      ref={ref}
+      data-slot="card-action"
+      className={cn("card__action", className)}
+      {...props}
+    />
+  ),
+);
+CardAction.displayName = "Card.Action";
+
+const Card = CardRoot;
+const CardContent = CardBody;
+
+export {
+  Card,
+  CardRoot,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardBody,
+  CardContent,
+  CardFooter,
+  CardAction,
+};
+export type { CardProps };

@@ -1,52 +1,54 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { cn } from '@/lib/utils'
+import { forwardRef, useState, type ImgHTMLAttributes } from "react";
+import { cn } from "@/lib/utils";
 
-function resolveUrl(url: string | null | undefined): string | null {
-  if (!url) return null
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) return url
-  return url
+type AvatarSize = "sm" | "md" | "lg";
+
+const SIZE_MAP: Record<AvatarSize, string> = {
+  sm: "h-8 w-8 text-[11px]",
+  md: "h-10 w-10 text-sm",
+  lg: "h-14 w-14 text-lg",
+};
+
+interface AvatarProps extends Omit<ImgHTMLAttributes<HTMLImageElement>, "size" | "src"> {
+  src?: string | null;
+  alt?: string;
+  fallback?: string;
+  size?: AvatarSize;
+  className?: string;
 }
 
-interface AvatarProps extends React.HTMLAttributes<HTMLDivElement> {
-  src?: string | null
-  alt?: string
-  fallback?: string
-  size?: 'sm' | 'md' | 'lg'
-}
-
-const sizeClasses = {
-  sm: 'h-8 w-8 text-xs',
-  md: 'h-10 w-10 text-sm',
-  lg: 'h-12 w-12 text-base',
-}
-
-const Avatar = React.forwardRef<HTMLDivElement, AvatarProps>(
-  ({ className, src, alt, fallback, size = 'md', ...props }, ref) => {
-    const [imgError, setImgError] = React.useState(false)
-    const initials = fallback || alt?.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase() || '?'
-    const showImg = src && !imgError
+const Avatar = forwardRef<HTMLDivElement, AvatarProps>(
+  ({ src, alt, fallback, size = "md", className, ...props }, ref) => {
+    const [imgError, setImgError] = useState(false);
+    const showImage = src && !imgError;
 
     return (
       <div
         ref={ref}
+        data-slot="avatar"
         className={cn(
-          'relative flex shrink-0 items-center justify-center rounded-full bg-muted overflow-hidden',
-          sizeClasses[size],
-          className
+          "relative inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-surface font-medium text-muted-foreground select-none",
+          SIZE_MAP[size],
+          className,
         )}
-        {...props}
       >
-        {showImg ? (
-          <img src={resolveUrl(src) || ''} alt={alt || ''} className="h-full w-full object-cover" onError={() => setImgError(true)} />
+        {showImage ? (
+          <img
+            src={src}
+            alt={alt}
+            onError={() => setImgError(true)}
+            className="h-full w-full object-cover"
+          />
         ) : (
-          <span className="font-medium text-muted-foreground">{initials}</span>
+          <span className="uppercase leading-none">{fallback || alt?.charAt(0) || "?"}</span>
         )}
       </div>
-    )
-  }
-)
-Avatar.displayName = 'Avatar'
+    );
+  },
+);
+Avatar.displayName = "Avatar";
 
-export { Avatar }
+export { Avatar };
+export type { AvatarProps };
