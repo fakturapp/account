@@ -231,8 +231,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <SiteHeader onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <RouteProgressBar />
 
-        <main className="flex-1 overflow-y-auto">
-          <div className="@container/main flex flex-1 flex-col gap-2">
+        <main className="relative flex-1 overflow-y-auto">
+          {/* Dégradé animé — orbes répartis sur toute la page */}
+          <div className="pointer-events-none fixed top-0 left-(--sidebar-width) right-0 h-screen overflow-hidden" aria-hidden="true">
+            {/* Haut gauche — indigo principal */}
+            <div className="absolute -top-40 -left-24 h-[550px] w-[550px] rounded-full bg-[#5957e8]/[0.06] blur-[120px] animate-[gradient-drift_14s_ease-in-out_infinite]" />
+            {/* Haut centre-droit — violet */}
+            <div className="absolute -top-20 right-[20%] h-[400px] w-[450px] rounded-full bg-[#7c5ce8]/[0.04] blur-[100px] animate-[gradient-drift_18s_ease-in-out_infinite_reverse]" />
+            {/* Centre gauche — lavande */}
+            <div className="absolute top-[30%] -left-16 h-[350px] w-[400px] rounded-full bg-[#a78bfa]/[0.035] blur-[110px] animate-[gradient-drift_20s_ease-in-out_infinite]" />
+            {/* Centre droit — indigo doux */}
+            <div className="absolute top-[40%] right-[10%] h-[300px] w-[350px] rounded-full bg-[#5957e8]/[0.03] blur-[100px] animate-[gradient-drift_16s_ease-in-out_infinite_reverse]" />
+            {/* Bas — violet diffus */}
+            <div className="absolute bottom-[5%] left-[30%] h-[350px] w-[400px] rounded-full bg-[#7c5ce8]/[0.03] blur-[110px] animate-[gradient-drift_22s_ease-in-out_infinite]" />
+          </div>
+          <div className="relative @container/main flex flex-1 flex-col gap-2">
             {children}
           </div>
         </main>
@@ -241,8 +254,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {}
       <Dialog open={!!switchConfirm} onClose={() => setSwitchConfirm(null)}>
         <div className="flex items-center gap-3 mb-4">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10">
-            <ArrowRightLeft className="h-5 w-5 text-primary" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent-soft">
+            <ArrowRightLeft className="h-5 w-5 text-accent" />
           </div>
           <div>
             <DialogTitle>Changer d&apos;équipe</DialogTitle>
@@ -253,9 +266,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         {switchConfirm && (
-          <div className="rounded-lg border border-border bg-muted/30 p-4 mb-2">
+          <div className="rounded-lg shadow-surface bg-surface p-4 mb-2">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary font-semibold">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft text-accent font-semibold">
                 {switchConfirm.name.charAt(0).toUpperCase()}
               </div>
               <div>
@@ -296,7 +309,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <div className="mb-4 mt-2">
             <label
               htmlFor="logout-wipe-all"
-              className="group flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-muted/30 p-3.5 transition-colors hover:bg-muted/50"
+              className="group flex cursor-pointer items-start gap-3 rounded-xl shadow-surface bg-surface p-3.5 transition-colors hover:bg-surface-hover"
             >
               <input
                 id="logout-wipe-all"
@@ -361,7 +374,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-background/60 backdrop-blur-md"
           >
-            <Spinner size="lg" className="text-primary" />
+            <Spinner size="lg" className="text-accent" />
             <p className="mt-4 text-sm font-medium text-foreground">
               {loggingOut ? 'Deconnexion en cours...' : "Changement d\u0027equipe en cours..."}
             </p>
