@@ -1,38 +1,39 @@
-import { cn } from '@/lib/utils'
+﻿import { forwardRef, type HTMLAttributes } from "react";
 
-function Skeleton({ className, ...props }: React.ComponentProps<'div'>) {
-  return (
+import { cn } from "@/lib/cn";
+import { tv, type VariantProps } from "tailwind-variants";
+
+const skeletonVariants = tv({
+  base: "skeleton",
+  defaultVariants: {
+    animation: "shimmer",
+  },
+  variants: {
+    animation: {
+      shimmer: "skeleton--shimmer",
+      pulse: "skeleton--pulse",
+      none: "skeleton--none",
+    },
+  },
+});
+
+type SkeletonVariants = VariantProps<typeof skeletonVariants>;
+
+interface SkeletonProps
+  extends HTMLAttributes<HTMLDivElement>,
+    SkeletonVariants {}
+
+const Skeleton = forwardRef<HTMLDivElement, SkeletonProps>(
+  ({ className, animation, ...props }, ref) => (
     <div
+      ref={ref}
       data-slot="skeleton"
-      className={cn('skeleton-shimmer rounded-md', className)}
+      className={cn(skeletonVariants({ animation }), className)}
       {...props}
     />
-  )
-}
+  ),
+);
+Skeleton.displayName = "Skeleton";
 
-Skeleton.Text = function SkeletonText({ lines = 3 }: { lines?: number }) {
-  return (
-    <div className="flex flex-col gap-2.5">
-      {Array.from({ length: lines }).map((_, i) => (
-        <Skeleton
-          key={i}
-          className={cn('h-3.5 rounded-md', i === lines - 1 ? 'w-3/5' : 'w-full')}
-        />
-      ))}
-    </div>
-  )
-}
-
-Skeleton.Circle = function SkeletonCircle({ size = 48 }: { size?: number }) {
-  return <Skeleton className="rounded-full" style={{ width: size, height: size }} />
-}
-
-Skeleton.Rect = function SkeletonRect({
-  className,
-}: {
-  className?: string
-}) {
-  return <Skeleton className={cn('h-30 w-full rounded-xl', className)} />
-}
-
-export { Skeleton }
+export { Skeleton, skeletonVariants };
+export type { SkeletonProps, SkeletonVariants };

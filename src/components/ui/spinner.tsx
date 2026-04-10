@@ -1,29 +1,65 @@
-import { cn } from '@/lib/utils'
+﻿import { forwardRef, type SVGAttributes } from "react";
 
-interface SpinnerProps {
-  className?: string
-  size?: 'sm' | 'md' | 'lg'
-}
+import { cn } from "@/lib/cn";
+import { tv, type VariantProps } from "tailwind-variants";
 
-const sizeClasses = {
-  sm: 'w-4 h-4',
-  md: 'w-6 h-6',
-  lg: 'w-10 h-10',
-}
+const spinnerVariants = tv({
+  base: "spinner",
+  defaultVariants: {
+    size: "md",
+    color: "current",
+  },
+  variants: {
+    size: {
+      sm: "spinner--sm",
+      md: "spinner--md",
+      lg: "spinner--lg",
+      xl: "spinner--xl",
+    },
+    color: {
+      current: "spinner--current",
+      accent: "spinner--accent",
+      success: "spinner--success",
+      warning: "spinner--warning",
+      danger: "spinner--danger",
+    },
+  },
+});
 
-export function Spinner({ className, size = 'sm' }: SpinnerProps) {
-  return (
+type SpinnerVariants = VariantProps<typeof spinnerVariants>;
+
+interface SpinnerProps extends Omit<SVGAttributes<SVGSVGElement>, "color">, SpinnerVariants {}
+
+const Spinner = forwardRef<SVGSVGElement, SpinnerProps>(
+  ({ className, size, color, ...props }, ref) => (
     <svg
-      viewBox="25 25 50 50"
-      className={cn('animate-spinner-rotate', sizeClasses[size], className)}
+      ref={ref}
+      data-slot="spinner"
+      className={cn(spinnerVariants({ size, color }), className)}
+      fill="none"
+      viewBox="0 0 24 24"
+      role="status"
+      aria-label="Chargement"
+      {...props}
     >
       <circle
-        r={20}
-        cy={50}
-        cx={50}
-        className="animate-spinner-dash fill-none stroke-current stroke-2"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="3"
+        strokeOpacity="0.2"
+      />
+      <path
+        d="M22 12a10 10 0 0 1-10 10"
+        stroke="currentColor"
+        strokeWidth="3"
         strokeLinecap="round"
       />
     </svg>
-  )
-}
+  ),
+);
+Spinner.displayName = "Spinner";
+
+export { Spinner, spinnerVariants };
+export type { SpinnerProps, SpinnerVariants };

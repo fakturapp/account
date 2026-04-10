@@ -1,53 +1,178 @@
-'use client'
+"use client";
 
-import * as React from 'react'
-import { cn } from '@/lib/utils'
-import { motion } from 'framer-motion'
+import { createContext, useContext, useMemo, type ComponentPropsWithRef, type ReactNode } from "react";
+import {
+  TabList as TabListPrimitive,
+  TabPanel as TabPanelPrimitive,
+  Tab as TabPrimitive,
+  Tabs as TabsPrimitive,
+} from "react-aria-components";
 
-interface Tab {
-  id: string
-  label: string
-  icon?: React.ReactNode
-  badge?: string
+import { composeTwRenderProps, composeSlotClassName } from "@/lib/compose-tw-render-props";
+import { tabsVariants, type TabsVariants } from "./tabs.styles";
+import { cn } from "@/lib/utils";
+
+interface TabsContextValue {
+  orientation?: "horizontal" | "vertical";
+  slots?: ReturnType<typeof tabsVariants>;
+  variant?: TabsVariants["variant"];
 }
 
-interface TabsProps {
-  tabs: Tab[]
-  activeTab: string
-  onChange: (id: string) => void
-  className?: string
+const TabsContext = createContext<TabsContextValue>({});
+
+interface TabsRootProps
+  extends ComponentPropsWithRef<typeof TabsPrimitive>,
+    TabsVariants {
+  children: ReactNode;
+  className?: string;
 }
 
-export function Tabs({ tabs, activeTab, onChange, className }: TabsProps) {
+const TabsRoot = ({
+  children,
+  className,
+  orientation = "horizontal",
+  variant,
+  ...props
+}: TabsRootProps) => {
+  const slots = useMemo(() => tabsVariants({ variant }), [variant]);
+
   return (
-    <div className={cn('flex gap-1 rounded-xl bg-muted/50 p-1', className)}>
+    <TabsContext.Provider value={{ orientation, slots, variant }}>
+      <TabsPrimitive
+        {...props}
+        className={composeTwRenderProps(className, slots.base())}
+        data-slot="tabs"
+        orientation={orientation}
+      >
+        {children}
+      </TabsPrimitive>
+    </TabsContext.Provider>
+  );
+};
+
+interface TabListContainerProps extends ComponentPropsWithRef<"div"> {
+  className?: string;
+}
+
+const TabListContainer = ({ children, className, ...props }: TabListContainerProps) => {
+  const { slots } = useContext(TabsContext);
+  return (
+    <div className={composeSlotClassName(slots?.tabListContainer, className)} data-slot="tabs-list-container" {...props}>
+      {children}
+    </div>
+  );
+};
+
+interface TabListProps extends ComponentPropsWithRef<typeof TabListPrimitive<object>> {
+  children: ReactNode;
+  className?: string;
+}
+
+const TabList = ({ children, className, ...props }: TabListProps) => {
+  const { slots } = useContext(TabsContext);
+  return (
+    <TabListPrimitive {...props} className={composeTwRenderProps(className, slots?.tabList())} data-slot="tabs-list">
+      {children}
+    </TabListPrimitive>
+  );
+};
+
+interface TabProps extends ComponentPropsWithRef<typeof TabPrimitive> {
+  className?: string;
+}
+
+const Tab = ({ children, className, ...props }: TabProps) => {
+  const { slots } = useContext(TabsContext);
+  return (
+    <TabPrimitive {...props} className={composeTwRenderProps(className, slots?.tab())} data-slot="tabs-tab">
+      {children}
+    </TabPrimitive>
+  );
+};
+
+const TabIndicator = (_props: { className?: string }) => null;
+
+interface TabPanelProps extends Omit<ComponentPropsWithRef<typeof TabPanelPrimitive>, "children"> {
+  children: ReactNode;
+  className?: string;
+}
+
+const TabPanel = ({ children, className, ...props }: TabPanelProps) => {
+  const { slots } = useContext(TabsContext);
+  return (
+    <TabPanelPrimitive {...props} className={composeTwRenderProps(className, slots?.tabPanel())} data-slot="tabs-panel">
+      {children}
+    </TabPanelPrimitive>
+  );
+};
+
+interface TabSeparatorProps extends ComponentPropsWithRef<"span"> {
+  className?: string;
+}
+
+const TabSeparator = ({ className, ...props }: TabSeparatorProps) => {
+  const { slots } = useContext(TabsContext);
+  return (
+    <span
+      aria-hidden="true"
+      className={composeSlotClassName(slots?.separator, className)}
+      data-slot="tabs-separator"
+      {...props}
+    />
+  );
+};
+
+interface LegacyTabItem {
+  id: string;
+  label: string;
+  icon?: ReactNode;
+}
+
+interface LegacyTabsProps {
+  tabs: LegacyTabItem[];
+  activeTab: string;
+  onChange: (id: string) => void;
+  className?: string;
+}
+
+const Tabs = ({ tabs, activeTab, onChange, className }: LegacyTabsProps) => (
+  <div className={cn("tabs", className)} data-slot="tabs">
+    <div className="tabs__list tabs__list--secondary">
       {tabs.map((tab) => (
         <button
           key={tab.id}
           onClick={() => onChange(tab.id)}
+          data-selected={activeTab === tab.id ? "true" : undefined}
           className={cn(
-            'relative flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-            activeTab === tab.id ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'
+            "tabs__tab",
+            activeTab === tab.id && "tabs__tab--selected"
           )}
+          type="button"
         >
-          {activeTab === tab.id && (
-            <motion.div
-              layoutId="tab-indicator"
-              className="absolute inset-0 rounded-lg bg-card shadow-sm border border-border/50"
-              transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
-            />
-          )}
-          <span className="relative z-10 flex items-center gap-2">
-            {tab.icon}
-            {tab.label}
-            {tab.badge && (
-              <span className="px-1.5 py-0.5 rounded-full bg-primary/10 text-primary text-[9px] font-semibold uppercase tracking-wide leading-none">
-                {tab.badge}
-              </span>
-            )}
-          </span>
+          {tab.icon && <span className="tabs__tab-icon">{tab.icon}</span>}
+          {tab.label}
         </button>
       ))}
     </div>
-  )
-}
+  </div>
+);
+
+export {
+  TabsRoot,
+  TabListContainer,
+  TabList,
+  Tab,
+  TabIndicator,
+  TabPanel,
+  TabSeparator,
+  Tabs,
+};
+export type {
+  TabsRootProps,
+  TabListContainerProps,
+  TabListProps,
+  TabProps,
+  TabPanelProps,
+  TabSeparatorProps,
+  LegacyTabsProps,
+};
