@@ -84,7 +84,7 @@ export function TutorialBanner() {
                   <GraduationCap className="h-4 w-4 text-accent" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-foreground">Didacticiel</p>
+                  <p className="text-[13px] font-semibold text-foreground">Didacticiel <span className="ml-1 inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0 text-[8px] font-bold text-amber-500 uppercase">Beta</span></p>
                   <p className="text-[11px] text-muted-foreground truncate">
                     Niveau {level} · {currentLevel?.name} · {step + 1}/{totalStepsInLevel}
                   </p>

@@ -858,6 +858,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               if (typeof tutorial === 'function') tutorial()
             }}>
               <GraduationCap className="h-4 w-4" /> Didacticiel
+              <span className="ml-auto inline-flex items-center rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[8px] font-bold text-amber-500 uppercase">Beta</span>
             </DropdownItem>
             <DropdownSeparator />
             <DropdownItem onClick={() => onOpenFeedback?.()}>

@@ -1,6 +1,6 @@
 import type { LucideIcon } from 'lucide-react'
 import {
-  Sparkles, Building2, UserPlus, Package, FileText,
+  GraduationCap, Building2, UserPlus, Package, FileText,
   Eye, Mail, Receipt, CreditCard, Trophy,
 } from 'lucide-react'
 
@@ -35,7 +35,7 @@ export const TUTORIAL_LEVELS: TutorialLevel[] = [
   /* ═══════════════ Niveau 1 : Bienvenue ═══════════════ */
   {
     id: 1, name: 'Bienvenue', subtitle: 'Découvrez votre espace de travail',
-    icon: Sparkles, color: '#6366f1',
+    icon: GraduationCap, color: '#6366f1',
     steps: [
       {
         id: '1-1',

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useTutorial } from '@/lib/tutorial-context'
 import { TUTORIAL_LEVELS } from '@/components/tutorial/tutorial-steps'
 import { GraduationCap, ArrowRight } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
 
 export function TutorialOfferModal() {
   const { showOffer, startTutorial, dismissOffer } = useTutorial()
@@ -24,7 +25,10 @@ export function TutorialOfferModal() {
               >
                 <GraduationCap className="h-7 w-7 text-white" />
               </motion.div>
-              <DialogTitle className="text-lg">Bienvenue sur Faktur !</DialogTitle>
+              <div className="flex items-center gap-2 justify-center">
+                <DialogTitle className="text-lg">Bienvenue sur Faktur !</DialogTitle>
+                <Badge variant="warning" className="text-[9px]">Beta</Badge>
+              </div>
               <DialogDescription className="mt-1.5 max-w-xs">
                 Découvrez toutes les fonctionnalités en 10 niveaux guidés.
               </DialogDescription>
