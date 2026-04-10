@@ -177,7 +177,6 @@ export default function BankPage() {
                           <div className="flex items-center gap-2">
                             <p className="text-sm font-medium text-foreground truncate">{account.label}</p>
                             {account.isDefault && <Badge variant="default" className="text-[10px] shrink-0">Par défaut</Badge>}
-                            <Badge variant="muted" className="text-[10px] shrink-0"><Shield className="h-2.5 w-2.5 mr-0.5" /> Chiffré</Badge>
                           </div>
                           <div className="flex items-center gap-3 mt-0.5">
                             {account.bankName && <span className="text-xs text-muted-foreground">{account.bankName}</span>}
