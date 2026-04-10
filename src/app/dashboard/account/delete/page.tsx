@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { Select } from '@/components/ui/select'
+import { FormSelect } from '@/components/ui/dropdown'
 import { Separator } from '@/components/ui/separator'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/components/ui/toast'
@@ -722,17 +722,18 @@ export default function DeleteAccountPage() {
               Aucun autre membre disponible.
             </p>
           ) : (
-            <Select
+            <FormSelect
               value={transferTarget}
-              onChange={(e) => setTransferTarget(e.target.value)}
-            >
-              <option value="">Sélectionner un membre</option>
-              {transferDialog?.members.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.displayName || m.email}
-                </option>
-              ))}
-            </Select>
+              onChange={setTransferTarget}
+              placeholder="Sélectionner un membre"
+              options={[
+                { value: '', label: 'Sélectionner un membre' },
+                ...(transferDialog?.members.map((m) => ({
+                  value: m.userId,
+                  label: m.displayName || m.email,
+                })) || []),
+              ]}
+            />
           )}
         </div>
         <DialogFooter>
