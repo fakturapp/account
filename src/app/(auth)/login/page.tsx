@@ -62,6 +62,7 @@ function LoginContent() {
   const [googleLoading, setGoogleLoading] = useState(false)
   const [passkeyLoading, setPasskeyLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
+  const [redirecting, setRedirecting] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
   const turnstileRef = useRef<TurnstileInstance>(null)
   const resetTurnstile = useCallback(() => {
@@ -87,6 +88,7 @@ function LoginContent() {
           return
         }
         login(token, data.user)
+        setRedirecting(true)
         router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
       })
     } else if (oauthError) {
@@ -136,6 +138,7 @@ function LoginContent() {
 
       if (data?.token && data?.user) {
         login(data.token, data.user, data.vaultKey)
+        setRedirecting(true)
         router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
       }
     } catch (err: any) {
@@ -162,6 +165,7 @@ function LoginContent() {
       if (err) return setError(err)
       if (data?.token) {
         login(data.token, data.user)
+        setRedirecting(true)
         router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
       }
       return
@@ -196,6 +200,7 @@ function LoginContent() {
 
     if (data?.token && data?.user) {
       login(data.token, data.user, data.vaultKey)
+      setRedirecting(true)
       router.push(getPostLoginRedirect(data.user.onboardingCompleted))
     }
   }
@@ -211,6 +216,21 @@ function LoginContent() {
       router.replace(redirectParam)
     }
   }, [authLoading, user, searchParams, router])
+
+  if (redirecting) {
+    return (
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="w-full max-w-sm mx-auto flex flex-col items-center justify-center py-20"
+      >
+        <Spinner size="lg" className="text-accent" />
+        <p className="mt-4 text-sm font-medium text-foreground">
+          Connexion en cours...
+        </p>
+      </motion.div>
+    )
+  }
 
   // Desktop shell detected — the email/password login form is a
   // dead end here (no keychain, no 2FA flow, no Turnstile). Show a
