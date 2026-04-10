@@ -15,6 +15,7 @@ import { IbanInput } from '@/components/ui/iban-input'
 import { useCompanySettings, type BankAccountItem, type BankAccountForm } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
 import { CreditCard, Banknote, Plus, Shield, Star, Pencil, Trash2 } from 'lucide-react'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 
 const BANK_DOMAINS: Record<string, string> = {
   'bnp paribas': 'bnpparibas.com', 'bnp': 'bnpparibas.com',
@@ -245,20 +246,19 @@ export default function BankPage() {
                 <span className="text-xs text-muted-foreground block">L&apos;IBAN et le BIC sont automatiquement chiffrés (AES-256-GCM).</span>
               </div>
             </div>
-            <label className="flex items-center gap-3 cursor-pointer">
-              <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${bankForm.isDefault ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
-                {bankForm.isDefault && (
-                  <svg className="h-3 w-3 text-accent-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-              <div>
+            <CheckboxRoot 
+              isSelected={bankForm.isDefault} 
+              onChange={(checked) => setBankForm((p) => ({ ...p, isDefault: checked }))} 
+              className="flex items-center gap-3 cursor-pointer"
+            >
+              <CheckboxControl>
+                <CheckboxIndicator />
+              </CheckboxControl>
+              <CheckboxContent>
                 <span className="text-sm font-medium text-foreground flex items-center gap-1.5"><Star className="h-3.5 w-3.5" /> Compte par défaut</span>
-                <span className="text-xs text-muted-foreground block">Ce compte sera sélectionné par défaut sur les nouvelles factures.</span>
-              </div>
-              <input type="checkbox" checked={bankForm.isDefault} onChange={(e) => setBankForm((p) => ({ ...p, isDefault: e.target.checked }))} className="sr-only" />
-            </label>
+                <span className="text-xs text-muted-foreground mt-[1px] block">Ce compte sera sélectionné par défaut sur les nouvelles factures.</span>
+              </CheckboxContent>
+            </CheckboxRoot>
           </div>
         </div>
         <DialogFooter>

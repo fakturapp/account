@@ -17,6 +17,7 @@ import { InvoiceSettingsProvider } from '@/lib/invoice-settings-context'
 import { CompanySettingsProvider } from '@/lib/company-settings-context'
 import { EmailProvider } from '@/lib/email-context'
 import { ArrowRightLeft, LogOut, Check } from 'lucide-react'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 import { FeedbackModal } from '@/components/modals/feedback-modal'
 import { BugReportModal } from '@/components/modals/bug-report-modal'
 import { isFakturDesktop } from '@/lib/is-desktop'
@@ -316,41 +317,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         {isDesktopRuntime && (
           <div className="mb-4 mt-2">
-            <label
-              htmlFor="logout-wipe-all"
+            <CheckboxRoot 
+              isSelected={logoutWipeAll} 
+              onChange={setLogoutWipeAll} 
               className="group flex cursor-pointer items-start gap-3 rounded-xl shadow-surface bg-surface p-3.5 transition-colors hover:bg-surface-hover"
             >
-              <input
-                id="logout-wipe-all"
-                type="checkbox"
-                checked={logoutWipeAll}
-                onChange={(e) => setLogoutWipeAll(e.target.checked)}
-                className="sr-only"
-              />
-              <span
-                className={cn(
-                  'mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-all duration-200',
-                  logoutWipeAll
-                    ? 'border-destructive bg-destructive shadow-[0_0_0_4px_rgba(239,68,68,0.12)]'
-                    : 'border-border bg-transparent group-hover:border-destructive/50'
-                )}
-              >
-                <AnimatePresence>
-                  {logoutWipeAll && (
-                    <motion.span
-                      key="check"
-                      initial={{ scale: 0, rotate: -45, opacity: 0 }}
-                      animate={{ scale: 1, rotate: 0, opacity: 1 }}
-                      exit={{ scale: 0, opacity: 0 }}
-                      transition={{ type: 'spring', stiffness: 380, damping: 22 }}
-                      className="flex"
-                    >
-                      <Check className="h-3 w-3 text-white" strokeWidth={3.5} />
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </span>
-              <div className="flex-1 min-w-0">
+              <CheckboxControl className="mt-0.5 data-[selected=true]:border-destructive data-[selected=true]:bg-destructive shadow-[0_0_0_4px_rgba(239,68,68,0)] data-[selected=true]:shadow-[0_0_0_4px_rgba(239,68,68,0.12)]">
+                <CheckboxIndicator />
+              </CheckboxControl>
+              <CheckboxContent className="flex-1 min-w-0 text-left">
                 <p className="text-[13px] font-semibold text-foreground leading-tight">
                   Effacer aussi mes données locales
                 </p>
@@ -359,8 +334,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                   seront supprimés. Sinon, seules les clés d&apos;authentification
                   (jetons, sessions, refresh) sont effacées.
                 </p>
-              </div>
-            </label>
+              </CheckboxContent>
+            </CheckboxRoot>
           </div>
         )}
 

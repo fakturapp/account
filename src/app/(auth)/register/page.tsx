@@ -14,7 +14,8 @@ import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
-import { ArrowRight, ArrowLeft, UserPlus, Check, Eye, EyeOff, Mail, Lock, User, Shield, AlertTriangle, MailX } from 'lucide-react'
+import { Check, Mail, Lock, Shield, User, ArrowRight, Activity, ArrowLeft, Eye, EyeOff, AlertTriangle, MailX, UserPlus } from 'lucide-react'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
@@ -661,35 +662,37 @@ function RegisterContent() {
 
                     {/* Terms */}
                     <div className="space-y-3">
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={acceptTerms}
-                          onChange={(e) => setAcceptTerms(e.target.checked)}
-                          className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 accent-primary"
-                        />
-                        <span className="text-sm text-muted-foreground leading-tight">
+                      <CheckboxRoot 
+                        isSelected={acceptTerms} 
+                        onChange={setAcceptTerms} 
+                        className="flex items-start gap-3 cursor-pointer group"
+                      >
+                        <CheckboxControl className="mt-0.5">
+                          <CheckboxIndicator />
+                        </CheckboxControl>
+                        <CheckboxContent className="text-sm text-muted-foreground leading-tight mt-0.5">
                           J&apos;accepte les{' '}
                           <a href="/legal/terms" target="_blank" className="text-accent underline-offset-2 hover:underline">
                             Conditions g&eacute;n&eacute;rales d&apos;utilisation
                           </a>
-                        </span>
-                      </label>
+                        </CheckboxContent>
+                      </CheckboxRoot>
 
-                      <label className="flex items-start gap-3 cursor-pointer group">
-                        <input
-                          type="checkbox"
-                          checked={acceptPrivacy}
-                          onChange={(e) => setAcceptPrivacy(e.target.checked)}
-                          className="mt-0.5 h-4 w-4 rounded border-border text-primary focus:ring-primary/20 accent-primary"
-                        />
-                        <span className="text-sm text-muted-foreground leading-tight">
+                      <CheckboxRoot 
+                        isSelected={acceptPrivacy} 
+                        onChange={setAcceptPrivacy} 
+                        className="flex items-start gap-3 cursor-pointer group"
+                      >
+                        <CheckboxControl className="mt-0.5">
+                          <CheckboxIndicator />
+                        </CheckboxControl>
+                        <CheckboxContent className="text-sm text-muted-foreground leading-tight mt-0.5">
                           J&apos;accepte la{' '}
                           <a href="/legal/privacy" target="_blank" className="text-accent underline-offset-2 hover:underline">
                             Politique de confidentialit&eacute;
                           </a>
-                        </span>
-                      </label>
+                        </CheckboxContent>
+                      </CheckboxRoot>
                     </div>
 
                     {process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !googleMode && (

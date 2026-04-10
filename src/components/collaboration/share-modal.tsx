@@ -12,6 +12,7 @@ import {
   Link2, Copy, Check, Mail, X, UserPlus, Globe,
   ChevronDown, Shield, Eye, Pencil, Trash2, Users
 } from 'lucide-react'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 
 
 type DocumentType = 'invoice' | 'quote' | 'credit_note'
@@ -346,17 +347,18 @@ export function ShareModal({ open, onClose, documentType, documentId }: ShareMod
                   G\u00e9n\u00e9rer
                 </Button>
               </div>
-              <label className="flex items-center gap-2 cursor-pointer px-1">
-                <input
-                  type="checkbox"
-                  checked={linkAutoExpire}
-                  onChange={(e) => setLinkAutoExpire(e.target.checked)}
-                  className="h-3.5 w-3.5 rounded border-border accent-primary"
-                />
-                <span className="text-xs text-muted-foreground">
-                  D\u00e9sactiver le lien quand je quitte la page
-                </span>
-              </label>
+              <CheckboxRoot 
+                isSelected={linkAutoExpire} 
+                onChange={setLinkAutoExpire} 
+                className="flex items-center gap-2 px-1"
+              >
+                <CheckboxControl>
+                  <CheckboxIndicator />
+                </CheckboxControl>
+                <CheckboxContent className="text-xs text-muted-foreground mt-[1px]">
+                  Désactiver le lien quand je quitte la page
+                </CheckboxContent>
+              </CheckboxRoot>
             </div>
           )}
         </div>

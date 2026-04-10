@@ -33,6 +33,7 @@ import {
   EyeOff,
   Pencil,
 } from 'lucide-react'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 
 interface OauthApp {
   id: string
@@ -1124,20 +1125,21 @@ function OauthAppFormModal({
 
         {/* First party (create only) */}
         {mode === 'create' && (
-          <label className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer hover:bg-muted/40 transition-colors">
-            <input
-              type="checkbox"
-              checked={form.isFirstParty}
-              onChange={(e) => setForm({ ...form, isFirstParty: e.target.checked })}
-              className="mt-0.5"
-            />
-            <div>
+          <CheckboxRoot 
+            isSelected={form.isFirstParty} 
+            onChange={(selected) => setForm({ ...form, isFirstParty: selected })} 
+            className="flex items-start gap-3 rounded-lg border border-border bg-card p-3 cursor-pointer hover:bg-muted/40 transition-colors"
+          >
+            <CheckboxControl className="mt-0.5">
+              <CheckboxIndicator />
+            </CheckboxControl>
+            <CheckboxContent>
               <p className="text-[13px] font-medium text-foreground">Application 1st-party</p>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground mt-[1px]">
                 Cochez pour les apps officielles (le badge sera affiché sur l&apos;écran de consentement).
               </p>
-            </div>
-          </label>
+            </CheckboxContent>
+          </CheckboxRoot>
         )}
       </div>
 

@@ -16,6 +16,7 @@ import { useCompanySettings } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
 import { StripeActivationModal } from '@/components/settings/stripe-activation-modal'
 import { SaveBar } from '@/components/ui/save-bar'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 import { Receipt, Banknote, Coins, PenLine, Lock, CreditCard, Info, CheckCircle, Trash2, AlertTriangle } from 'lucide-react'
 
 export default function PaymentPage() {
@@ -161,53 +162,56 @@ export default function PaymentPage() {
                 <FieldDescription>Sélectionnez les moyens de paiement que vous souhaitez afficher sur vos factures.</FieldDescription>
 
                 <div className="space-y-3">
-                  <label className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-surface transition-colors has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5">
-                    <input type="checkbox" checked={paymentForm.paymentMethods.includes('bank_transfer')} onChange={() => togglePaymentMethod('bank_transfer')} className="sr-only" />
+                  <CheckboxRoot 
+                    isSelected={paymentForm.paymentMethods.includes('bank_transfer')} 
+                    onChange={() => togglePaymentMethod('bank_transfer')} 
+                    className="flex items-center w-full gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-surface transition-colors data-[selected=true]:border-primary/40 data-[selected=true]:bg-primary/5"
+                  >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
                       <Banknote className="h-5 w-5 text-accent" />
                     </div>
-                    <div className="flex-1">
+                    <CheckboxContent className="flex-1 text-left">
                       <p className="text-sm font-medium text-foreground">Virement bancaire</p>
-                      <p className="text-xs text-muted-foreground">Vos coordonnées bancaires seront affichées sur la facture</p>
-                    </div>
-                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${paymentForm.paymentMethods.includes('bank_transfer') ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
-                      {paymentForm.paymentMethods.includes('bank_transfer') && (
-                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      )}
-                    </div>
-                  </label>
+                      <p className="text-xs text-muted-foreground mt-[1px]">Vos coordonnées bancaires seront affichées sur la facture</p>
+                    </CheckboxContent>
+                    <CheckboxControl>
+                      <CheckboxIndicator />
+                    </CheckboxControl>
+                  </CheckboxRoot>
 
-                  <label className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-surface transition-colors has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5">
-                    <input type="checkbox" checked={paymentForm.paymentMethods.includes('cash')} onChange={() => togglePaymentMethod('cash')} className="sr-only" />
+                  <CheckboxRoot 
+                    isSelected={paymentForm.paymentMethods.includes('cash')} 
+                    onChange={() => togglePaymentMethod('cash')} 
+                    className="flex items-center w-full gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-surface transition-colors data-[selected=true]:border-primary/40 data-[selected=true]:bg-primary/5"
+                  >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-green-500/10">
                       <Coins className="h-5 w-5 text-green-500" />
                     </div>
-                    <div className="flex-1">
+                    <CheckboxContent className="flex-1 text-left">
                       <p className="text-sm font-medium text-foreground">Espèces</p>
-                      <p className="text-xs text-muted-foreground">Paiement en espèces accepté</p>
-                    </div>
-                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${paymentForm.paymentMethods.includes('cash') ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
-                      {paymentForm.paymentMethods.includes('cash') && (
-                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      )}
-                    </div>
-                  </label>
+                      <p className="text-xs text-muted-foreground mt-[1px]">Paiement en espèces accepté</p>
+                    </CheckboxContent>
+                    <CheckboxControl>
+                      <CheckboxIndicator />
+                    </CheckboxControl>
+                  </CheckboxRoot>
 
-                  <label className="flex items-center gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-surface transition-colors has-[:checked]:border-primary/40 has-[:checked]:bg-primary/5">
-                    <input type="checkbox" checked={paymentForm.paymentMethods.includes('custom')} onChange={() => togglePaymentMethod('custom')} className="sr-only" />
+                  <CheckboxRoot 
+                    isSelected={paymentForm.paymentMethods.includes('custom')} 
+                    onChange={() => togglePaymentMethod('custom')} 
+                    className="flex items-center w-full gap-4 rounded-xl border border-border p-4 cursor-pointer hover:bg-surface transition-colors data-[selected=true]:border-primary/40 data-[selected=true]:bg-primary/5"
+                  >
                     <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-yellow-500/10">
                       <PenLine className="h-5 w-5 text-yellow-500" />
                     </div>
-                    <div className="flex-1">
+                    <CheckboxContent className="flex-1 text-left">
                       <p className="text-sm font-medium text-foreground">Autre</p>
-                      <p className="text-xs text-muted-foreground">Définissez un moyen de paiement personnalisé</p>
-                    </div>
-                    <div className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors ${paymentForm.paymentMethods.includes('custom') ? 'bg-primary border-primary' : 'border-muted-foreground/30'}`}>
-                      {paymentForm.paymentMethods.includes('custom') && (
-                        <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-                      )}
-                    </div>
-                  </label>
+                      <p className="text-xs text-muted-foreground mt-[1px]">Définissez un moyen de paiement personnalisé</p>
+                    </CheckboxContent>
+                    <CheckboxControl>
+                      <CheckboxIndicator />
+                    </CheckboxControl>
+                  </CheckboxRoot>
 
                   {paymentForm.paymentMethods.includes('custom') && (
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="pl-14">

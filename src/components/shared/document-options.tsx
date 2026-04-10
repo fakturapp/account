@@ -12,6 +12,7 @@ import {
 import { Tooltip } from '@/components/ui/tooltip'
 import { SelectRoot, SelectTrigger, SelectValue, SelectIndicator, SelectPopover } from '@/components/ui/select'
 import { ListBoxRoot as ListBox, ListBoxItemRoot as ListBoxItem } from '@/components/ui/list-box'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 import { AiGenerateButton } from '@/components/ai/ai-generate-button'
 import type { ClientInfo } from './a4-sheet'
 
@@ -131,24 +132,19 @@ function OptionCheckbox({
 }) {
   return (
     <div>
-      <button
-        type="button"
-        onClick={onToggle}
+      <CheckboxRoot 
+        isSelected={checked} 
+        onChange={onToggle} 
         className="flex items-center gap-2 cursor-pointer py-1 w-full text-left"
       >
-        <div
-          className={cn(
-            'h-3.5 w-3.5 rounded border flex-shrink-0 flex items-center justify-center transition-colors',
-            checked
-              ? 'border-primary bg-primary'
-              : 'border-muted-foreground/30 hover:border-muted-foreground/50',
-          )}
-        >
-          {checked && <Check className="h-2 w-2 text-primary-foreground" />}
-        </div>
-        <span className="text-[13px] text-foreground">{label}</span>
-      </button>
-      {checked && children && <div className="ml-5.5 mt-1 mb-1">{children}</div>}
+        <CheckboxControl>
+          <CheckboxIndicator />
+        </CheckboxControl>
+        <CheckboxContent className="text-[13px] text-foreground mt-[1px]">
+          {label}
+        </CheckboxContent>
+      </CheckboxRoot>
+      {checked && children && <div className="ml-6 mt-1 mb-1">{children}</div>}
     </div>
   )
 }
