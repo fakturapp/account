@@ -37,10 +37,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
       {/* Sidebar gauche — par dessus le background */}
       <motion.div
-        initial={{ opacity: 0, x: -30 }}
+        initial={{ opacity: 0, x: -100 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="fixed inset-y-0 left-0 z-10 flex w-full md:w-[560px] lg:w-[640px] flex-col bg-overlay shadow-overlay rounded-r-[2rem]"
+        transition={{ type: 'spring', bounce: 0.15, duration: 0.8 }}
+        className="fixed inset-y-0 left-0 z-10 flex w-full md:w-[480px] lg:w-[540px] flex-col bg-overlay shadow-overlay rounded-r-[2rem]"
       >
         {/* Logo Faktur centré */}
         <div className="flex items-center justify-center gap-2.5 pt-10 pb-2">
@@ -63,7 +63,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </motion.div>
 
       {/* Texte animé — côté droit, overlay sombre pour lisibilité */}
-      <div className="hidden md:flex fixed inset-y-0 right-0 left-[560px] lg:left-[640px] z-[1] flex-col items-center justify-center">
+      <div className="hidden md:flex fixed inset-y-0 right-0 left-[480px] lg:left-[540px] z-[1] flex-col items-center justify-center">
         <div className="relative z-10 max-w-md px-12 text-center">
           <AnimatePresence mode="wait">
             <motion.div
