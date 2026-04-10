@@ -89,9 +89,44 @@ const ListBoxItemRoot = ({
       {(values) => (
         <ListBoxItemContext.Provider value={{ slots, state: values }}>
           {typeof children === "function" ? children(values) : children}
+          <AutoIndicator />
         </ListBoxItemContext.Provider>
       )}
     </ListBoxItemPrimitive>
+  );
+};
+
+/* Auto-render indicator inside every list box item */
+const AutoIndicator = () => {
+  const { slots, state } = useContext(ListBoxItemContext);
+  const isSelected = state?.isSelected;
+
+  return (
+    <span
+      aria-hidden="true"
+      className={composeSlotClassName(slots?.indicator)}
+      data-slot="list-box-item-indicator"
+      data-visible={isSelected || undefined}
+    >
+      <svg
+        aria-hidden="true"
+        data-slot="list-box-item-indicator--checkmark"
+        fill="none"
+        role="presentation"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={2}
+        viewBox="0 0 17 18"
+        style={{
+          strokeDasharray: 22,
+          strokeDashoffset: isSelected ? 44 : 66,
+          transition: 'stroke-dashoffset 250ms linear',
+        }}
+      >
+        <polyline points="1 9 7 14 15 4" />
+      </svg>
+    </span>
   );
 };
 

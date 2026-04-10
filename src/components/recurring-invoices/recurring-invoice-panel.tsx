@@ -232,16 +232,16 @@ export function RecurringInvoicePanel({ open, editingId, onClose, onSaved }: Rec
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-y-0 right-0 z-[100] w-full max-w-2xl bg-card/40 backdrop-blur-2xl border-l border-border/40 shadow-overlay liquid-glass flex flex-col overflow-hidden"
+            className="fixed inset-y-0 right-0 z-[100] w-full max-w-2xl bg-white dark:bg-card/40 dark:backdrop-blur-2xl border-l border-border/20 dark:border-border/40 dark:liquid-glass flex flex-col overflow-hidden shadow-xl dark:shadow-none"
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-border/40 relative z-10 bg-card/20 backdrop-blur-md">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/20 dark:border-border/40 relative z-10 dark:bg-card/20 dark:backdrop-blur-md">
               <div className="flex items-center gap-3">
                 <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10">
                   <RefreshCw className="h-4.5 w-4.5 text-primary" />
                 </div>
                 <h2 className="text-lg font-semibold text-foreground">
-                  {isEditing ? 'Modifier la recurrence' : 'Nouvelle recurrence'}
+                  {isEditing ? 'Modifier la récurrence' : 'Nouvelle récurrence'}
                 </h2>
               </div>
               <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
@@ -530,7 +530,7 @@ export function RecurringInvoicePanel({ open, editingId, onClose, onSaved }: Rec
             )}
 
             {/* Footer */}
-            <div className="px-6 py-4 border-t border-border/40 relative z-10 bg-card/20 backdrop-blur-md flex items-center justify-end gap-3">
+            <div className="px-6 py-4 border-t border-border/20 dark:border-border/40 relative z-10 dark:bg-card/20 dark:backdrop-blur-md flex items-center justify-end gap-3">
               <Button variant="outline" onClick={onClose} type="button">
                 Annuler
               </Button>

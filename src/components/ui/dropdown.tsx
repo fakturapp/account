@@ -80,7 +80,7 @@ export function Dropdown({ trigger, children, align = 'right', position = 'below
           exit={{ opacity: 0, y: position === 'above' ? 4 : -4 }}
           transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
           className={cn(
-            'fixed z-[9999] min-w-[220px] rounded-xl bg-overlay p-1.5 shadow-overlay',
+            'fixed z-[9999] min-w-[220px] rounded-xl bg-overlay shadow-overlay overflow-hidden border border-border/10',
             className
           )}
           style={{
@@ -90,7 +90,10 @@ export function Dropdown({ trigger, children, align = 'right', position = 'below
           }}
           onClick={() => setOpen(false)}
         >
-          {children}
+          {/* Scrollable interior with fade mask at top and bottom if overflowing */}
+          <div className="max-h-[300px] overflow-y-auto p-1.5 [mask-image:linear-gradient(to_bottom,transparent_0px,black_16px,black_calc(100%-16px),transparent_100%)]">
+            {children}
+          </div>
         </motion.div>
       )}
     </AnimatePresence>
@@ -186,12 +189,14 @@ export function DropdownSub({ trigger, children, className }: DropdownSubProps) 
             exit={{ opacity: 0, x: -4 }}
             transition={{ duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
             className={cn(
-              'absolute left-full top-0 ml-1.5 min-w-[200px] rounded-xl bg-overlay p-1.5 shadow-overlay',
+              'absolute left-full top-0 ml-1.5 min-w-[200px] rounded-xl bg-overlay shadow-overlay overflow-hidden border border-border/10',
               className
             )}
             style={flyoutStyle}
           >
-            {children}
+            <div className="max-h-[300px] overflow-y-auto p-1.5 [mask-image:linear-gradient(to_bottom,transparent_0px,black_16px,black_calc(100%-16px),transparent_100%)]">
+              {children}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -201,22 +206,46 @@ export function DropdownSub({ trigger, children, className }: DropdownSubProps) 
 
 interface DropdownItemProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   destructive?: boolean
+  selected?: boolean
 }
 
 export const DropdownItem = React.forwardRef<HTMLButtonElement, DropdownItemProps>(
-  ({ className, destructive, children, ...props }, ref) => (
+  ({ className, destructive, selected, children, ...props }, ref) => (
     <button
       ref={ref}
       className={cn(
-        'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+        'relative flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         destructive
           ? 'text-danger hover:bg-danger-soft'
           : 'text-foreground/90 hover:bg-foreground/[0.06] hover:text-foreground',
+        selected && 'pr-9',
         className
       )}
       {...props}
     >
       {children}
+      {selected !== undefined && (
+        <span className="absolute top-1/2 right-3 flex h-4 w-4 shrink-0 -translate-y-1/2 items-center justify-center text-primary">
+          <svg
+            aria-hidden="true"
+            fill="none"
+            role="presentation"
+            stroke="currentColor"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            viewBox="0 0 17 18"
+            className="h-3 w-3"
+            style={{
+              strokeDasharray: 22,
+              strokeDashoffset: selected ? 44 : 66,
+              transition: 'stroke-dashoffset 250ms linear',
+            }}
+          >
+            <polyline points="1 9 7 14 15 4" />
+          </svg>
+        </span>
+      )}
     </button>
   )
 )

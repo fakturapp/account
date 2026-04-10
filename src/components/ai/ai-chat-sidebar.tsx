@@ -579,7 +579,7 @@ export function AiChatSidebar({
   )
 
   return (
-    <div className="flex flex-col h-[calc(100vh-200px)] max-h-[600px] rounded-[2rem] border border-border/40 bg-card/40 backdrop-blur-2xl liquid-glass shadow-overlay relative overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-200px)] max-h-[600px] rounded-[2rem] border border-border/40 bg-card/40 backdrop-blur-2xl liquid-glass relative overflow-hidden">
       {/* ─── Header ─────────────────────────────────────────────── */}
       <div className="flex items-center gap-2 px-5 py-4 border-b border-border/40 bg-card/20 backdrop-blur-md relative z-10">
         <Sparkles className="h-4 w-4 text-purple-500 shrink-0" />

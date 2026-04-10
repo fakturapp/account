@@ -492,7 +492,7 @@ function EditInvoiceContent() {
         <div className="flex flex-col xl:flex-row gap-5">
           <div className="flex-1 min-w-0 flex justify-center">
             <div className="w-full max-w-[960px] rounded-xl">
-              <div className="bg-card/40 backdrop-blur-md rounded-2xl border border-border/40 p-10 shadow-overlay relative overflow-hidden liquid-glass" style={{ aspectRatio: '210/297' }}>
+              <div className="bg-white dark:bg-zinc-900 rounded-sm border border-border/20 p-10 relative overflow-hidden" style={{ aspectRatio: '210/297' }}>
                 <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.03] to-transparent skeleton-shimmer" />
                 <div className="flex justify-between mb-12">
                   <div className="space-y-3">
@@ -847,7 +847,7 @@ function EditInvoiceContent() {
       </div>
 
       {/* Sticky save bar */}
-      <div className="sticky bottom-4 z-20 flex flex-col items-center gap-2 pointer-events-none">
+      <div className="fixed bottom-4 left-0 right-0 z-20 flex flex-col items-center gap-2 pointer-events-none">
         <AnimatePresence>
           {validationErrors.length > 0 && (
             <motion.div

@@ -777,7 +777,7 @@ function EditQuoteContent() {
       </div>
 
       {/* ── Sticky save bar ── */}
-      <div className="sticky bottom-4 z-20 flex flex-col items-center gap-2 pointer-events-none">
+      <div className="fixed bottom-4 left-0 right-0 z-20 flex flex-col items-center gap-2 pointer-events-none">
         <AnimatePresence>
           {validationErrors.length > 0 && (
             <motion.div
