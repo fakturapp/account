@@ -938,7 +938,6 @@ export function A4Sheet({
   // Template font override takes precedence
   const effectiveFont = T.font || documentFont
 
-  // ── Pretext: detect A4 page overflow without DOM reflows ──
   const overflowData = useDocumentOverflow({
     lines,
     notes: showNotes ? notes : undefined,
@@ -998,7 +997,6 @@ export function A4Sheet({
           colorScheme: darkMode ? 'dark' : 'light',
         }}
       >
-        {/* ── Pretext overflow warning ── */}
         {overflowData.overflows && !isPreview && (
           <div className="absolute top-2 right-2 z-20">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 backdrop-blur-sm">
