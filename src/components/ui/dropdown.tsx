@@ -80,7 +80,7 @@ export function Dropdown({ trigger, children, align = 'right', position = 'below
           exit={{ opacity: 0, y: position === 'above' ? 4 : -4 }}
           transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
           className={cn(
-            'fixed z-[9999] min-w-[220px] rounded-xl border border-border/80 bg-card p-1.5 shadow-xl shadow-black/10',
+            'fixed z-[9999] min-w-[220px] rounded-xl bg-overlay p-1.5 shadow-overlay',
             className
           )}
           style={{
@@ -168,8 +168,8 @@ export function DropdownSub({ trigger, children, className }: DropdownSubProps) 
         type="button"
         className={cn(
           'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-          'text-foreground/90 hover:bg-muted hover:text-foreground',
-          open && 'bg-muted text-foreground'
+          'text-foreground/90 hover:bg-foreground/[0.06] hover:text-foreground',
+          open && 'bg-foreground/[0.06] text-foreground'
         )}
         onClick={(e) => e.stopPropagation()}
       >
@@ -186,7 +186,7 @@ export function DropdownSub({ trigger, children, className }: DropdownSubProps) 
             exit={{ opacity: 0, x: -4 }}
             transition={{ duration: 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
             className={cn(
-              'absolute left-full top-0 ml-1.5 min-w-[200px] rounded-xl border border-border/80 bg-card p-1.5 shadow-xl shadow-black/10',
+              'absolute left-full top-0 ml-1.5 min-w-[200px] rounded-xl bg-overlay p-1.5 shadow-overlay',
               className
             )}
             style={flyoutStyle}
@@ -210,8 +210,8 @@ export const DropdownItem = React.forwardRef<HTMLButtonElement, DropdownItemProp
       className={cn(
         'flex w-full items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
         destructive
-          ? 'text-destructive hover:bg-destructive/10'
-          : 'text-foreground/90 hover:bg-muted hover:text-foreground',
+          ? 'text-danger hover:bg-danger-soft'
+          : 'text-foreground/90 hover:bg-foreground/[0.06] hover:text-foreground',
         className
       )}
       {...props}
@@ -232,4 +232,4 @@ export function DropdownLabel({ children, className }: { children: React.ReactNo
   )
 }
 
-export const DropdownSeparator = () => <div className="my-1.5 h-px bg-border/60" />
+export const DropdownSeparator = () => <div className="my-1.5 h-px bg-separator" />

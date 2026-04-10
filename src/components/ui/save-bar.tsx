@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { AlertTriangle, Save, RotateCcw } from 'lucide-react'
 
@@ -94,14 +93,14 @@ export function SaveBar({ hasChanges, saving, error, onSave, onReset }: SaveBarP
           className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50"
         >
           <div
-            className={`flex items-center gap-4 rounded-2xl border px-5 py-3 shadow-2xl shadow-black/10 backdrop-blur-xl transition-colors duration-300 ${
+            className={`flex items-center gap-4 rounded-xl bg-overlay px-5 py-3 shadow-overlay backdrop-blur-xl transition-colors duration-300 ${
               showWarning
-                ? 'border-destructive/30 bg-destructive/10'
-                : 'border-border/50 bg-card/95'
+                ? 'ring-1 ring-danger/30 ring-inset'
+                : ''
             }`}
           >
             {showWarning ? (
-              <div className="flex items-center gap-2 text-destructive">
+              <div className="flex items-center gap-2 text-danger">
                 <AlertTriangle className="h-4 w-4 shrink-0" />
                 <p className="text-sm font-medium max-w-[320px] truncate">
                   {error ? `Erreur : ${error}` : 'Sauvegardez vos modifications avant de quitter'}
@@ -114,28 +113,27 @@ export function SaveBar({ hasChanges, saving, error, onSave, onReset }: SaveBarP
             )}
 
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={onReset}
                 disabled={saving}
-                className="text-muted-foreground"
+                className="button button--secondary button--sm"
               >
                 <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
                 R&eacute;initialiser
-              </Button>
-              <Button
-                size="sm"
+              </button>
+              <button
+                type="button"
                 onClick={onSave}
                 disabled={saving}
-                className="min-w-[120px]"
+                className="button button--primary button--sm min-w-[120px]"
               >
                 {saving ? (
                   <><Spinner className="h-3.5 w-3.5" /> Sauvegarde...</>
                 ) : (
                   <><Save className="h-3.5 w-3.5 mr-1.5" /> Sauvegarder</>
                 )}
-              </Button>
+              </button>
             </div>
           </div>
         </motion.div>

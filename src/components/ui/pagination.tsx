@@ -43,11 +43,11 @@ export function Pagination({ meta, onPageChange }: PaginationProps) {
   const pages = getPageNumbers(meta.currentPage, meta.lastPage)
 
   return (
-    <div className="flex items-center justify-center gap-1.5 pt-4">
+    <div className="flex items-center justify-center gap-1.5 rounded-lg bg-surface p-1.5">
       <button
         onClick={() => onPageChange(meta.currentPage - 1)}
         disabled={meta.currentPage <= 1}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <ChevronLeft className="h-4 w-4" />
       </button>
@@ -64,8 +64,8 @@ export function Pagination({ meta, onPageChange }: PaginationProps) {
             className={cn(
               'flex h-8 min-w-8 items-center justify-center rounded-lg px-2 text-sm font-medium transition-colors',
               p === meta.currentPage
-                ? 'bg-primary text-primary-foreground'
-                : 'border border-border text-muted-foreground hover:bg-muted hover:text-foreground'
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground hover:bg-surface-hover hover:text-foreground'
             )}
           >
             {p}
@@ -76,7 +76,7 @@ export function Pagination({ meta, onPageChange }: PaginationProps) {
       <button
         onClick={() => onPageChange(meta.currentPage + 1)}
         disabled={meta.currentPage >= meta.lastPage}
-        className="flex h-8 w-8 items-center justify-center rounded-lg border border-border text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:bg-surface-hover hover:text-foreground transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <ChevronRight className="h-4 w-4" />
       </button>

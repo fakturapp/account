@@ -31,7 +31,7 @@ export function Dialog({ open, onClose, children, className, dismissible = true,
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            className="absolute inset-0 bg-backdrop backdrop-blur-sm"
             onClick={dismissible ? onClose : undefined}
           />
           <motion.div
@@ -40,7 +40,7 @@ export function Dialog({ open, onClose, children, className, dismissible = true,
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
             className={cn(
-              'relative z-10 w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-2xl',
+              'relative z-10 w-full max-w-md rounded-2xl bg-overlay p-6 shadow-overlay',
               className
             )}
           >
@@ -53,7 +53,7 @@ export function Dialog({ open, onClose, children, className, dismissible = true,
 }
 
 export function DialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
-  return <h2 className={cn('text-lg font-semibold text-foreground', className)} {...props} />
+  return <h2 className={cn('text-lg font-semibold tracking-[-0.015em] text-foreground', className)} {...props} />
 }
 
 export function DialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {

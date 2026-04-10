@@ -43,10 +43,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 20, scale: 0.95 }}
               className={cn(
-                'rounded-xl border px-4 py-3 text-sm shadow-xl backdrop-blur-sm',
-                t.type === 'success' && 'border-success/20 bg-success/10 text-success',
-                t.type === 'error' && 'border-destructive/20 bg-destructive/10 text-destructive',
-                t.type === 'info' && 'border-border bg-card text-foreground'
+                'rounded-xl bg-overlay px-4 py-3 text-sm shadow-overlay',
+                t.type === 'success' && 'text-success',
+                t.type === 'error' && 'text-danger',
+                t.type === 'info' && 'text-foreground'
               )}
             >
               {t.message}
