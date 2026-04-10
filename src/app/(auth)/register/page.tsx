@@ -412,7 +412,7 @@ function RegisterContent() {
                         <Separator />
                       </div>
                       <div className="relative flex justify-center">
-                        <span className="bg-card px-3 text-xs text-muted-foreground">ou par email</span>
+                        <span className="bg-card px-3 text-xs text-muted-foreground rounded-full">ou par email</span>
                       </div>
                     </div>
 

@@ -472,7 +472,7 @@ function LoginContent() {
                   <Separator />
                 </div>
                 <div className="relative flex justify-center">
-                  <span className="bg-background px-3 text-xs text-muted-foreground uppercase tracking-wider">ou</span>
+                  <span className="bg-background px-3 text-xs text-muted-foreground uppercase tracking-wider rounded-full">ou</span>
                 </div>
               </motion.div>
 
