@@ -873,7 +873,6 @@ export function RichTextarea({
     if (singleLine && e.key === 'Enter') e.preventDefault()
   }, [singleLine])
 
-  // Use pretext to estimate content height without DOM measurement
   const pretextHeight = (() => {
     if (singleLine || !value) return 0
     try {
