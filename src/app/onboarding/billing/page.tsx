@@ -104,6 +104,7 @@ export default function OnboardingBillingPage() {
     if (err) return setError(err)
 
     sessionStorage.removeItem('onboarding_appearance')
+    localStorage.setItem('faktur_tutorial_offer', 'pending')
     await refreshUser()
     router.push('/dashboard')
   }
@@ -124,6 +125,7 @@ export default function OnboardingBillingPage() {
     if (err) return setError(err)
 
     sessionStorage.removeItem('onboarding_appearance')
+    localStorage.setItem('faktur_tutorial_offer', 'pending')
     await refreshUser()
     router.push('/dashboard')
   }

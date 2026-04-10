@@ -23,6 +23,11 @@ import { isFakturDesktop } from '@/lib/is-desktop'
 import { usePageView } from '@/hooks/use-page-view'
 import { initWebVitals } from '@/lib/web-vitals'
 import { useAnalyticsContext } from '@/lib/analytics'
+import { TutorialProvider, useTutorialSafe } from '@/lib/tutorial-context'
+import { TutorialBanner } from '@/components/tutorial/tutorial-banner'
+import { TutorialOverlay } from '@/components/tutorial/tutorial-overlay'
+import { TutorialOfferModal } from '@/components/tutorial/tutorial-offer-modal'
+import { TutorialLevelComplete } from '@/components/tutorial/tutorial-level-complete'
 
 interface TeamListItem {
   id: string
@@ -202,6 +207,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <InvoiceSettingsProvider>
     <CompanySettingsProvider>
     <EmailProvider>
+    <TutorialProvider>
     <div className="relative h-screen overflow-hidden bg-background">
       {/* Dégradés multi-couleurs animés — radial-gradient (net, sans pixelisation) */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
@@ -259,9 +265,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         )}
       >
         <SiteHeader onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
+        <TutorialBanner />
         <RouteProgressBar />
 
-        <main className="relative flex-1 overflow-y-auto">
+        <main className="relative flex-1 overflow-y-auto" data-tutorial="main-content">
           <div className="relative @container/main flex flex-1 flex-col gap-2">
             {children}
           </div>
@@ -387,7 +394,13 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
       <FeedbackModal open={feedbackOpen} onClose={() => setFeedbackOpen(false)} />
       <BugReportModal open={bugReportOpen} onClose={() => setBugReportOpen(false)} />
+
+      {/* Tutorial system */}
+      <TutorialOverlay />
+      <TutorialOfferModal />
+      <TutorialLevelComplete />
     </div>
+    </TutorialProvider>
     </EmailProvider>
     </CompanySettingsProvider>
     </InvoiceSettingsProvider>
