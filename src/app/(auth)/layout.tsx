@@ -2,7 +2,10 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import dynamic from 'next/dynamic'
 import BlurText from '@/components/ui/blur-text'
+
+const Iridescence = dynamic(() => import('@/components/ui/iridescence'), { ssr: false })
 
 const ADVANTAGES = [
   { title: 'Facturation instantanée', desc: 'Créez et envoyez des factures professionnelles en quelques secondes.' },
@@ -24,40 +27,43 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   }, [])
 
   return (
-    <div className="relative flex min-h-screen bg-background">
-      {/* Sidebar gauche — formulaire */}
+    <div className="relative min-h-screen">
+      {/* Iridescence — couvre TOUTE la page, visible derrière les arrondis de la sidebar */}
+      <div className="fixed inset-0 z-0">
+        <Iridescence color={[0.4, 0.3, 1]} speed={0.6} amplitude={0.15} />
+      </div>
+      {/* Overlay sombre — couvre TOUTE la page (y compris derrière les arrondis) */}
+      <div className="fixed inset-0 z-[1] bg-black/30 pointer-events-none" />
+
+      {/* Sidebar gauche — par dessus le background */}
       <motion.div
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative z-10 flex w-full md:w-[520px] lg:w-[580px] shrink-0 flex-col bg-overlay shadow-overlay rounded-r-[2rem]"
+        className="fixed inset-y-0 left-0 z-10 flex w-full md:w-[560px] lg:w-[640px] flex-col bg-overlay shadow-overlay rounded-r-[2rem]"
       >
-        <div className="flex flex-1 flex-col items-center justify-center px-8 py-12 md:px-12 lg:px-16 overflow-y-auto">
-          <div className="w-full max-w-[380px]">
+        {/* Logo Faktur centré */}
+        <div className="flex items-center justify-center gap-2.5 pt-10 pb-2">
+          <img src="/logo.svg" alt="Faktur" className="h-9 w-9" />
+          <span className="text-xl font-bold tracking-[-0.03em] text-foreground">Faktur</span>
+        </div>
+
+        <div className="flex flex-1 flex-col items-center justify-center px-8 py-8 md:px-14 lg:px-20 overflow-y-auto">
+          <div className="w-full max-w-[400px]">
             {children}
           </div>
         </div>
+
         {/* Footer */}
         <div className="px-8 pb-6 text-center">
           <p className="text-[11px] text-muted-foreground">
-            Gratuit, pour toujours.
+            Powered by danbenba
           </p>
         </div>
       </motion.div>
 
-      {/* Fond derrière les arrondis de la sidebar */}
-      <div className="hidden md:block fixed inset-y-0 left-0 z-0 w-[520px] lg:w-[580px] bg-overlay" aria-hidden="true" />
-
-      {/* Côté droit — fond avec textes animés */}
-      <div className="relative hidden md:flex flex-1 flex-col items-center justify-center overflow-hidden">
-        {/* Gradient orbs */}
-        <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-          <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-[#5957e8]/[0.08] blur-[120px] animate-[gradient-drift_14s_ease-in-out_infinite]" />
-          <div className="absolute bottom-0 -left-20 h-[400px] w-[400px] rounded-full bg-[#7c5ce8]/[0.06] blur-[100px] animate-[gradient-drift_18s_ease-in-out_infinite_reverse]" />
-          <div className="absolute top-[40%] right-[20%] h-[300px] w-[300px] rounded-full bg-[#a78bfa]/[0.04] blur-[90px] animate-[gradient-drift_22s_ease-in-out_infinite]" />
-        </div>
-
-        {/* Texte animé */}
+      {/* Texte animé — côté droit, overlay sombre pour lisibilité */}
+      <div className="hidden md:flex fixed inset-y-0 right-0 left-[560px] lg:left-[640px] z-[1] flex-col items-center justify-center">
         <div className="relative z-10 max-w-md px-12 text-center">
           <AnimatePresence mode="wait">
             <motion.div
@@ -69,24 +75,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             >
               <BlurText
                 text={ADVANTAGES[currentIndex].title}
-                className="text-3xl lg:text-4xl font-bold text-foreground tracking-tight justify-center"
+                className="text-3xl lg:text-4xl font-bold text-white tracking-tight justify-center drop-shadow-lg"
                 delay={80}
                 animateBy="words"
               />
-              <p className="mt-4 text-base text-muted-foreground leading-relaxed">
+              <p className="mt-4 text-base text-white/80 leading-relaxed drop-shadow-md">
                 {ADVANTAGES[currentIndex].desc}
               </p>
             </motion.div>
           </AnimatePresence>
 
-          {/* Indicateurs */}
           <div className="mt-10 flex items-center justify-center gap-2">
             {ADVANTAGES.map((_, i) => (
               <button
                 key={i}
                 onClick={() => setCurrentIndex(i)}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === currentIndex ? 'w-8 bg-accent' : 'w-1.5 bg-foreground/15'
+                  i === currentIndex ? 'w-8 bg-white' : 'w-1.5 bg-white/30'
                 }`}
               />
             ))}

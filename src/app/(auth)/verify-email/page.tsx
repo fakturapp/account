@@ -63,7 +63,7 @@ function VerifyEmailContent() {
   }
 
   return (
-    <motion.div initial="hidden" animate="visible" className="w-full max-w-md">
+    <motion.div initial="hidden" animate="visible" className="w-full max-w-sm">
       <Card className="overflow-hidden p-0 border-border/50">
         <CardContent className="p-8">
           <FieldGroup>

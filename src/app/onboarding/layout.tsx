@@ -4,9 +4,12 @@ import { useAuth } from '@/lib/auth'
 import { usePathname, useRouter } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
 import { motion, AnimatePresence } from 'framer-motion'
-import { CheckCircle2, Users, Shield, Building2, Palette, Mail, Receipt } from 'lucide-react'
+import { CheckCircle2, Users, Shield, Building2, Palette, Mail, Receipt, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
+
+const Iridescence = dynamic(() => import('@/components/ui/iridescence'), { ssr: false })
 
 interface Step {
   id: string
@@ -31,8 +34,44 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
 
   if (loading || !user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <Skeleton className="h-8 w-32 rounded-lg" />
+      <div className="relative min-h-screen">
+        <div className="fixed inset-0 z-0 bg-surface" />
+        <div className="fixed inset-0 z-[1] bg-black/10" />
+        {/* Skeleton sidebar */}
+        <div className="fixed inset-y-0 left-0 z-10 flex w-[280px] lg:w-[320px] flex-col bg-overlay shadow-overlay rounded-r-[2rem]">
+          <div className="px-5 pt-6 pb-4 space-y-2">
+            <Skeleton className="h-2 w-16 rounded" />
+            <Skeleton className="h-4 w-40 rounded" />
+            <Skeleton className="h-2 w-20 rounded" />
+          </div>
+          <div className="mx-5 mb-4"><Skeleton className="h-1 w-full rounded-full" /></div>
+          <div className="mx-5 h-px bg-separator" />
+          <div className="flex-1 px-4 py-3 space-y-1">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full rounded-xl" />
+            ))}
+          </div>
+          <div className="mx-5 h-px bg-separator" />
+          <div className="p-4">
+            <div className="flex items-center gap-2.5 px-2">
+              <Skeleton className="h-7 w-7 rounded-lg" />
+              <div className="flex-1 space-y-1">
+                <Skeleton className="h-3 w-24 rounded" />
+                <Skeleton className="h-2 w-16 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Skeleton contenu */}
+        <div className="fixed inset-y-0 right-0 left-[280px] lg:left-[320px] z-[2] flex items-center justify-center">
+          <div className="w-full max-w-2xl px-10 space-y-6">
+            <Skeleton className="h-6 w-48 rounded-lg mx-auto" />
+            <Skeleton className="h-3 w-64 rounded mx-auto" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-12 w-full rounded-xl" />
+            <Skeleton className="h-11 w-full rounded-xl" />
+          </div>
+        </div>
       </div>
     )
   }
@@ -40,13 +79,20 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const currentStepIndex = steps.findIndex((s) => pathname.startsWith(s.path))
 
   return (
-    <div className="relative flex min-h-screen bg-background">
-      {/* Sidebar gauche — étapes */}
+    <div className="relative min-h-screen">
+      {/* Iridescence — couvre TOUTE la page, visible derrière les arrondis de la sidebar */}
+      <div className="fixed inset-0 z-0">
+        <Iridescence color={[0.4, 0.3, 1]} speed={0.4} amplitude={0.1} />
+      </div>
+      {/* Overlay sombre — couvre TOUTE la page (y compris derrière les arrondis) */}
+      <div className="fixed inset-0 z-[1] bg-black/25 pointer-events-none" />
+
+      {/* Sidebar gauche — par dessus le background */}
       <motion.aside
         initial={{ opacity: 0, x: -30 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="relative z-10 flex w-[280px] lg:w-[320px] shrink-0 flex-col bg-overlay shadow-overlay rounded-r-[2rem]"
+        className="fixed inset-y-0 left-0 z-10 flex w-[280px] lg:w-[320px] flex-col bg-overlay shadow-overlay rounded-r-[2rem]"
       >
         {/* Header */}
         <div className="px-5 pt-6 pb-4">
@@ -140,31 +186,30 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
                 Installation en cours
               </p>
             </div>
+            <button
+              onClick={() => { localStorage.removeItem('faktur_token'); window.location.href = '/login' }}
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-danger hover:bg-danger-soft transition-colors"
+              title="Se déconnecter"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
           </div>
         </div>
       </motion.aside>
 
-      {/* Fond derrière les arrondis de la sidebar */}
-      <div className="fixed inset-y-0 left-0 z-0 w-[280px] lg:w-[320px] bg-overlay" aria-hidden="true" />
-
-      {/* Contenu principal — droite */}
-      <main className="relative flex-1 overflow-y-auto">
-        {/* Gradient orbs */}
-        <div className="pointer-events-none fixed top-0 right-0 bottom-0 left-[320px] overflow-hidden" aria-hidden="true">
-          <div className="absolute -top-32 -right-32 h-[500px] w-[500px] rounded-full bg-[#5957e8]/[0.06] blur-[120px] animate-[gradient-drift_14s_ease-in-out_infinite]" />
-          <div className="absolute bottom-0 left-[10%] h-[400px] w-[400px] rounded-full bg-[#7c5ce8]/[0.04] blur-[100px] animate-[gradient-drift_18s_ease-in-out_infinite_reverse]" />
-        </div>
-
-        {/* Header avec logo Faktur */}
-        <div className="relative z-10 flex items-center justify-between px-8 pt-6 pb-2">
-          <Link href="/" className="flex items-center gap-2.5 text-foreground hover:opacity-80 transition-opacity">
+      {/* Contenu principal — droite, offset par la sidebar */}
+      <main className="fixed inset-y-0 right-0 left-[280px] lg:left-[320px] z-[1] overflow-y-auto">
+        <div className="relative h-full">
+        {/* Header avec logo Faktur — centré */}
+        <div className="flex items-center justify-center px-8 pt-6 pb-2">
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity drop-shadow-md">
             <img src="/logo.svg" alt="Faktur" className="h-7 w-7" />
-            <span className="text-base font-semibold tracking-[-0.02em]">Faktur</span>
+            <span className="text-base font-semibold tracking-[-0.02em] text-white">Faktur</span>
           </Link>
         </div>
 
         {/* Contenu des étapes */}
-        <div className="relative z-10 min-h-[calc(100vh-80px)] flex items-center justify-center px-6 md:px-10">
+        <div className="min-h-[calc(100vh-80px)] flex items-center justify-center px-6 md:px-10">
           <AnimatePresence mode="wait">
             <motion.div
               key={pathname}
@@ -177,6 +222,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
               {children}
             </motion.div>
           </AnimatePresence>
+        </div>
         </div>
       </main>
     </div>
