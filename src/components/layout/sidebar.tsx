@@ -904,7 +904,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
 
           <DropdownSeparator />
 
-          <Link href="/dashboard/download">
+          <Link href="/download">
             <DropdownItem>
               <Download className="h-4 w-4" /> Installer l&apos;application
             </DropdownItem>
