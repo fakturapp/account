@@ -14,14 +14,22 @@ interface DialogProps {
   zIndex?: string
 }
 
-export function Dialog({ open, onClose, children, className, dismissible = true, zIndex = 'z-50' }: DialogProps) {
+import { createPortal } from 'react-dom'
+
+export function Dialog({ open, onClose, children, className, dismissible = true, zIndex = 'z-[9999]' }: DialogProps) {
+  const [mounted, setMounted] = React.useState(false)
+
+  React.useEffect(() => {
+    setMounted(true)
+  }, [])
+
   React.useEffect(() => {
     if (open) document.body.style.overflow = 'hidden'
     else document.body.style.overflow = ''
     return () => { document.body.style.overflow = '' }
   }, [open])
 
-  return (
+  const content = (
     <AnimatePresence>
       {open && (
         <div className={cn('fixed inset-0 flex items-center justify-center', zIndex)}>
@@ -38,7 +46,7 @@ export function Dialog({ open, onClose, children, className, dismissible = true,
             exit={{ opacity: 0, scale: 0.95, y: 10 }}
             transition={{ type: 'spring', bounce: 0.15, duration: 0.4 }}
             className={cn(
-              'relative z-10 w-full max-w-md bg-overlay shadow-overlay rounded-[30px] p-6',
+              'relative w-full max-w-md bg-overlay shadow-overlay rounded-[30px] p-6',
               className
             )}
           >
@@ -48,6 +56,9 @@ export function Dialog({ open, onClose, children, className, dismissible = true,
       )}
     </AnimatePresence>
   )
+
+  if (!mounted) return null
+  return typeof document !== 'undefined' ? createPortal(content, document.body) : null
 }
 
 interface DialogHeaderProps {

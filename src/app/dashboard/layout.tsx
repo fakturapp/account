@@ -206,7 +206,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       {/* Dégradés multi-couleurs animés — radial-gradient (net, sans pixelisation) */}
       <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden" aria-hidden="true">
         <div
-          className="absolute inset-0 animate-[gradient-drift_20s_ease-in-out_infinite] will-change-transform"
+          className="absolute -inset-[100px] animate-[gradient-drift_20s_ease-in-out_infinite] will-change-transform"
           style={{
             background: [
               'radial-gradient(ellipse 600px 600px at 5% 5%, rgba(89,87,232,0.12) 0%, transparent 70%)',
@@ -219,7 +219,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           }}
         />
         <div
-          className="absolute inset-0 animate-[gradient-drift_25s_ease-in-out_infinite_reverse] will-change-transform"
+          className="absolute -inset-[100px] animate-[gradient-drift_25s_ease-in-out_infinite_reverse] will-change-transform"
           style={{
             background: [
               'radial-gradient(ellipse 350px 350px at 18% 3%, rgba(59,130,246,0.09) 0%, transparent 70%)',
