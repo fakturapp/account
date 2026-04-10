@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
 import { useToast } from '@/components/ui/toast'
 import {
@@ -236,15 +236,10 @@ export default function EInvoicingPage() {
       {/* E-Invoicing Confirmation Modal */}
       <Dialog open={showEInvoicingModal} onClose={() => setShowEInvoicingModal(false)}>
         <div className="p-6 max-w-md">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-soft">
-              <FileCheck className="h-6 w-6 text-accent" />
-            </div>
-            <div>
-              <DialogTitle>Activer la facturation electronique</DialogTitle>
-              <DialogDescription>Reforme obligatoire a partir de septembre 2026</DialogDescription>
-            </div>
-          </div>
+          <DialogHeader onClose={() => setShowEInvoicingModal(false)} icon={<FileCheck className="h-5 w-5 text-accent" />}>
+            <DialogTitle>Activer la facturation electronique</DialogTitle>
+            <DialogDescription>Reforme obligatoire a partir de septembre 2026</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3 mb-6">
             <p className="text-sm text-muted-foreground leading-relaxed">
               En activant cette option, vos documents seront generes au format Factur-X (PDF/A-3) conforme aux exigences de la reforme francaise.
@@ -274,18 +269,13 @@ export default function EInvoicingPage() {
       {/* Beta Warning Modal */}
       <Dialog open={showBetaWarningModal} onClose={() => setShowBetaWarningModal(false)}>
         <div className="p-6 max-w-md">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-500/10">
-              <FlaskConical className="h-6 w-6 text-yellow-500" />
-            </div>
-            <div>
-              <DialogTitle className="flex items-center gap-2">
-                Fonctionnalite en beta
-                <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-semibold uppercase tracking-wide">Beta</span>
-              </DialogTitle>
-              <DialogDescription>Apercu anticipe de la facturation electronique</DialogDescription>
-            </div>
-          </div>
+          <DialogHeader onClose={() => setShowBetaWarningModal(false)} icon={<FlaskConical className="h-5 w-5 text-yellow-500" />}>
+            <DialogTitle className="flex items-center gap-2">
+              Fonctionnalite en beta
+              <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-semibold uppercase tracking-wide">Beta</span>
+            </DialogTitle>
+            <DialogDescription>Apercu anticipe de la facturation electronique</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3 mb-6">
             <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 space-y-2">
               <div className="flex items-start gap-2">

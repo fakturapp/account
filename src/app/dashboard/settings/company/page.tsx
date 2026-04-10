@@ -10,7 +10,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Separator } from '@/components/ui/separator'
 import { useToast } from '@/components/ui/toast'
 import { Spinner } from '@/components/ui/spinner'
-import { Dialog, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { useCompanySettings, type Company } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
@@ -248,7 +248,9 @@ export default function CompanyInfoPage() {
 
       {/* Multi-step edit modal */}
       <Dialog open={editModalOpen} onClose={() => setEditModalOpen(false)} className="max-w-lg">
-        <DialogTitle>Modifier les informations</DialogTitle>
+        <DialogHeader onClose={() => setEditModalOpen(false)}>
+          <DialogTitle>Modifier les informations</DialogTitle>
+        </DialogHeader>
 
         <div className="flex items-center gap-1 mt-4 mb-6">
           {editSteps.map((step, i) => (

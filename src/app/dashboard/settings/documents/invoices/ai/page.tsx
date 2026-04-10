@@ -6,7 +6,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
 import { useToast } from '@/components/ui/toast'
 import { GroqIcon } from '@/components/icons/groq-icon'
@@ -622,18 +622,13 @@ export default function FakturAIPage() {
       {/* ═══ AI Beta Activation Modal ═══ */}
       <Dialog open={showAiBetaModal} onClose={() => setShowAiBetaModal(false)}>
         <div className="p-6 max-w-md">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/20">
-              <Sparkles className="h-6 w-6 text-indigo-400" />
-            </div>
-            <div>
-              <DialogTitle className="flex items-center gap-2">
-                Activer Faktur AI
-                <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-semibold uppercase tracking-wide">Bêta</span>
-              </DialogTitle>
-              <DialogDescription>Assistant intelligent pour vos documents</DialogDescription>
-            </div>
-          </div>
+          <DialogHeader onClose={() => setShowAiBetaModal(false)} icon={<Sparkles className="h-5 w-5 text-accent" />}>
+            <DialogTitle className="flex items-center gap-2">
+              Activer Faktur AI
+              <span className="px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-500 text-[10px] font-semibold uppercase tracking-wide">Bêta</span>
+            </DialogTitle>
+            <DialogDescription>Assistant intelligent pour vos documents</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3 mb-6">
             <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 space-y-2">
               <div className="flex items-start gap-2">

@@ -11,7 +11,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Select } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
-import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/components/ui/toast'
@@ -651,10 +651,12 @@ export default function TeamPage() {
       <Dialog open={inviteOpen} onClose={resetInviteDialog}>
         {!inviteResult ? (
           <>
-            <DialogTitle>Inviter un membre</DialogTitle>
-            <DialogDescription>
-              Envoyez une invitation par email pour ajouter un membre à votre équipe.
-            </DialogDescription>
+            <DialogHeader onClose={resetInviteDialog}>
+              <DialogTitle>Inviter un membre</DialogTitle>
+              <DialogDescription>
+                Envoyez une invitation par email pour ajouter un membre à votre équipe.
+              </DialogDescription>
+            </DialogHeader>
 
             <form onSubmit={handleInvite} className="mt-4 space-y-4">
               <Field>
@@ -806,11 +808,13 @@ export default function TeamPage() {
 
       {/* Role Change Dialog */}
       <Dialog open={roleDialogOpen} onClose={() => setRoleDialogOpen(false)}>
-        <DialogTitle>Changer le rôle</DialogTitle>
-        <DialogDescription>
-          Modifier le rôle de{' '}
-          <strong>{roleTarget?.user?.fullName || roleTarget?.user?.email}</strong>.
-        </DialogDescription>
+        <DialogHeader onClose={() => setRoleDialogOpen(false)}>
+          <DialogTitle>Changer le rôle</DialogTitle>
+          <DialogDescription>
+            Modifier le rôle de{' '}
+            <strong>{roleTarget?.user?.fullName || roleTarget?.user?.email}</strong>.
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="mt-4">
           <Select value={newRole} onChange={(e) => setNewRole(e.target.value)}>
@@ -832,12 +836,14 @@ export default function TeamPage() {
 
       {/* Transfer Ownership Dialog */}
       <Dialog open={transferOpen} onClose={() => setTransferOpen(false)}>
-        <DialogTitle>Transférer la propriété</DialogTitle>
-        <DialogDescription>
-          Vous êtes sur le point de transférer le rôle de Super Admin à{' '}
-          <strong>{transferTarget?.user?.fullName || transferTarget?.user?.email}</strong>. Vous
-          serez rétrogradé au rôle d&apos;Administrateur. Cette action est irréversible.
-        </DialogDescription>
+        <DialogHeader showClose={false}>
+          <DialogTitle>Transférer la propriété</DialogTitle>
+          <DialogDescription>
+            Vous êtes sur le point de transférer le rôle de Super Admin à{' '}
+            <strong>{transferTarget?.user?.fullName || transferTarget?.user?.email}</strong>. Vous
+            serez rétrogradé au rôle d&apos;Administrateur. Cette action est irréversible.
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="mt-4">
           <Input
@@ -866,12 +872,14 @@ export default function TeamPage() {
 
       {/* Remove Member Dialog */}
       <Dialog open={removeOpen} onClose={() => setRemoveOpen(false)}>
-        <DialogTitle>Retirer un membre</DialogTitle>
-        <DialogDescription>
-          Êtes-vous sûr de vouloir retirer{' '}
-          <strong>{removeTarget?.user?.fullName || removeTarget?.user?.email}</strong> de
-          l&apos;équipe ? Cette personne n&apos;aura plus accès aux données de l&apos;équipe.
-        </DialogDescription>
+        <DialogHeader showClose={false}>
+          <DialogTitle>Retirer un membre</DialogTitle>
+          <DialogDescription>
+            Êtes-vous sûr de vouloir retirer{' '}
+            <strong>{removeTarget?.user?.fullName || removeTarget?.user?.email}</strong> de
+            l&apos;équipe ? Cette personne n&apos;aura plus accès aux données de l&apos;équipe.
+          </DialogDescription>
+        </DialogHeader>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => setRemoveOpen(false)}>
@@ -907,15 +915,10 @@ export default function TeamPage() {
         <AnimatePresence mode="wait">
           {deleteStep === 1 && (
             <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/10">
-                  <AlertTriangle className="h-5.5 w-5.5 text-destructive" />
-                </div>
-                <div>
-                  <DialogTitle className="mb-0">Supprimer l&apos;équipe</DialogTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Étape 1 sur 3 — Avertissement</p>
-                </div>
-              </div>
+              <DialogHeader showClose={false} icon={<AlertTriangle className="h-5 w-5 text-danger" />}>
+                <DialogTitle>Supprimer l&apos;équipe</DialogTitle>
+                <DialogDescription>Étape 1 sur 3 — Avertissement</DialogDescription>
+              </DialogHeader>
 
               <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-2">
                 <p className="text-sm font-medium text-destructive">Cette action est irréversible.</p>
@@ -947,8 +950,10 @@ export default function TeamPage() {
 
           {deleteStep === 2 && (
             <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-              <DialogTitle>Confirmer le nom</DialogTitle>
-              <p className="text-xs text-muted-foreground mt-0.5 mb-4">Étape 2 sur 3 — Vérification</p>
+              <DialogHeader showClose={false}>
+                <DialogTitle>Confirmer le nom</DialogTitle>
+                <DialogDescription>Étape 2 sur 3 — Vérification</DialogDescription>
+              </DialogHeader>
 
               <Field>
                 <FieldLabel htmlFor="deleteTeamName">
@@ -981,8 +986,10 @@ export default function TeamPage() {
 
           {deleteStep === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }}>
-              <DialogTitle>Mot de passe</DialogTitle>
-              <p className="text-xs text-muted-foreground mt-0.5 mb-4">Étape 3 sur 3 — Authentification</p>
+              <DialogHeader showClose={false}>
+                <DialogTitle>Mot de passe</DialogTitle>
+                <DialogDescription>Étape 3 sur 3 — Authentification</DialogDescription>
+              </DialogHeader>
 
               <Field>
                 <FieldLabel htmlFor="deletePassword">Entrez votre mot de passe pour confirmer</FieldLabel>
@@ -1016,10 +1023,12 @@ export default function TeamPage() {
 
       {/* Team Logo Dialog */}
       <Dialog open={logoOpen} onClose={() => setLogoOpen(false)}>
-        <DialogTitle>Logo de l&apos;équipe</DialogTitle>
-        <DialogDescription>
-          Choisissez comment définir le logo de votre équipe.
-        </DialogDescription>
+        <DialogHeader onClose={() => setLogoOpen(false)}>
+          <DialogTitle>Logo de l&apos;équipe</DialogTitle>
+          <DialogDescription>
+            Choisissez comment définir le logo de votre équipe.
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="mt-4 space-y-3">
           <button

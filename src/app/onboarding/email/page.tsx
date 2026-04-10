@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription } from '@/components/ui/field'
-import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
 import { api } from '@/lib/api'
@@ -382,15 +382,12 @@ function OnboardingEmailContent() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center justify-between mb-1">
+              <DialogHeader onClose={closeDialog} icon={<Mail className="h-5 w-5 text-accent" />}>
                 <DialogTitle>Choisir un fournisseur</DialogTitle>
-                <button onClick={closeDialog} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <DialogDescription className="mb-6">
-                Sélectionnez le service que vous souhaitez utiliser pour envoyer vos emails.
-              </DialogDescription>
+                <DialogDescription>
+                  Sélectionnez le service que vous souhaitez utiliser pour envoyer vos emails.
+                </DialogDescription>
+              </DialogHeader>
 
               <div className="space-y-3">
                 <button

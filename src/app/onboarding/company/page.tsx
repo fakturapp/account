@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/components/ui/field'
-import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
@@ -550,12 +550,9 @@ export default function OnboardingCompanyPage() {
 
       {/* Skip confirmation modal */}
       <Dialog open={showSkipConfirm} onClose={() => setShowSkipConfirm(false)} className="max-w-sm">
-        <div className="flex items-center gap-3 mb-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10 shrink-0">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-          </div>
-          <DialogTitle className="mb-0">Passer cette étape ?</DialogTitle>
-        </div>
+        <DialogHeader showClose={false} icon={<AlertTriangle className="h-5 w-5 text-warning" />}>
+          <DialogTitle>Passer cette étape ?</DialogTitle>
+        </DialogHeader>
         <DialogDescription>
           Sans les informations de votre entreprise, vous ne pourrez pas créer de factures ni de devis.
           Vous pourrez les compléter plus tard dans les paramètres.

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel, FieldDescription } from '@/components/ui/field'
-import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
 import { useEmail, type EmailAccountItem } from '@/lib/email-context'
@@ -530,15 +530,12 @@ function EmailSettingsContent() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center justify-between mb-1">
+              <DialogHeader onClose={closeDialog}>
                 <DialogTitle>Ajouter un fournisseur</DialogTitle>
-                <button onClick={closeDialog} className="h-8 w-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
-                  <X className="h-4 w-4" />
-                </button>
-              </div>
-              <DialogDescription className="mb-6">
-                Sélectionnez le service que vous souhaitez utiliser pour envoyer vos emails.
-              </DialogDescription>
+                <DialogDescription>
+                  Sélectionnez le service que vous souhaitez utiliser pour envoyer vos emails.
+                </DialogDescription>
+              </DialogHeader>
 
               <div className="space-y-3">
                 <button
@@ -596,21 +593,20 @@ function EmailSettingsContent() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-4">
                 <button
                   onClick={() => { setDialogStep('choose'); setConfigError('') }}
                   className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-surface-hover transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4 text-muted-foreground" />
                 </button>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
-                  <Zap className="h-4 w-4 text-violet-500" />
-                </div>
-                <DialogTitle className="text-base">Configurer Resend</DialogTitle>
+                <DialogHeader className="mb-0 flex-1" icon={<Zap className="h-4 w-4 text-violet-500" />}>
+                  <DialogTitle className="text-base">Configurer Resend</DialogTitle>
+                  <DialogDescription>
+                    Renseignez votre clé API et l&apos;email d&apos;envoi.
+                  </DialogDescription>
+                </DialogHeader>
               </div>
-              <DialogDescription className="mb-5 ml-10">
-                Renseignez votre clé API et l&apos;email d&apos;envoi.
-              </DialogDescription>
 
               {configError && (
                 <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-center text-sm text-destructive mb-4">
@@ -698,21 +694,20 @@ function EmailSettingsContent() {
               exit={{ opacity: 0, x: -20 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-4">
                 <button
                   onClick={() => { setDialogStep('choose'); setConfigError('') }}
                   className="h-7 w-7 rounded-lg flex items-center justify-center hover:bg-surface-hover transition-colors"
                 >
                   <ArrowLeft className="h-4 w-4 text-muted-foreground" />
                 </button>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/10">
-                  <Server className="h-4 w-4 text-blue-500" />
-                </div>
-                <DialogTitle className="text-base">Configurer SMTP</DialogTitle>
+                <DialogHeader className="mb-0 flex-1" icon={<Server className="h-4 w-4 text-blue-500" />}>
+                  <DialogTitle className="text-base">Configurer SMTP</DialogTitle>
+                  <DialogDescription>
+                    Renseignez les paramètres de votre serveur SMTP.
+                  </DialogDescription>
+                </DialogHeader>
               </div>
-              <DialogDescription className="mb-5 ml-10">
-                Renseignez les paramètres de votre serveur SMTP.
-              </DialogDescription>
 
               {configError && (
                 <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-center text-sm text-destructive mb-4">
@@ -938,15 +933,12 @@ function EmailSettingsContent() {
 
       {/* Delete confirmation dialog */}
       <Dialog open={deleteConfirm !== null} onClose={() => setDeleteConfirm(null)} className="max-w-sm">
-        <div className="flex flex-col items-center py-2">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10 mb-4">
-            <Trash2 className="h-5 w-5 text-destructive" />
-          </div>
-          <DialogTitle className="text-center">Déconnecter le compte</DialogTitle>
-          <DialogDescription className="text-center">
+        <DialogHeader showClose={false} icon={<Trash2 className="h-5 w-5 text-danger" />}>
+          <DialogTitle>Déconnecter le compte</DialogTitle>
+          <DialogDescription>
             Êtes-vous sûr de vouloir déconnecter <strong className="text-foreground">{deleteConfirm?.email}</strong> ? Vous ne pourrez plus envoyer d&apos;emails via ce compte.
           </DialogDescription>
-        </div>
+        </DialogHeader>
         <DialogFooter>
           <Button variant="outline" onClick={() => setDeleteConfirm(null)}>Annuler</Button>
           <Button

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Field, FieldLabel, FieldDescription } from '@/components/ui/field'
 import { useToast } from '@/components/ui/toast'
 import { Spinner } from '@/components/ui/spinner'
-import { Dialog, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { IbanInput } from '@/components/ui/iban-input'
 import { useCompanySettings, type BankAccountItem, type BankAccountForm } from '@/lib/company-settings-context'
@@ -207,7 +207,9 @@ export default function BankPage() {
 
       {/* Bank account add/edit dialog */}
       <Dialog open={bankDialogOpen} onClose={() => setBankDialogOpen(false)} className="max-w-md">
-        <DialogTitle>{bankEditId ? 'Modifier le compte bancaire' : 'Ajouter un compte bancaire'}</DialogTitle>
+        <DialogHeader onClose={() => setBankDialogOpen(false)}>
+          <DialogTitle>{bankEditId ? 'Modifier le compte bancaire' : 'Ajouter un compte bancaire'}</DialogTitle>
+        </DialogHeader>
         <div className="space-y-4 mt-4">
           <Field>
             <FieldLabel htmlFor="bankLabel">Libellé *</FieldLabel>

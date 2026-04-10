@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
 import { useToast } from '@/components/ui/toast'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Users, FlaskConical, AlertTriangle, Zap, Eye, MousePointer2, Share2 } from 'lucide-react'
 
 export default function CollaborationSettingsPage() {
@@ -116,15 +116,10 @@ export default function CollaborationSettingsPage() {
 
       {/* Warning confirmation dialog */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)} className="max-w-md">
-        <DialogTitle className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-500/10">
-            <AlertTriangle className="h-5 w-5 text-amber-500" />
-          </div>
-          <div>
-            <p>Fonctionnalit&eacute; en b&ecirc;ta extr&ecirc;me</p>
-            <p className="text-xs font-normal text-muted-foreground mt-0.5">Lisez attentivement avant d&apos;activer</p>
-          </div>
-        </DialogTitle>
+        <DialogHeader onClose={() => setConfirmOpen(false)} icon={<AlertTriangle className="h-5 w-5 text-amber-500" />}>
+          <DialogTitle>Fonctionnalit&eacute; en b&ecirc;ta extr&ecirc;me</DialogTitle>
+          <DialogDescription>Lisez attentivement avant d&apos;activer</DialogDescription>
+        </DialogHeader>
 
         <div className="mt-4 space-y-4">
           <p className="text-sm text-muted-foreground leading-relaxed">
