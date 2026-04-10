@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect, type RefObject } from 'react'
 import { Minus, Plus } from 'lucide-react'
 
 const STORAGE_KEY = 'faktur_doc_zoom'
@@ -17,6 +17,49 @@ export function loadDocumentZoom(): number {
     return n >= MIN && n <= MAX ? n : DEFAULT
   } catch {
     return DEFAULT
+  }
+}
+
+/**
+ * Compensate for CSS transform: scale() overflow on the A4 sheet.
+ *
+ * Because `transform: scale()` doesn't affect layout, scaling above 100%
+ * makes the visual sheet extend below its layout box, colliding with the
+ * page bottom. This hook measures the unscaled sheet height via a ref
+ * and returns the pixel margin-bottom needed to push following content
+ * past the visual overflow, plus a base breathing space.
+ *
+ * Returns a style object ready to spread onto the transform container:
+ *   <div style={{ transform: `scale(${zoom/100})`, ...zoomSpacing }}>
+ */
+export function useZoomSpacing(
+  ref: RefObject<HTMLElement | null>,
+  zoom: number,
+): { marginBottom: string; transition: string } {
+  const [naturalHeight, setNaturalHeight] = useState(0)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const update = () => setNaturalHeight(el.offsetHeight)
+    update()
+
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [ref])
+
+  const scale = zoom / 100
+  // Overflow = the visual-space portion of the sheet that extends below
+  // its layout box when scale > 1.
+  const overflow = Math.max(0, (scale - 1) * naturalHeight)
+  // Always add a small base padding so the sheet isn't flush with the
+  // page bottom even at 100% zoom.
+  const base = 32
+  return {
+    marginBottom: `${Math.round(overflow + base)}px`,
+    transition: 'margin-bottom 0.15s ease, transform 0.15s ease',
   }
 }
 
