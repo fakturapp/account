@@ -366,7 +366,6 @@ export function AiChatSidebar({
 
   function handleInputChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
     setInput(e.target.value)
-    // Use pretext for height estimation (avoids DOM reflow), fallback to scrollHeight
     try {
       const font = resolveFont()
       const width = e.target.clientWidth || 280
