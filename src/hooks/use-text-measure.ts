@@ -10,9 +10,6 @@ import {
   type FontSizeKey,
 } from '@/lib/pretext'
 
-// ── useTextMeasure ────────────────────────────────────────
-// Measures a single text block's height/lines without DOM reflows.
-
 interface TextMeasureOptions {
   font?: string
   fontSize?: number | FontSizeKey
@@ -58,10 +55,6 @@ export function useTextMeasure(
   return result
 }
 
-
-// ── useDocumentOverflow ───────────────────────────────────
-// Tracks whether a document's content overflows the A4 page.
-
 interface DocumentOverflowParams {
   lines: { description: string; type: 'standard' | 'section' }[]
   notes?: string
@@ -90,7 +83,6 @@ export function useDocumentOverflow(
   })
   const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  // Serialize deps for comparison
   const depsKey = useMemo(() => JSON.stringify({
     lines: params.lines.map(l => ({ d: l.description.slice(0, 100), t: l.type })),
     notes: params.notes?.slice(0, 50),
@@ -117,10 +109,6 @@ export function useDocumentOverflow(
 
   return result
 }
-
-
-// ── useAutoHeight ─────────────────────────────────────────
-// Calculate textarea height based on text content without DOM reflows.
 
 export function useAutoHeight(
   text: string,
