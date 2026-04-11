@@ -324,7 +324,7 @@
   --ease-fluid: cubic-bezier(0.32, 0.72, 0, 1);
 
   /* Typography */
-  --font-sans: var(--font-lexend), 'Lexend', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-sans: 'SN Pro', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --tracking-ui: -0.015em;
 
   /* Sizing */
