@@ -43,9 +43,7 @@ const DESKTOP_DOWNLOADS = {
   windows: `${DESKTOP_RELEASE_BASE}/FakturDesktop-Installer.exe`,
   macDmg: `${DESKTOP_RELEASE_BASE}/FakturDesktop.dmg`,
   macZip: `${DESKTOP_RELEASE_BASE}/FakturDesktop-mac.zip`,
-  linuxAppImage: `${DESKTOP_RELEASE_BASE}/FakturDesktop.AppImage`,
-  linuxDeb: `${DESKTOP_RELEASE_BASE}/faktur-desktop_amd64.deb`,
-  linuxRpm: `${DESKTOP_RELEASE_BASE}/faktur-desktop.x86_64.rpm`,
+  linuxAppImage: `${DESKTOP_RELEASE_BASE}/FakturDesktop-linux-x86_64.AppImage`,
 } as const
 
 const GITHUB_RELEASES_LATEST = 'https://github.com/fakturapp/faktur-desktop/releases/latest'
@@ -556,18 +554,6 @@ export default function DownloadPage() {
               icon: <Package className="h-5 w-5 shrink-0 text-amber-500" />,
               label: 'AppImage',
               desc: 'Portable, sans installation',
-            },
-            {
-              url: DESKTOP_DOWNLOADS.linuxDeb,
-              icon: <HardDrive className="h-5 w-5 shrink-0 text-orange-500" />,
-              label: '.deb',
-              desc: 'Debian, Ubuntu, Mint…',
-            },
-            {
-              url: DESKTOP_DOWNLOADS.linuxRpm,
-              icon: <Package className="h-5 w-5 shrink-0 text-red-500" />,
-              label: '.rpm',
-              desc: 'Fedora, RHEL, openSUSE…',
             },
           ].map(({ url, icon, label, desc }) => (
             <button
