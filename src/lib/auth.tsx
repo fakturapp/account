@@ -43,6 +43,7 @@ const AUTH_LOCAL_KEYS = [
   'faktur_vault_key',
   'faktur_source',
   'faktur_vault_locked',
+  'faktur_last_login',
 ] as const
 
 const ALWAYS_PRESERVE_KEYS = new Set<string>([
@@ -202,6 +203,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (vaultKey) {
       localStorage.setItem('faktur_vault_key', vaultKey)
     }
+
+    try {
+      const source = (userData.fullName ?? userData.email).trim()
+      const initial = (source[0] ?? '?').toUpperCase()
+      localStorage.setItem(
+        'faktur_last_login',
+        JSON.stringify({
+          email: userData.email,
+          avatarUrl: userData.avatarUrl,
+          initial,
+          ts: Date.now(),
+        })
+      )
+    } catch {}
+
     setUser(userData)
   }
 
