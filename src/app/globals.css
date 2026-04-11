@@ -325,7 +325,6 @@
 
   /* Typography */
   --font-sans: 'SN Pro', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: Arial, 'Helvetica Neue', Helvetica, sans-serif;
   --tracking-ui: -0.015em;
 
   /* Sizing */
@@ -418,12 +417,6 @@ body {
   font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-h1,
-h2,
-.font-display {
-  font-family: var(--font-display);
 }
 
 /* ============================================================
