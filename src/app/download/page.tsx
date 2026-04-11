@@ -372,12 +372,6 @@ export default function DownloadPage() {
             chiffrées, et toujours à portée de main.
           </p>
         </div>
-        {isDesktop && (
-          <Badge variant="success" className="text-xs">
-            <Check className="h-3 w-3 mr-1" />
-            Desktop installé {desktopVersion ? `· v${desktopVersion}` : ''}
-          </Badge>
-        )}
       </motion.div>
 
       <motion.section
