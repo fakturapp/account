@@ -22,8 +22,8 @@ export function ShinyText({
   disabled = false,
   speed = 2,
   className = '',
-  color = '#5957e8',
-  shineColor = '#a5a3f7',
+  color = '#b5b5b5',
+  shineColor = '#ffffff',
   spread = 120,
   yoyo = false,
   pauseOnHover = false,
@@ -100,17 +100,18 @@ export function ShinyText({
     if (pauseOnHover) setIsPaused(false)
   }, [pauseOnHover])
 
+  const gradientStyle: React.CSSProperties = {
+    backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
+    backgroundSize: '200% auto',
+    WebkitBackgroundClip: 'text',
+    backgroundClip: 'text',
+    WebkitTextFillColor: 'transparent',
+  }
+
   return (
     <motion.span
       className={`inline-block ${className}`}
-      style={{
-        backgroundImage: `linear-gradient(${spread}deg, ${color} 0%, ${color} 35%, ${shineColor} 50%, ${color} 65%, ${color} 100%)`,
-        backgroundSize: '200% auto',
-        WebkitBackgroundClip: 'text',
-        backgroundClip: 'text',
-        WebkitTextFillColor: 'transparent',
-        backgroundPosition,
-      }}
+      style={{ ...gradientStyle, backgroundPosition }}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -118,3 +119,5 @@ export function ShinyText({
     </motion.span>
   )
 }
+
+export default ShinyText
