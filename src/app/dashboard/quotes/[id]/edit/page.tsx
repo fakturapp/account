@@ -23,6 +23,7 @@ import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor 
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 import { SyncBroadcaster } from '@/components/collaboration/sync-broadcaster'
 import { setApplyingRemote } from '@/components/collaboration/use-broadcast'
+import { formatCurrency } from '@/lib/currency'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -48,7 +49,7 @@ function EditQuoteContent() {
   const searchParams = useSearchParams()
   const quoteId = params.id as string
   const { toast } = useToast()
-  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
+  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, persistSettings, uploadLogo } = useInvoiceSettings()
   const collabEnabled = invoiceSettings.collaborationEnabled
 
   const [loading, setLoading] = useState(true)
@@ -236,27 +237,37 @@ function EditQuoteContent() {
     setIsDirty(true)
   }, [])
 
-  const handleLogoChange = useCallback((url: string | null, saveToSettings: boolean) => {
+  const handleLogoChange = useCallback(async (url: string | null, saveToSettings: boolean) => {
     setLogoUrl(url)
     if (saveToSettings) {
-      if (url === null) updateSettings({ logoUrl: null, logoSource: 'custom' })
-      else if (url === companyLogoUrl) updateSettings({ logoSource: 'company' })
-      else updateSettings({ logoUrl: url, logoSource: 'custom' })
+      const partial =
+        url === null
+          ? { logoUrl: null, logoSource: 'custom' as const }
+          : url === companyLogoUrl
+            ? { logoSource: 'company' as const }
+            : { logoUrl: url, logoSource: 'custom' as const }
+      const { error } = await persistSettings(partial)
+      if (error) toast(error, 'error')
     }
     setIsDirty(true)
-  }, [companyLogoUrl, updateSettings])
+  }, [companyLogoUrl, persistSettings, toast])
 
-  const handleLogoUpload = useCallback((file: File, saveToSettings: boolean) => {
+  const handleLogoUpload = useCallback(async (file: File, saveToSettings: boolean) => {
     const reader = new FileReader()
     reader.onload = () => setLogoUrl(reader.result as string)
     reader.readAsDataURL(file)
-    if (saveToSettings) { uploadLogo(file); updateSettings({ logoSource: 'custom' }) }
+    if (saveToSettings) {
+      const logoUrl = await uploadLogo(file)
+      const { error } = await persistSettings({ logoUrl: logoUrl || null, logoSource: 'custom' })
+      if (error) toast(error, 'error')
+    }
     setIsDirty(true)
-  }, [uploadLogo, updateSettings])
+  }, [persistSettings, toast, uploadLogo])
 
-  const handleLogoBorderRadiusChange = useCallback((radius: number) => {
-    updateSettings({ logoBorderRadius: radius })
-  }, [updateSettings])
+  const handleLogoBorderRadiusChange = useCallback(async (radius: number) => {
+    const { error } = await persistSettings({ logoBorderRadius: radius })
+    if (error) toast(error, 'error')
+  }, [persistSettings, toast])
 
   // Calculations
   const { subtotal, taxAmount, discountAmount, total, tvaBreakdown } = useMemo(() => {
@@ -362,6 +373,8 @@ function EditQuoteContent() {
         email: company.email,
         siren: company.siren,
         vatNumber: company.vatNumber,
+        paymentConditions: company.paymentConditions,
+        currency: company.currency,
       } : undefined,
       lines: lines
         .filter((l) => l.description.trim())
@@ -801,7 +814,7 @@ function EditQuoteContent() {
           className="pointer-events-auto inline-flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5"
         >
           <div className="text-sm text-muted-foreground">
-            Total : <span className="font-bold text-foreground">{total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
+            Total : <span className="font-bold text-foreground">{formatCurrency(total, company?.currency || 'EUR')}</span>
           </div>
           <Button onClick={handleSave} disabled={saving} size="sm" className="min-w-[140px] rounded-xl">
             {saving ? (<><Spinner /> Enregistrement...</>) : (<><Save className="h-4 w-4 mr-1.5" /> Sauvegarder</>)}
