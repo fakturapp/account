@@ -67,16 +67,16 @@ const STATUS_LABELS: Record<string, string> = {
   finalized: 'Finalisée',
 }
 
-const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'danger' | 'default' | 'muted'> = {
+const STATUS_VARIANTS: Record<string, 'success' | 'warning' | 'destructive' | 'default' | 'muted'> = {
   paid: 'success',
   accepted: 'success',
   finalized: 'success',
   sent: 'default',
   paid_unconfirmed: 'warning',
   partial: 'warning',
-  overdue: 'danger',
+  overdue: 'destructive',
   cancelled: 'muted',
-  refused: 'danger',
+  refused: 'destructive',
   expired: 'muted',
   draft: 'muted',
 }
