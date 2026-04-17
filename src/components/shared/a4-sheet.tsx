@@ -1379,7 +1379,6 @@ export function A4Sheet({
                             placeholder={isSection ? t.sectionTitle : t.description}
                             className={cn('text-[12px]', isSection && 'font-bold')}
                             style={{ color: T.text }}
-                            singleLine
                           />
                         )}
                       </div>
