@@ -44,7 +44,7 @@ interface InvoiceDetail {
   subject: string | null
   issueDate: string
   dueDate: string | null
-  billingType: 'quick' | 'detailed'
+  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
   accentColor: string | null
   logoUrl: string | null
   language: string | null

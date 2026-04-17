@@ -12,7 +12,7 @@ export interface AiDocumentData {
   notes?: string
   acceptanceConditions?: string
   clientId?: string
-  billingType?: 'quick' | 'detailed'
+  billingType?: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
   paymentMethod?: 'bank_transfer' | 'cash' | 'other'
 }
 

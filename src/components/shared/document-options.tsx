@@ -20,7 +20,7 @@ import type { ClientInfo } from './a4-sheet'
 
 
 export interface DocumentOptions {
-  billingType: 'quick' | 'detailed'
+  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
   subject: string
   issueDate: string
   validityDate: string
@@ -181,25 +181,35 @@ export function DocumentOptionsPanel({
         <CollapsibleSection title="Document" defaultOpen>
           {}
           <div className="mb-3">
-            <label className="text-xs text-muted-foreground font-medium block mb-1">Type</label>
+            <label className="text-xs text-muted-foreground font-medium block mb-1">Colonnes</label>
             <div className="flex gap-1">
-              {[
-                { id: 'quick' as const, label: 'Rapide', icon: Zap },
-                { id: 'detailed' as const, label: 'Complet', icon: ClipboardList },
-              ].map((t) => (
-                <button
-                  key={t.id}
-                  onClick={() => onChange({ billingType: t.id })}
-                  className={cn(
-                    'flex-1 flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
-                    options.billingType === t.id
-                      ? 'border-primary bg-primary/5 text-foreground'
-                      : 'border-border text-muted-foreground hover:border-muted-foreground/40',
-                  )}
-                >
-                  <t.icon className="h-3 w-3" /> {t.label}
-                </button>
-              ))}
+              {([
+                { key: 'qty', label: 'Quantité', icon: ClipboardList },
+                { key: 'vat', label: 'TVA', icon: Zap },
+              ] as const).map((col) => {
+                const hasQty = options.billingType === 'detailed' || options.billingType === 'qty-only'
+                const hasVat = options.billingType === 'detailed' || options.billingType === 'vat-only'
+                const active = col.key === 'qty' ? hasQty : hasVat
+                return (
+                  <button
+                    key={col.key}
+                    onClick={() => {
+                      let newQty = col.key === 'qty' ? !hasQty : hasQty
+                      let newVat = col.key === 'vat' ? !hasVat : hasVat
+                      const bt = newQty && newVat ? 'detailed' : newQty ? 'qty-only' : newVat ? 'vat-only' : 'quick'
+                      onChange({ billingType: bt })
+                    }}
+                    className={cn(
+                      'flex-1 flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
+                      active
+                        ? 'border-primary bg-primary/5 text-foreground'
+                        : 'border-border text-muted-foreground hover:border-muted-foreground/40',
+                    )}
+                  >
+                    <col.icon className="h-3 w-3" /> {col.label}
+                  </button>
+                )
+              })}
             </div>
           </div>
 

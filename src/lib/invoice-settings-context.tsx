@@ -37,7 +37,7 @@ function toRequestSettings(settings: InvoiceSettings): InvoiceSettings {
 }
 
 export interface InvoiceSettings {
-  billingType: 'quick' | 'detailed'
+  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
   logoUrl: string | null
   logoSource: 'custom' | 'company'
   accentColor: string

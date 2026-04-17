@@ -37,7 +37,7 @@ interface CreditNoteDetail {
   reason: string | null
   subject: string | null
   issueDate: string
-  billingType: 'quick' | 'detailed'
+  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
   accentColor: string | null
   logoUrl: string | null
   language: string | null

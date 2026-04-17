@@ -847,7 +847,7 @@ interface A4SheetProps {
   onQuoteNumberChange: (v: string) => void
   issueDate: string
   validityDate: string
-  billingType: 'quick' | 'detailed'
+  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
   company: CompanyInfo | null
   onCompanyFieldChange: (field: keyof CompanyInfo, value: string) => void
   client: ClientInfo | null
@@ -969,13 +969,23 @@ export function A4Sheet({
   const hasError = (field: string) => validationErrors.includes(field)
   const errorBorder = '#ef4444'
 
-  const gridCols = billingType === 'detailed'
-    ? 'minmax(120px, 1fr) 45px 50px 75px 45px 80px 28px'
-    : 'minmax(150px, 1fr) 90px 28px'
+  const showQty = billingType === 'detailed' || billingType === 'qty-only'
+  const showVat = billingType === 'detailed' || billingType === 'vat-only'
 
-  const gridColsPreview = billingType === 'detailed'
-    ? 'minmax(120px, 1fr) 45px 50px 75px 45px 80px'
-    : 'minmax(150px, 1fr) 90px'
+  const gridCols = [
+    'minmax(120px, 1fr)',
+    ...(showQty ? ['45px', '50px', '75px'] : []),
+    ...(showVat ? ['45px'] : []),
+    showQty || showVat ? '80px' : '90px',
+    '28px',
+  ].join(' ')
+
+  const gridColsPreview = [
+    'minmax(120px, 1fr)',
+    ...(showQty ? ['45px', '50px', '75px'] : []),
+    ...(showVat ? ['45px'] : []),
+    showQty || showVat ? '80px' : '90px',
+  ].join(' ')
 
   const cols = isPreview ? gridColsPreview : gridCols
 
@@ -1343,12 +1353,14 @@ export function A4Sheet({
                 <div className="overflow-hidden" style={{ display: 'grid', gridTemplateColumns: cols, borderTopLeftRadius: T.borderRadius, borderTopRightRadius: T.borderRadius }}>
                   <div className="px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.5px] truncate"
                     style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.designation}</div>
-                  {billingType === 'detailed' && (<>
+                  {showQty && (<>
                     <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.qty}</div>
                     <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unit}</div>
                     <div className="px-1 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unitPriceHT}</div>
-                    <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.vat}</div>
                   </>)}
+                  {showVat && (
+                    <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.vat}</div>
+                  )}
                   <div className="px-2 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.amountHT}</div>
                   {ed && <div className="py-2" style={{ backgroundColor: accentColor }} />}
                 </div>
@@ -1356,7 +1368,7 @@ export function A4Sheet({
                 {/* Rows */}
                 {lines.map((line, idx) => {
                   const isSection = line.type === 'section'
-                  const ht = isSection ? 0 : (billingType === 'quick' ? line.unitPrice : line.quantity * line.unitPrice)
+                  const ht = isSection ? 0 : (showQty ? line.quantity * line.unitPrice : line.unitPrice)
                   const rowBg = idx % 2 === 0 ? T.rowEven : T.rowOdd
 
                   return (
@@ -1383,7 +1395,7 @@ export function A4Sheet({
                         )}
                       </div>
 
-                      {!isSection && billingType === 'detailed' && (<>
+                      {!isSection && showQty && (<>
                         <div className="px-1.5 py-2 text-center">
                           {isPreview ? <span className="text-[12px]">{line.quantity}</span>
                             : <input type="number" min="0" step="1" value={line.quantity}
@@ -1405,6 +1417,8 @@ export function A4Sheet({
                                 className="w-full bg-transparent text-[12px] text-right focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                                 style={{ color: T.text }} />}
                         </div>
+                      </>)}
+                      {!isSection && showVat && (
                         <div className="px-1.5 py-2 text-center">
                           {isPreview ? <span className="text-[11px]" style={{ color: T.textMuted }}>{line.vatRate}%</span>
                             : <div className="w-full flex justify-center">
@@ -1432,13 +1446,14 @@ export function A4Sheet({
                                 </Dropdown>
                               </div>}
                         </div>
-                      </>)}
+                      )}
 
-                      {isSection && billingType === 'detailed' && (<><div /><div /><div /><div /></>)}
+                      {isSection && showQty && (<><div /><div /><div /></>)}
+                      {isSection && showVat && (<div />)}
 
                       {!isSection ? (
                         <div className="px-3 py-2 text-right text-[12px] font-semibold" style={{ color: T.text }}>
-                          {billingType === 'quick' && ed ? (
+                          {!showQty && ed ? (
                             <input type="number" min="0" step="0.01" value={line.unitPrice}
                               onChange={(e) => onUpdateLine(idx, { unitPrice: parseFloat(e.target.value) || 0 })}
                               className="w-full bg-transparent text-[12px] text-right font-semibold focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
@@ -1506,7 +1521,7 @@ export function A4Sheet({
                       )}
                     </div>
                     <div className="px-2 flex justify-between items-center">
-                      <span className="text-[20px] font-extrabold tracking-wide">{billingType === 'detailed' ? t.totalTTC : t.totalHT}</span>
+                      <span className="text-[20px] font-extrabold tracking-wide">{showVat ? t.totalTTC : t.totalHT}</span>
                       <span
                         className="text-[20px] font-extrabold tracking-wide py-1 px-3"
                         style={{ borderRadius: 100, background: `${accentColor}15` }}
@@ -1545,7 +1560,7 @@ export function A4Sheet({
                         border: `1px solid ${accentColor}${T.totalBorder}`,
                         borderRadius: T.borderRadius,
                       }}>
-                      <span className="text-[13px] font-bold" style={{ color: T.text }}>{billingType === 'detailed' ? t.totalTTC : t.totalHT}</span>
+                      <span className="text-[13px] font-bold" style={{ color: T.text }}>{showVat ? t.totalTTC : t.totalHT}</span>
                       <span className="text-[15px] font-bold" style={{ color: accentColor }}>{fmtCurrency(total, lang, documentCurrency)}</span>
                     </div>
                   </div>

@@ -77,7 +77,7 @@ export default function NewInvoicePage() {
   ])
 
   const [options, setOptions] = useState({
-    billingType: 'quick' as 'quick' | 'detailed',
+    billingType: 'quick' as 'quick' | 'detailed' | 'qty-only' | 'vat-only',
     subject: '',
     issueDate: getToday(),
     validityDate: getDefaultDueDate(),
@@ -319,11 +319,11 @@ export default function NewInvoicePage() {
 
     for (const line of lines) {
       if (line.type === 'section') continue
-      const lt = options.billingType === 'quick' ? line.unitPrice : line.quantity * line.unitPrice
-      const lTax = options.billingType === 'detailed' ? lt * (line.vatRate / 100) : 0
+      const lt = (options.billingType === 'quick' || options.billingType === 'vat-only') ? line.unitPrice : line.quantity * line.unitPrice
+      const lTax = (options.billingType === 'detailed' || options.billingType === 'vat-only') ? lt * (line.vatRate / 100) : 0
       sub += lt; tax += lTax
 
-      if (options.billingType === 'detailed') {
+      if (options.billingType === 'detailed' || options.billingType === 'vat-only') {
         const rate = line.vatRate
         if (!tvaMap[rate]) tvaMap[rate] = { base: 0, amount: 0 }
         tvaMap[rate].base += lt; tvaMap[rate].amount += lTax
@@ -427,10 +427,10 @@ export default function NewInvoicePage() {
         .map((l) => ({
           description: l.description,
           saleType: l.type === 'section' ? 'section' : l.saleType || undefined,
-          quantity: l.type === 'section' ? 1 : options.billingType === 'quick' ? 1 : l.quantity,
+          quantity: l.type === 'section' ? 1 : (options.billingType === 'quick' || options.billingType === 'vat-only') ? 1 : l.quantity,
           unit: l.type === 'section' ? undefined : l.unit || undefined,
           unitPrice: l.type === 'section' ? 0 : l.unitPrice,
-          vatRate: l.type === 'section' ? 0 : options.billingType === 'quick' ? 0 : l.vatRate,
+          vatRate: l.type === 'section' ? 0 : (options.billingType === 'quick' || options.billingType === 'qty-only') ? 0 : l.vatRate,
         })),
     }
 

@@ -151,6 +151,48 @@ export default function InvoiceOptionsPage() {
                       Factures detaillees avec TVA, remises, conditions et mentions
                     </p>
                   </button>
+                  <button
+                    onClick={() => updateSettings({ billingType: 'qty-only' })}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                      settings.billingType === 'qty-only'
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:border-muted-foreground/30 hover:bg-surface'
+                    }`}
+                  >
+                    {settings.billingType === 'qty-only' && (
+                      <div className="absolute top-3 right-3">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                          <Check className="h-3 w-3 text-accent-foreground" />
+                        </div>
+                      </div>
+                    )}
+                    <ClipboardList className="h-5 w-5 text-accent mb-2" />
+                    <p className="font-medium text-sm text-foreground">Quantite uniquement</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Affiche les quantites sans TVA
+                    </p>
+                  </button>
+                  <button
+                    onClick={() => updateSettings({ billingType: 'vat-only' })}
+                    className={`relative rounded-xl border-2 p-4 text-left transition-all ${
+                      settings.billingType === 'vat-only'
+                        ? 'border-primary bg-primary/5 shadow-sm'
+                        : 'border-border hover:border-muted-foreground/30 hover:bg-surface'
+                    }`}
+                  >
+                    {settings.billingType === 'vat-only' && (
+                      <div className="absolute top-3 right-3">
+                        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                          <Check className="h-3 w-3 text-accent-foreground" />
+                        </div>
+                      </div>
+                    )}
+                    <ClipboardList className="h-5 w-5 text-accent mb-2" />
+                    <p className="font-medium text-sm text-foreground">TVA uniquement</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Affiche la TVA sans les quantites
+                    </p>
+                  </button>
                 </div>
               </CardContent>
             </Card>
