@@ -70,6 +70,10 @@ function saveOptionsToStorage(opts: Record<string, any>) {
       showAcceptanceConditions: opts.showAcceptanceConditions,
       showFreeField: opts.showFreeField,
       showFooterText: opts.showFooterText,
+      showQuantityColumn: opts.showQuantityColumn,
+      showUnitColumn: opts.showUnitColumn,
+      showUnitPriceColumn: opts.showUnitPriceColumn,
+      showVatColumn: opts.showVatColumn,
       footerMode: opts.footerMode,
     }
     localStorage.setItem(QUOTE_OPTIONS_KEY, JSON.stringify(toSave))
@@ -130,6 +134,10 @@ export default function NewQuotePage() {
     showAcceptanceConditions: false,
     showFreeField: false,
     showFooterText: false,
+    showQuantityColumn: true,
+    showUnitColumn: true,
+    showUnitPriceColumn: true,
+    showVatColumn: true,
     footerMode: 'company_info' as 'company_info' | 'custom',
     facturX: false,
   })
@@ -173,6 +181,10 @@ export default function NewQuotePage() {
         showAcceptanceConditions: saved?.showAcceptanceConditions ?? (!!(invoiceSettings.defaultAcceptanceConditions) || prev.showAcceptanceConditions),
         showFreeField: saved?.showFreeField ?? (!!(invoiceSettings.defaultFreeField) || prev.showFreeField),
         showFooterText: saved?.showFooterText ?? (!!(invoiceSettings.defaultFooterText) || prev.showFooterText),
+        showQuantityColumn: saved?.showQuantityColumn ?? prev.showQuantityColumn,
+        showUnitColumn: saved?.showUnitColumn ?? prev.showUnitColumn,
+        showUnitPriceColumn: saved?.showUnitPriceColumn ?? prev.showUnitPriceColumn,
+        showVatColumn: saved?.showVatColumn ?? prev.showVatColumn,
         footerMode: saved?.footerMode || invoiceSettings.footerMode || prev.footerMode,
       }))
       setAccentColor(invoiceSettings.accentColor)
@@ -243,14 +255,17 @@ export default function NewQuotePage() {
     setIsDirty(true); setValidationErrors([])
   }, [])
 
-  const handleMoveLine = useCallback((fromIndex: number, toIndex: number) => {
+  const handleReorderLine = useCallback((fromIndex: number, toIndex: number) => {
     setLines((prev) => {
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= prev.length || toIndex >= prev.length) {
+        return prev
+      }
       const next = [...prev]
       const [moved] = next.splice(fromIndex, 1)
       next.splice(toIndex, 0, moved)
       return next
     })
-    setIsDirty(true)
+    setIsDirty(true); setValidationErrors([])
   }, [])
 
   const handleOptionsChange = useCallback((partial: Partial<typeof options>) => {
@@ -384,6 +399,10 @@ export default function NewQuotePage() {
       deliveryAddress: options.showDeliveryAddress ? (options.deliveryAddress || undefined) : undefined,
       clientSiren: options.clientSiren || undefined,
       clientVatNumber: options.clientVatNumber || undefined,
+      showQuantityColumn: options.showQuantityColumn,
+      showUnitColumn: options.showUnitColumn,
+      showUnitPriceColumn: options.showUnitPriceColumn,
+      showVatColumn: options.showVatColumn,
       vatExemptReason: options.vatExemptReason,
       clientSnapshot: selectedClient ? {
         id: selectedClient.id,
@@ -662,9 +681,9 @@ export default function NewQuotePage() {
             lines={lines}
             onUpdateLine={handleUpdateLine}
             onAddLine={handleAddLine}
+            onReorderLine={handleReorderLine}
             onCatalogClick={() => setCatalogModalOpen(true)}
             onRemoveLine={handleRemoveLine}
-            onMoveLine={handleMoveLine}
             subtotal={subtotal}
             taxAmount={taxAmount}
             discountAmount={discountAmount}
@@ -696,6 +715,10 @@ export default function NewQuotePage() {
             showAcceptanceConditions={options.showAcceptanceConditions}
             showFreeField={options.showFreeField}
             showFooterText={options.showFooterText}
+            showQuantityColumn={options.showQuantityColumn}
+            showUnitColumn={options.showUnitColumn}
+            showUnitPriceColumn={options.showUnitPriceColumn}
+            showVatColumn={options.showVatColumn}
             footerMode={options.footerMode}
             validationErrors={validationErrors}
             onAcceptanceConditionsChange={(v) => handleOptionsChange({ acceptanceConditions: v })}

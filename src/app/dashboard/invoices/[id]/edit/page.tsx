@@ -109,6 +109,10 @@ function EditInvoiceContent() {
     showAcceptanceConditions: false,
     showFreeField: false,
     showFooterText: false,
+    showQuantityColumn: true,
+    showUnitColumn: true,
+    showUnitPriceColumn: true,
+    showVatColumn: true,
     footerMode: 'company_info' as 'company_info' | 'custom',
     facturX: false,
   })
@@ -167,6 +171,10 @@ function EditInvoiceContent() {
           showAcceptanceConditions: !!inv.acceptanceConditions,
           showFreeField: !!inv.freeField,
           showFooterText: !!inv.footerText,
+          showQuantityColumn: inv.showQuantityColumn !== false,
+          showUnitColumn: inv.showUnitColumn !== false,
+          showUnitPriceColumn: inv.showUnitPriceColumn !== false,
+          showVatColumn: inv.showVatColumn !== false,
           footerMode: ((invoiceSettings.footerMode as string) === 'vat_exempt' ? 'company_info' : invoiceSettings.footerMode) || 'company_info',
           facturX: inv.facturX || false,
         })
@@ -248,14 +256,17 @@ function EditInvoiceContent() {
     setIsDirty(true); setValidationErrors([])
   }, [])
 
-  const handleMoveLine = useCallback((fromIndex: number, toIndex: number) => {
+  const handleReorderLine = useCallback((fromIndex: number, toIndex: number) => {
     setLines((prev) => {
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= prev.length || toIndex >= prev.length) {
+        return prev
+      }
       const next = [...prev]
       const [moved] = next.splice(fromIndex, 1)
       next.splice(toIndex, 0, moved)
       return next
     })
-    setIsDirty(true)
+    setIsDirty(true); setValidationErrors([])
   }, [])
 
   const handleOptionsChange = useCallback((partial: Partial<typeof options>) => {
@@ -401,6 +412,10 @@ function EditInvoiceContent() {
       deliveryAddress: options.showDeliveryAddress ? (options.deliveryAddress || undefined) : undefined,
       clientSiren: options.clientSiren || undefined,
       clientVatNumber: options.clientVatNumber || undefined,
+      showQuantityColumn: options.showQuantityColumn,
+      showUnitColumn: options.showUnitColumn,
+      showUnitPriceColumn: options.showUnitPriceColumn,
+      showVatColumn: options.showVatColumn,
       paymentMethod: paymentMethod || undefined,
       bankAccountId: bankAccountId || undefined,
       vatExemptReason: options.vatExemptReason,
@@ -716,9 +731,9 @@ function EditInvoiceContent() {
               lines={lines}
               onUpdateLine={handleUpdateLine}
               onAddLine={handleAddLine}
+              onReorderLine={handleReorderLine}
               onCatalogClick={() => setCatalogModalOpen(true)}
               onRemoveLine={handleRemoveLine}
-              onMoveLine={handleMoveLine}
               subtotal={subtotal}
               taxAmount={taxAmount}
               discountAmount={discountAmount}
@@ -752,6 +767,10 @@ function EditInvoiceContent() {
               showAcceptanceConditions={options.showAcceptanceConditions}
               showFreeField={options.showFreeField}
               showFooterText={options.showFooterText}
+              showQuantityColumn={options.showQuantityColumn}
+              showUnitColumn={options.showUnitColumn}
+              showUnitPriceColumn={options.showUnitPriceColumn}
+              showVatColumn={options.showVatColumn}
               footerMode={options.footerMode}
               logoBorderRadius={invoiceSettings.logoBorderRadius}
               validationErrors={validationErrors}

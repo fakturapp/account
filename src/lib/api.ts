@@ -11,25 +11,45 @@ function notifyVaultLocked() {
   vaultLockListeners.forEach((cb) => cb())
 }
 
-function extractErrorMessage(data: any): string {
-  if (data?.error?.message) return data.error.message
-  if (data?.message) return data.message
-  if (Array.isArray(data?.errors) && data.errors[0]?.message) return data.errors[0].message
-  return 'Something went wrong'
+function parseErrorPayload(data: any): { code?: string; message: string } {
+  const details = data?.error?.details
+  const validationErrors = Array.isArray(details?.errors) ? details.errors : Array.isArray(data?.errors) ? data.errors : null
+  const firstValidationMessage =
+    validationErrors && typeof validationErrors[0]?.message === 'string'
+      ? validationErrors[0].message
+      : undefined
+
+  return {
+    code:
+      (typeof details?.error_code === 'string' ? details.error_code : undefined) ||
+      (typeof data?.error?.error_code === 'string' ? data.error.error_code : undefined) ||
+      (typeof data?.code === 'string' ? data.code : undefined),
+    message:
+      (typeof data?.error?.message === 'string' ? data.error.message : undefined) ||
+      (typeof data?.message === 'string' ? data.message : undefined) ||
+      firstValidationMessage ||
+      'Something went wrong',
+  }
 }
 
 function handleVaultOrSession(data: any, status: number): { error: string } | null {
-  const errorCode = data?.error?.details?.error_code || data?.code
-  if (status === 423 && (errorCode === 'VAULT_LOCKED' || errorCode === 'vault_locked')) {
+  const { code, message } = parseErrorPayload(data)
+
+  if (status === 423 && (code === 'VAULT_LOCKED' || code === 'vault_locked')) {
     notifyVaultLocked()
     return { error: 'VAULT_LOCKED' }
   }
-  if (status === 401 && (errorCode === 'SESSION_EXPIRED' || errorCode === 'account_session_expired')) {
+
+  if (
+    status === 401 &&
+    (code === 'SESSION_EXPIRED' || code === 'account_session_invalid' || code === 'account_session_expired')
+  ) {
     localStorage.removeItem('faktur_token')
     localStorage.removeItem('faktur_vault_key')
     window.location.href = '/login'
-    return { error: 'Session expired' }
+    return { error: message || 'Session expired' }
   }
+
   return null
 }
 
@@ -62,13 +82,13 @@ async function request<T = unknown>(
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractErrorMessage(data) }
+      return { error: parseErrorPayload(data).message || 'Unauthorized' }
     }
 
     const data = await res.json()
 
     if (!res.ok) {
-      return { error: extractErrorMessage(data) }
+      return { error: parseErrorPayload(data).message }
     }
     return { data }
   } catch {
@@ -102,13 +122,13 @@ async function uploadRequest<T = unknown>(
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractErrorMessage(data) }
+      return { error: parseErrorPayload(data).message || 'Unauthorized' }
     }
 
     const data = await res.json()
 
     if (!res.ok) {
-      return { error: extractErrorMessage(data) }
+      return { error: parseErrorPayload(data).message }
     }
     return { data }
   } catch {
@@ -135,12 +155,12 @@ async function blobRequest(endpoint: string): Promise<{ blob?: Blob; filename?: 
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractErrorMessage(data) }
+      return { error: parseErrorPayload(data).message || 'Unauthorized' }
     }
 
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      return { error: extractErrorMessage(data) || 'Download failed' }
+      const data = await res.json().catch(() => ({ message: 'Download failed' }))
+      return { error: parseErrorPayload(data).message || 'Download failed' }
     }
 
     const blob = await res.blob()
@@ -179,12 +199,12 @@ async function postBlobRequest(
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractErrorMessage(data) }
+      return { error: parseErrorPayload(data).message || 'Unauthorized' }
     }
 
     if (!res.ok) {
-      const data = await res.json().catch(() => ({}))
-      return { error: extractErrorMessage(data) || 'Download failed' }
+      const data = await res.json().catch(() => ({ message: 'Download failed' }))
+      return { error: parseErrorPayload(data).message || 'Download failed' }
     }
 
     const blob = await res.blob()

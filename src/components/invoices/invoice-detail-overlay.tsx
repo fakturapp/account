@@ -35,8 +35,6 @@ import {
   History,
   FileMinus2,
   Link2,
-  Eye,
-  ChevronDown,
 } from 'lucide-react'
 
 interface InvoiceDetail {
@@ -72,6 +70,10 @@ interface InvoiceDetail {
   clientId: string | null
   clientSnapshot?: string | null
   companySnapshot?: string | null
+  showQuantityColumn?: boolean
+  showUnitColumn?: boolean
+  showUnitPriceColumn?: boolean
+  showVatColumn?: boolean
   client: ClientInfo | null
   vatExemptReason?: 'none' | 'not_subject' | 'france_no_vat' | 'outside_france'
   lines: {
@@ -132,14 +134,6 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
   const [hasStripeConfigured, setHasStripeConfigured] = useState(false)
   const { hasEmailConfigured } = useEmail()
   const commentTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
-  const [displayOptions, setDisplayOptions] = useState({
-    showAmount: true,
-    showVat: true,
-    showVatPercent: true,
-    showQuantity: true,
-    showUnit: true,
-    showUnitPrice: true,
-  })
 
   useEffect(() => {
     if (!invoiceId) return
@@ -484,16 +478,13 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                   showSubject={!!invoice.subject}
                   showAcceptanceConditions={!!invoice.acceptanceConditions}
                   showFreeField={!!invoice.freeField}
+                  showQuantityColumn={invoice.showQuantityColumn !== false}
+                  showUnitColumn={invoice.showUnitColumn !== false}
+                  showUnitPriceColumn={invoice.showUnitPriceColumn !== false}
+                  showVatColumn={invoice.showVatColumn !== false}
                   footerMode={invoiceSettings.footerMode}
                   documentFont={invoiceSettings.documentFont}
                   vatExemptReason={invoice.vatExemptReason || 'none'}
-                  columnVisibility={invoice.billingType === 'detailed' ? {
-                    showQuantity: displayOptions.showQuantity,
-                    showUnit: displayOptions.showUnit,
-                    showUnitPrice: displayOptions.showUnitPrice,
-                    showVatPercent: displayOptions.showVatPercent,
-                    showAmount: displayOptions.showAmount,
-                  } : undefined}
                 />
                 {/* Download & Print buttons */}
                 <div className="flex justify-center gap-2 mt-3">
@@ -687,51 +678,6 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                       </DropdownItem>
                     </Dropdown>
                   </div>
-
-                  {/* Display options */}
-                  {invoice.billingType === 'detailed' && (
-                    <div className="px-5 py-4 border-b border-separator">
-                      <button
-                        onClick={() => {
-                          const el = document.getElementById('display-options-panel')
-                          if (el) el.classList.toggle('hidden')
-                        }}
-                        className="w-full flex items-center justify-between text-sm font-semibold text-foreground"
-                      >
-                        <span className="flex items-center gap-2"><Eye className="h-4 w-4 text-muted-foreground" /> Colonnes affichées</span>
-                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                      </button>
-                      <div id="display-options-panel" className="mt-3 space-y-2">
-                        {[
-                          { key: 'showAmount' as const, label: 'Montant HT' },
-                          { key: 'showVat' as const, label: 'TVA (montant)' },
-                          { key: 'showVatPercent' as const, label: '% TVA' },
-                          { key: 'showQuantity' as const, label: 'Quantité' },
-                          { key: 'showUnit' as const, label: 'Unité' },
-                          { key: 'showUnitPrice' as const, label: 'Prix unitaire HT' },
-                        ].map(({ key, label }) => (
-                          <label key={key} className="flex items-center gap-2.5 cursor-pointer select-none">
-                            <span
-                              className={`h-[18px] w-[18px] shrink-0 rounded-[5px] border-2 transition-all flex items-center justify-center ${
-                                displayOptions[key] ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 bg-transparent'
-                              }`}
-                              onClick={(e) => {
-                                e.preventDefault()
-                                setDisplayOptions((prev) => ({ ...prev, [key]: !prev[key] }))
-                              }}
-                            >
-                              {displayOptions[key] && (
-                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                                </svg>
-                              )}
-                            </span>
-                            <span className="text-xs text-muted-foreground">{label}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                  )}
 
                   {/* Payment link section */}
                   <PaymentLinkCard

@@ -191,16 +191,6 @@ function EditCreditNoteContent() {
     setIsDirty(true); setValidationErrors([])
   }, [])
 
-  const handleMoveLine = useCallback((fromIndex: number, toIndex: number) => {
-    setLines((prev) => {
-      const next = [...prev]
-      const [moved] = next.splice(fromIndex, 1)
-      next.splice(toIndex, 0, moved)
-      return next
-    })
-    setIsDirty(true)
-  }, [])
-
   const handleOptionsChange = useCallback((partial: Partial<typeof options>) => {
     setOptions((prev) => ({ ...prev, ...partial }))
     setIsDirty(true); setValidationErrors([])
@@ -543,7 +533,6 @@ function EditCreditNoteContent() {
               onAddLine={handleAddLine}
               onCatalogClick={() => setCatalogModalOpen(true)}
               onRemoveLine={handleRemoveLine}
-              onMoveLine={handleMoveLine}
               subtotal={subtotal}
               taxAmount={taxAmount}
               discountAmount={discountAmount}

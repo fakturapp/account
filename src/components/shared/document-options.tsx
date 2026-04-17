@@ -40,6 +40,10 @@ export interface DocumentOptions {
   showAcceptanceConditions: boolean
   showFreeField: boolean
   showFooterText: boolean
+  showQuantityColumn?: boolean
+  showUnitColumn?: boolean
+  showUnitPriceColumn?: boolean
+  showVatColumn?: boolean
   facturX: boolean
 }
 
@@ -557,6 +561,36 @@ export function DocumentOptionsPanel({
                 />
               </div>
             </OptionCheckbox>
+
+            {documentType !== 'credit_note' && options.billingType === 'detailed' && (
+              <div className="px-0.5 py-2">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+                  <Info className="h-3 w-3" /> Colonnes du tableau
+                </div>
+                <div className="rounded-xl border border-border/60 bg-card/40 px-3 py-2">
+                  <OptionCheckbox
+                    checked={options.showQuantityColumn ?? true}
+                    onToggle={() => onChange({ showQuantityColumn: !(options.showQuantityColumn ?? true) })}
+                    label="Quantite"
+                  />
+                  <OptionCheckbox
+                    checked={options.showUnitColumn ?? true}
+                    onToggle={() => onChange({ showUnitColumn: !(options.showUnitColumn ?? true) })}
+                    label="Unite"
+                  />
+                  <OptionCheckbox
+                    checked={options.showUnitPriceColumn ?? true}
+                    onToggle={() => onChange({ showUnitPriceColumn: !(options.showUnitPriceColumn ?? true) })}
+                    label="Prix unitaire HT"
+                  />
+                  <OptionCheckbox
+                    checked={options.showVatColumn ?? true}
+                    onToggle={() => onChange({ showVatColumn: !(options.showVatColumn ?? true) })}
+                    label="Taux de TVA"
+                  />
+                </div>
+              </div>
+            )}
 
             <OptionCheckbox
               checked={options.showNotes}

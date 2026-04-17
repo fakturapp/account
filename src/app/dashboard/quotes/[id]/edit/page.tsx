@@ -98,6 +98,10 @@ function EditQuoteContent() {
     showAcceptanceConditions: false,
     showFreeField: false,
     showFooterText: false,
+    showQuantityColumn: true,
+    showUnitColumn: true,
+    showUnitPriceColumn: true,
+    showVatColumn: true,
     footerMode: 'company_info' as 'company_info' | 'custom',
     facturX: false,
   })
@@ -147,6 +151,10 @@ function EditQuoteContent() {
           showAcceptanceConditions: !!q.acceptanceConditions,
           showFreeField: !!q.freeField,
           showFooterText: !!q.footerText,
+          showQuantityColumn: q.showQuantityColumn !== false,
+          showUnitColumn: q.showUnitColumn !== false,
+          showUnitPriceColumn: q.showUnitPriceColumn !== false,
+          showVatColumn: q.showVatColumn !== false,
           footerMode: ((invoiceSettings.footerMode as string) === 'vat_exempt' ? 'company_info' : invoiceSettings.footerMode) || 'company_info',
           facturX: q.facturX || false,
         })
@@ -212,14 +220,17 @@ function EditQuoteContent() {
     setIsDirty(true); setValidationErrors([])
   }, [])
 
-  const handleMoveLine = useCallback((fromIndex: number, toIndex: number) => {
+  const handleReorderLine = useCallback((fromIndex: number, toIndex: number) => {
     setLines((prev) => {
+      if (fromIndex === toIndex || fromIndex < 0 || toIndex < 0 || fromIndex >= prev.length || toIndex >= prev.length) {
+        return prev
+      }
       const next = [...prev]
       const [moved] = next.splice(fromIndex, 1)
       next.splice(toIndex, 0, moved)
       return next
     })
-    setIsDirty(true)
+    setIsDirty(true); setValidationErrors([])
   }, [])
 
   const handleOptionsChange = useCallback((partial: Partial<typeof options>) => {
@@ -345,6 +356,10 @@ function EditQuoteContent() {
       deliveryAddress: options.showDeliveryAddress ? (options.deliveryAddress || undefined) : undefined,
       clientSiren: options.clientSiren || undefined,
       clientVatNumber: options.clientVatNumber || undefined,
+      showQuantityColumn: options.showQuantityColumn,
+      showUnitColumn: options.showUnitColumn,
+      showUnitPriceColumn: options.showUnitPriceColumn,
+      showVatColumn: options.showVatColumn,
       vatExemptReason: options.vatExemptReason,
       clientSnapshot: selectedClient ? {
         id: selectedClient.id,
@@ -650,9 +665,9 @@ function EditQuoteContent() {
             lines={lines}
             onUpdateLine={handleUpdateLine}
             onAddLine={handleAddLine}
+            onReorderLine={handleReorderLine}
             onCatalogClick={() => setCatalogModalOpen(true)}
             onRemoveLine={handleRemoveLine}
-            onMoveLine={handleMoveLine}
             subtotal={subtotal}
             taxAmount={taxAmount}
             discountAmount={discountAmount}
@@ -684,6 +699,10 @@ function EditQuoteContent() {
             showAcceptanceConditions={options.showAcceptanceConditions}
             showFreeField={options.showFreeField}
             showFooterText={options.showFooterText}
+            showQuantityColumn={options.showQuantityColumn}
+            showUnitColumn={options.showUnitColumn}
+            showUnitPriceColumn={options.showUnitPriceColumn}
+            showVatColumn={options.showVatColumn}
             footerMode={options.footerMode}
             logoBorderRadius={invoiceSettings.logoBorderRadius}
             validationErrors={validationErrors}

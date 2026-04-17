@@ -58,6 +58,10 @@ interface QuoteDetail {
   clientId: string | null
   clientSnapshot?: string | null
   companySnapshot?: string | null
+  showQuantityColumn?: boolean
+  showUnitColumn?: boolean
+  showUnitPriceColumn?: boolean
+  showVatColumn?: boolean
   client: ClientInfo | null
   vatExemptReason?: 'none' | 'not_subject' | 'france_no_vat' | 'outside_france'
   lines: {
@@ -366,6 +370,10 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
                   showSubject={!!quote.subject}
                   showAcceptanceConditions={!!quote.acceptanceConditions}
                   showFreeField={!!quote.freeField}
+                  showQuantityColumn={quote.showQuantityColumn !== false}
+                  showUnitColumn={quote.showUnitColumn !== false}
+                  showUnitPriceColumn={quote.showUnitPriceColumn !== false}
+                  showVatColumn={quote.showVatColumn !== false}
                   footerMode={invoiceSettings.footerMode}
                   documentFont={invoiceSettings.documentFont}
                   vatExemptReason={quote.vatExemptReason || 'none'}

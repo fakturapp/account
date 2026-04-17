@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   Trash2, Search, X, Building2, UserRound,
   RefreshCw, MousePointerClick, FileText, Plus, Type, ChevronDown, Package, ImagePlus, Upload,
-  AlertTriangle, ArrowUp, ArrowDown,
+  AlertTriangle, GripVertical,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { RichTextarea, mdToHtml } from '@/components/ui/rich-textarea'
@@ -853,9 +853,9 @@ interface A4SheetProps {
   lines: DocumentLine[]
   onUpdateLine: (index: number, partial: Partial<DocumentLine>) => void
   onAddLine: (type: 'standard' | 'section') => void
+  onReorderLine?: (fromIndex: number, toIndex: number) => void
   onCatalogClick?: () => void
   onRemoveLine: (index: number) => void
-  onMoveLine?: (fromIndex: number, toIndex: number) => void
   subtotal: number
   taxAmount: number
   discountAmount: number
@@ -903,20 +903,17 @@ interface A4SheetProps {
   onDeliveryAddressChange?: (v: string) => void
   onIssueDateChange?: (d: string) => void
   onValidityDateChange?: (d: string) => void
-  columnVisibility?: {
-    showQuantity?: boolean
-    showUnit?: boolean
-    showUnitPrice?: boolean
-    showVatPercent?: boolean
-    showAmount?: boolean
-  }
+  showQuantityColumn?: boolean
+  showUnitColumn?: boolean
+  showUnitPriceColumn?: boolean
+  showVatColumn?: boolean
 }
 
 export function A4Sheet({
   mode, logoUrl, accentColor, documentTitle, quoteNumber, onQuoteNumberChange,
   issueDate, validityDate,
   billingType, company, onCompanyFieldChange, client, onClientClick, onClearClient, onClientFieldChange,
-  lines, onUpdateLine, onAddLine, onCatalogClick, onRemoveLine, onMoveLine,
+  lines, onUpdateLine, onAddLine, onReorderLine, onCatalogClick, onRemoveLine,
   subtotal, taxAmount, discountAmount, total, tvaBreakdown,
   notes, onNotesChange, acceptanceConditions, signatureField, freeField,
   deliveryAddress, showDeliveryAddress, clientSiren, showClientSiren,
@@ -931,11 +928,16 @@ export function A4Sheet({
   validationErrors = [],
   onAcceptanceConditionsChange, onFreeFieldChange, onFooterTextChange, onDeliveryAddressChange,
   onIssueDateChange, onValidityDateChange,
-  columnVisibility,
+  showQuantityColumn = true,
+  showUnitColumn = true,
+  showUnitPriceColumn = true,
+  showVatColumn = true,
 }: A4SheetProps) {
   const isPreview = mode === 'preview'
   const ed = !isPreview // shorthand: is editable?
   const lang = language || 'fr'
+  const [draggingLineIndex, setDraggingLineIndex] = useState<number | null>(null)
+  const [dragOverLineIndex, setDragOverLineIndex] = useState<number | null>(null)
 
   const T = getTemplate(template, darkMode)
   const t = getTranslations(lang)
@@ -971,29 +973,63 @@ export function A4Sheet({
 
   const hasError = (field: string) => validationErrors.includes(field)
   const errorBorder = '#ef4444'
+  const detailedColumns = [
+    { key: 'quantity', width: '45px', label: t.qty, visible: showQuantityColumn },
+    { key: 'unit', width: '50px', label: t.unit, visible: showUnitColumn },
+    { key: 'unitPrice', width: '75px', label: t.unitPriceHT, visible: showUnitPriceColumn },
+    { key: 'vat', width: '45px', label: t.vat, visible: showVatColumn },
+  ].filter((column) => column.visible)
+  const canReorderLines = ed && typeof onReorderLine === 'function' && lines.length > 1
 
-  const cv = columnVisibility || {}
-  const showQty = cv.showQuantity !== false
-  const showUnit = cv.showUnit !== false
-  const showUP = cv.showUnitPrice !== false
-  const showVP = cv.showVatPercent !== false
-  const showAmt = cv.showAmount !== false
+  const gridCols = billingType === 'detailed'
+    ? [
+        'minmax(120px, 1fr)',
+        ...detailedColumns.map((column) => column.width),
+        '80px',
+        ed ? '36px' : null,
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : ['minmax(150px, 1fr)', '90px', ed ? '36px' : null].filter(Boolean).join(' ')
 
-  const buildGrid = (edit: boolean) => {
-    if (billingType !== 'detailed') {
-      return edit ? 'minmax(150px, 1fr) 90px 28px' : 'minmax(150px, 1fr) 90px'
-    }
-    const parts = ['minmax(120px, 1fr)']
-    if (showQty) parts.push('45px')
-    if (showUnit) parts.push('50px')
-    if (showUP) parts.push('75px')
-    if (showVP) parts.push('45px')
-    if (showAmt) parts.push('80px')
-    if (edit) parts.push('28px')
-    return parts.join(' ')
-  }
+  const gridColsPreview = billingType === 'detailed'
+    ? ['minmax(120px, 1fr)', ...detailedColumns.map((column) => column.width), '80px'].join(' ')
+    : 'minmax(150px, 1fr) 90px'
 
-  const cols = isPreview ? buildGrid(false) : buildGrid(true)
+  const cols = isPreview ? gridColsPreview : gridCols
+  const reorderLineLabel = lang === 'en' ? 'Drag to reorder' : 'Glisser pour reordonner'
+
+  const handleLineDragStart = useCallback((index: number) => {
+    setDraggingLineIndex(index)
+    setDragOverLineIndex(index)
+  }, [])
+
+  const handleLineDragOver = useCallback(
+    (event: React.DragEvent<HTMLDivElement>, index: number) => {
+      if (!canReorderLines || draggingLineIndex === null || draggingLineIndex === index) return
+      event.preventDefault()
+      event.dataTransfer.dropEffect = 'move'
+      setDragOverLineIndex(index)
+    },
+    [canReorderLines, draggingLineIndex]
+  )
+
+  const handleLineDrop = useCallback(
+    (index: number) => {
+      if (!canReorderLines || draggingLineIndex === null) return
+      if (draggingLineIndex !== index) {
+        onReorderLine?.(draggingLineIndex, index)
+      }
+      setDraggingLineIndex(null)
+      setDragOverLineIndex(null)
+    },
+    [canReorderLines, draggingLineIndex, onReorderLine]
+  )
+
+  const handleLineDragEnd = useCallback(() => {
+    setDraggingLineIndex(null)
+    setDragOverLineIndex(null)
+  }, [])
 
   const ie = (v: string, onChange: (s: string) => void, cls?: string, ph?: string) => (
     <InlineEdit value={v} onChange={onChange} preview={isPreview} accentColor={accentColor}
@@ -1359,13 +1395,19 @@ export function A4Sheet({
                 <div className="overflow-hidden" style={{ display: 'grid', gridTemplateColumns: cols, borderTopLeftRadius: T.borderRadius, borderTopRightRadius: T.borderRadius }}>
                   <div className="px-2 py-2 text-[9px] font-semibold uppercase tracking-[0.5px] truncate"
                     style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.designation}</div>
-                  {billingType === 'detailed' && (<>
-                    {showQty && <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.qty}</div>}
-                    {showUnit && <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unit}</div>}
-                    {showUP && <div className="px-1 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.unitPriceHT}</div>}
-                    {showVP && <div className="px-1 py-2 text-[9px] font-semibold text-center truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.vat}</div>}
-                  </>)}
-                  {showAmt && <div className="px-2 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.amountHT}</div>}
+                  {billingType === 'detailed' && detailedColumns.map((column) => (
+                    <div
+                      key={column.key}
+                      className={cn(
+                        'px-1 py-2 text-[9px] font-semibold truncate',
+                        column.key === 'unitPrice' ? 'text-right' : 'text-center',
+                      )}
+                      style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}
+                    >
+                      {column.label}
+                    </div>
+                  ))}
+                  <div className="px-2 py-2 text-[9px] font-semibold text-right truncate" style={{ backgroundColor: accentColor, color: contrastText(accentColor) }}>{t.amountHT}</div>
                   {ed && <div className="py-2" style={{ backgroundColor: accentColor }} />}
                 </div>
 
@@ -1379,9 +1421,21 @@ export function A4Sheet({
                     <div
                       key={line.id}
                       className={cn('items-center', ed && 'group')}
-                      style={{ display: 'grid', gridTemplateColumns: cols, backgroundColor: rowBg, borderBottom: `1px solid ${T.borderLight}`, transition: 'background-color 0.15s' }}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: cols,
+                        backgroundColor: dragOverLineIndex === idx && draggingLineIndex !== idx ? `${accentColor}${T.rowHover}` : rowBg,
+                        borderBottom: `1px solid ${T.borderLight}`,
+                        transition: 'background-color 0.15s',
+                        opacity: draggingLineIndex === idx ? 0.65 : 1,
+                      }}
                       onMouseEnter={ed ? (e) => (e.currentTarget.style.backgroundColor = `${accentColor}${T.rowHover}`) : undefined}
                       onMouseLeave={ed ? (e) => (e.currentTarget.style.backgroundColor = rowBg) : undefined}
+                      onDragOver={canReorderLines ? (event) => handleLineDragOver(event, idx) : undefined}
+                      onDrop={canReorderLines ? (event) => {
+                        event.preventDefault()
+                        handleLineDrop(idx)
+                      } : undefined}
                     >
                       <div className="px-3 py-2">
                         {isPreview ? (
@@ -1399,29 +1453,35 @@ export function A4Sheet({
                         )}
                       </div>
 
-                      {!isSection && billingType === 'detailed' && (<>
-                        {showQty && <div className="px-1.5 py-2 text-center">
+                      {!isSection && billingType === 'detailed' && showQuantityColumn && (
+                        <div className="px-1.5 py-2 text-center">
                           {isPreview ? <span className="text-[12px]">{line.quantity}</span>
                             : <input type="number" min="0" step="1" value={line.quantity}
                                 onChange={(e) => onUpdateLine(idx, { quantity: parseFloat(e.target.value) || 0 })}
                                 className="w-full bg-transparent text-[12px] text-center focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                                 style={{ color: T.text }} />}
-                        </div>}
-                        {showUnit && <div className="px-1.5 py-2 text-center">
+                        </div>
+                      )}
+                      {!isSection && billingType === 'detailed' && showUnitColumn && (
+                        <div className="px-1.5 py-2 text-center">
                           {isPreview ? <span className="text-[11px]" style={{ color: T.textMuted }}>{line.unit || '-'}</span>
                             : <input type="text" value={line.unit} placeholder={t.unit}
                                 onChange={(e) => onUpdateLine(idx, { unit: e.target.value })}
                                 className="w-full bg-transparent text-[11px] text-center focus:outline-none"
                                 style={{ color: T.textMuted }} />}
-                        </div>}
-                        {showUP && <div className="px-1 py-2 text-right overflow-hidden">
+                        </div>
+                      )}
+                      {!isSection && billingType === 'detailed' && showUnitPriceColumn && (
+                        <div className="px-1 py-2 text-right overflow-hidden">
                           {isPreview ? <span className="text-[11px] truncate block">{fmtCurrency(line.unitPrice, lang)}</span>
                             : <input type="number" min="0" step="0.01" value={line.unitPrice}
                                 onChange={(e) => onUpdateLine(idx, { unitPrice: parseFloat(e.target.value) || 0 })}
                                 className="w-full bg-transparent text-[12px] text-right focus:outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
                                 style={{ color: T.text }} />}
-                        </div>}
-                        {showVP && <div className="px-1.5 py-2 text-center">
+                        </div>
+                      )}
+                      {!isSection && billingType === 'detailed' && showVatColumn && (
+                        <div className="px-1.5 py-2 text-center">
                           {isPreview ? <span className="text-[11px]" style={{ color: T.textMuted }}>{line.vatRate}%</span>
                             : <div className="w-full flex justify-center">
                                 <Dropdown
@@ -1447,14 +1507,14 @@ export function A4Sheet({
                                   ))}
                                 </Dropdown>
                               </div>}
-                        </div>}
-                      </>)}
+                        </div>
+                      )}
 
-                      {isSection && billingType === 'detailed' && (<>
-                        {showQty && <div />}{showUnit && <div />}{showUP && <div />}{showVP && <div />}
-                      </>)}
+                      {isSection && billingType === 'detailed' && detailedColumns.map((column) => (
+                        <div key={`${line.id}-${column.key}`} />
+                      ))}
 
-                      {showAmt && (!isSection ? (
+                      {!isSection ? (
                         <div className="px-3 py-2 text-right text-[12px] font-semibold" style={{ color: T.text }}>
                           {billingType === 'quick' && ed ? (
                             <input type="number" min="0" step="0.01" value={line.unitPrice}
@@ -1463,39 +1523,41 @@ export function A4Sheet({
                               style={{ color: T.text }} />
                           ) : fmtCurrency(ht, lang)}
                         </div>
-                      ) : <div />)}
+                      ) : <div />}
 
                       {ed && (
-                        <div className="px-0.5 py-1 flex flex-col items-center gap-0.5">
-                          {idx > 0 && onMoveLine && (
-                            <button onClick={() => onMoveLine(idx, idx - 1)}
+                        <div className="px-0.5 py-2 flex flex-col items-center justify-center gap-0.5">
+                          {canReorderLines && (
+                            <button
+                              type="button"
+                              draggable
+                              onDragStart={(event) => {
+                                event.dataTransfer.effectAllowed = 'move'
+                                event.dataTransfer.setData('text/plain', line.id)
+                                handleLineDragStart(idx)
+                              }}
+                              onDragEnd={handleLineDragEnd}
                               className="w-5 h-5 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                               style={{ color: T.inputPlaceholder }}
-                              onMouseEnter={(e) => { e.currentTarget.style.color = accentColor; e.currentTarget.style.backgroundColor = `${accentColor}15` }}
-                              onMouseLeave={(e) => { e.currentTarget.style.color = T.inputPlaceholder; e.currentTarget.style.backgroundColor = 'transparent' }}
-                              title="Monter"
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.color = accentColor
+                                e.currentTarget.style.backgroundColor = darkMode ? '#2a2a30' : '#eef2ff'
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.color = T.inputPlaceholder
+                                e.currentTarget.style.backgroundColor = 'transparent'
+                              }}
+                              title={reorderLineLabel}
                             >
-                              <ArrowUp className="h-3 w-3" />
-                            </button>
-                          )}
-                          {idx < lines.length - 1 && onMoveLine && (
-                            <button onClick={() => onMoveLine(idx, idx + 1)}
-                              className="w-5 h-5 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
-                              style={{ color: T.inputPlaceholder }}
-                              onMouseEnter={(e) => { e.currentTarget.style.color = accentColor; e.currentTarget.style.backgroundColor = `${accentColor}15` }}
-                              onMouseLeave={(e) => { e.currentTarget.style.color = T.inputPlaceholder; e.currentTarget.style.backgroundColor = 'transparent' }}
-                              title="Descendre"
-                            >
-                              <ArrowDown className="h-3 w-3" />
+                              <GripVertical className="h-3 w-3" />
                             </button>
                           )}
                           {lines.length > 1 && (
-                            <button onClick={() => onRemoveLine(idx)}
+                            <button type="button" onClick={() => onRemoveLine(idx)}
                               className="w-5 h-5 rounded-full flex items-center justify-center transition-all opacity-0 group-hover:opacity-100"
                               style={{ color: T.inputPlaceholder }}
                               onMouseEnter={(e) => { e.currentTarget.style.color = '#e53935'; e.currentTarget.style.backgroundColor = darkMode ? '#2a2a30' : '#fef2f2' }}
                               onMouseLeave={(e) => { e.currentTarget.style.color = T.inputPlaceholder; e.currentTarget.style.backgroundColor = 'transparent' }}
-                              title="Supprimer"
                             >
                               <Trash2 className="h-3 w-3" />
                             </button>
