@@ -85,10 +85,13 @@ export function useCollaboration({
   useEffect(() => {
     if (!enabled || !documentId) return
 
+    const token = localStorage.getItem('faktur_token')
+    if (!token) return
+
     const socket = io(`${WS_URL}/collaboration`, {
       path: '/ws',
       transports: ['websocket', 'polling'],
-      withCredentials: true,
+      auth: { token },
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 1000,

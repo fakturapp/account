@@ -80,7 +80,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
     AI_MODELS.some(m => m.id === settings.aiModel) ? settings.aiModel : 'nvidia/nemotron-3-super-120b-a12b:free'
   )
   const [showModelDropdown, setShowModelDropdown] = useState(false)
-  const [billingType, setBillingType] = useState<'quick' | 'detailed' | 'qty-only' | 'vat-only'>('detailed')
+  const [billingType, setBillingType] = useState<'quick' | 'detailed'>('detailed')
   const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash' | 'other'>('bank_transfer')
   const [showOptions, setShowOptions] = useState(false)
   const [aiOptions, setAiOptions] = useState({

@@ -7,7 +7,6 @@ import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
 import { ShieldAlert, LogIn } from 'lucide-react'
-import { useAuth } from '@/lib/auth'
 
 type DocumentType = 'invoice' | 'quote' | 'credit_note'
 
@@ -21,15 +20,14 @@ export default function ShareLinkPage() {
   const router = useRouter()
   const params = useParams()
   const token = params.token as string
-  const { user, loading: authLoading } = useAuth()
 
   const [status, setStatus] = useState<'loading' | 'error' | 'unauthenticated'>('loading')
   const [errorMessage, setErrorMessage] = useState('')
 
   useEffect(() => {
     async function validate() {
-      if (authLoading) return
-      if (!user) {
+      const authToken = localStorage.getItem('faktur_token')
+      if (!authToken) {
         sessionStorage.setItem('faktur_share_redirect', `/share/${token}`)
         setStatus('unauthenticated')
         return
@@ -59,7 +57,7 @@ export default function ShareLinkPage() {
     }
 
     validate()
-  }, [token, router, user, authLoading])
+  }, [token, router])
 
   if (status === 'loading') {
     return (

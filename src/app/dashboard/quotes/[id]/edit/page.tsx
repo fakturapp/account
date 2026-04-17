@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
 import { Spinner } from '@/components/ui/spinner'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
+import { useCompanySettings } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
 import { A4Sheet, ClientModal, type DocumentLine, type ClientInfo, type CompanyInfo } from '@/components/shared/a4-sheet'
 import { DocumentOptionsPanel } from '@/components/shared/document-options'
@@ -23,7 +24,6 @@ import { CollaborationToolbar, CollaborationReadOnlyBanner, CollaborationEditor 
 import { CollaborationProvider } from '@/components/collaboration/collaboration-provider'
 import { SyncBroadcaster } from '@/components/collaboration/sync-broadcaster'
 import { setApplyingRemote } from '@/components/collaboration/use-broadcast'
-import { formatCurrency } from '@/lib/currency'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -49,7 +49,8 @@ function EditQuoteContent() {
   const searchParams = useSearchParams()
   const quoteId = params.id as string
   const { toast } = useToast()
-  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, persistSettings, uploadLogo } = useInvoiceSettings()
+  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
+  const { paymentForm: companyPaymentForm } = useCompanySettings()
   const collabEnabled = invoiceSettings.collaborationEnabled
 
   const [loading, setLoading] = useState(true)
@@ -75,7 +76,7 @@ function EditQuoteContent() {
   const [lines, setLines] = useState<DocumentLine[]>([])
 
   const [options, setOptions] = useState({
-    billingType: 'quick' as 'quick' | 'detailed' | 'qty-only' | 'vat-only',
+    billingType: 'quick' as 'quick' | 'detailed',
     subject: '',
     issueDate: '',
     validityDate: '',
@@ -211,6 +212,16 @@ function EditQuoteContent() {
     setIsDirty(true); setValidationErrors([])
   }, [])
 
+  const handleMoveLine = useCallback((fromIndex: number, toIndex: number) => {
+    setLines((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+    setIsDirty(true)
+  }, [])
+
   const handleOptionsChange = useCallback((partial: Partial<typeof options>) => {
     setOptions((prev) => ({ ...prev, ...partial }))
     setIsDirty(true); setValidationErrors([])
@@ -237,37 +248,27 @@ function EditQuoteContent() {
     setIsDirty(true)
   }, [])
 
-  const handleLogoChange = useCallback(async (url: string | null, saveToSettings: boolean) => {
+  const handleLogoChange = useCallback((url: string | null, saveToSettings: boolean) => {
     setLogoUrl(url)
     if (saveToSettings) {
-      const partial =
-        url === null
-          ? { logoUrl: null, logoSource: 'custom' as const }
-          : url === companyLogoUrl
-            ? { logoSource: 'company' as const }
-            : { logoUrl: url, logoSource: 'custom' as const }
-      const { error } = await persistSettings(partial)
-      if (error) toast(error, 'error')
+      if (url === null) updateSettings({ logoUrl: null, logoSource: 'custom' })
+      else if (url === companyLogoUrl) updateSettings({ logoSource: 'company' })
+      else updateSettings({ logoUrl: url, logoSource: 'custom' })
     }
     setIsDirty(true)
-  }, [companyLogoUrl, persistSettings, toast])
+  }, [companyLogoUrl, updateSettings])
 
-  const handleLogoUpload = useCallback(async (file: File, saveToSettings: boolean) => {
+  const handleLogoUpload = useCallback((file: File, saveToSettings: boolean) => {
     const reader = new FileReader()
     reader.onload = () => setLogoUrl(reader.result as string)
     reader.readAsDataURL(file)
-    if (saveToSettings) {
-      const logoUrl = await uploadLogo(file)
-      const { error } = await persistSettings({ logoUrl: logoUrl || null, logoSource: 'custom' })
-      if (error) toast(error, 'error')
-    }
+    if (saveToSettings) { uploadLogo(file); updateSettings({ logoSource: 'custom' }) }
     setIsDirty(true)
-  }, [persistSettings, toast, uploadLogo])
+  }, [uploadLogo, updateSettings])
 
-  const handleLogoBorderRadiusChange = useCallback(async (radius: number) => {
-    const { error } = await persistSettings({ logoBorderRadius: radius })
-    if (error) toast(error, 'error')
-  }, [persistSettings, toast])
+  const handleLogoBorderRadiusChange = useCallback((radius: number) => {
+    updateSettings({ logoBorderRadius: radius })
+  }, [updateSettings])
 
   // Calculations
   const { subtotal, taxAmount, discountAmount, total, tvaBreakdown } = useMemo(() => {
@@ -276,11 +277,11 @@ function EditQuoteContent() {
 
     for (const line of lines) {
       if (line.type === 'section') continue
-      const lt = (options.billingType === 'quick' || options.billingType === 'vat-only') ? line.unitPrice : line.quantity * line.unitPrice
-      const lTax = (options.billingType === 'detailed' || options.billingType === 'vat-only') ? lt * (line.vatRate / 100) : 0
+      const lt = options.billingType === 'quick' ? line.unitPrice : line.quantity * line.unitPrice
+      const lTax = options.billingType === 'detailed' ? lt * (line.vatRate / 100) : 0
       sub += lt; tax += lTax
 
-      if (options.billingType === 'detailed' || options.billingType === 'vat-only') {
+      if (options.billingType === 'detailed') {
         const rate = line.vatRate
         if (!tvaMap[rate]) tvaMap[rate] = { base: 0, amount: 0 }
         tvaMap[rate].base += lt; tvaMap[rate].amount += lTax
@@ -373,18 +374,16 @@ function EditQuoteContent() {
         email: company.email,
         siren: company.siren,
         vatNumber: company.vatNumber,
-        paymentConditions: company.paymentConditions,
-        currency: company.currency,
       } : undefined,
       lines: lines
         .filter((l) => l.description.trim())
         .map((l) => ({
           description: l.description,
           saleType: l.type === 'section' ? 'section' : l.saleType || undefined,
-          quantity: l.type === 'section' ? 1 : (options.billingType === 'quick' || options.billingType === 'vat-only') ? 1 : l.quantity,
+          quantity: l.type === 'section' ? 1 : options.billingType === 'quick' ? 1 : l.quantity,
           unit: l.type === 'section' ? undefined : l.unit || undefined,
           unitPrice: l.type === 'section' ? 0 : l.unitPrice,
-          vatRate: l.type === 'section' ? 0 : (options.billingType === 'quick' || options.billingType === 'qty-only') ? 0 : l.vatRate,
+          vatRate: l.type === 'section' ? 0 : options.billingType === 'quick' ? 0 : l.vatRate,
         })),
     }
 
@@ -653,6 +652,7 @@ function EditQuoteContent() {
             onAddLine={handleAddLine}
             onCatalogClick={() => setCatalogModalOpen(true)}
             onRemoveLine={handleRemoveLine}
+            onMoveLine={handleMoveLine}
             subtotal={subtotal}
             taxAmount={taxAmount}
             discountAmount={discountAmount}
@@ -669,8 +669,8 @@ function EditQuoteContent() {
             showClientSiren={!!options.clientSiren}
             clientVatNumber={options.clientVatNumber}
             showClientVatNumber={!!options.clientVatNumber}
-            paymentMethods={invoiceSettings.paymentMethods}
-            customPaymentMethod={invoiceSettings.customPaymentMethod}
+            paymentMethods={companyPaymentForm.paymentMethods}
+            customPaymentMethod={companyPaymentForm.customPaymentMethod}
             subject={options.subject}
             onSubjectChange={(v) => handleOptionsChange({ subject: v })}
             template={invoiceSettings.template}
@@ -814,7 +814,7 @@ function EditQuoteContent() {
           className="pointer-events-auto inline-flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5"
         >
           <div className="text-sm text-muted-foreground">
-            Total : <span className="font-bold text-foreground">{formatCurrency(total, company?.currency || 'EUR')}</span>
+            Total : <span className="font-bold text-foreground">{total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
           </div>
           <Button onClick={handleSave} disabled={saving} size="sm" className="min-w-[140px] rounded-xl">
             {saving ? (<><Spinner /> Enregistrement...</>) : (<><Save className="h-4 w-4 mr-1.5" /> Sauvegarder</>)}

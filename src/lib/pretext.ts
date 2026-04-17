@@ -162,7 +162,7 @@ export function estimateDocumentContentHeight(params: {
   freeField?: string
   footerText?: string
   font?: string
-  billingType?: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
+  billingType?: 'quick' | 'detailed'
 }): {
   totalHeight: number
   overflows: boolean

@@ -14,13 +14,11 @@ import { SelectRoot, SelectTrigger, SelectValue, SelectIndicator, SelectPopover 
 import { ListBoxRoot as ListBox, ListBoxItemRoot as ListBoxItem } from '@/components/ui/list-box'
 import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 import { AiGenerateButton } from '@/components/ai/ai-generate-button'
-import { formatCurrency } from '@/lib/currency'
-import { useCompanySettings } from '@/lib/company-settings-context'
 import type { ClientInfo } from './a4-sheet'
 
 
 export interface DocumentOptions {
-  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
+  billingType: 'quick' | 'detailed'
   subject: string
   issueDate: string
   validityDate: string
@@ -78,8 +76,8 @@ const ACCENT_COLORS = [
   '#f97316', '#22c55e', '#14b8a6', '#6b7280', '#18181b',
 ]
 
-function fmtCurrency(n: number, currency: string) {
-  return formatCurrency(n, currency)
+function fmtCurrency(n: number) {
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(n)
 }
 
 
@@ -165,12 +163,10 @@ export function DocumentOptionsPanel({
   customPaymentMethodLabel,
   stripeConfigured = false,
 }: DocumentOptionsProps) {
-  const { company } = useCompanySettings()
   const [showSiren, setShowSiren] = useState(!!options.clientSiren || eInvoicingEnabled)
   const [showVat, setShowVat] = useState(!!options.clientVatNumber || eInvoicingEnabled)
   const [showTitle, setShowTitle] = useState(!!options.documentTitle)
   const [showDiscount, setShowDiscount] = useState(options.globalDiscountType !== 'none')
-  const currency = company?.currency || 'EUR'
 
   return (
     <div className="space-y-3">
@@ -181,35 +177,25 @@ export function DocumentOptionsPanel({
         <CollapsibleSection title="Document" defaultOpen>
           {}
           <div className="mb-3">
-            <label className="text-xs text-muted-foreground font-medium block mb-1">Colonnes</label>
+            <label className="text-xs text-muted-foreground font-medium block mb-1">Type</label>
             <div className="flex gap-1">
-              {([
-                { key: 'qty', label: 'Quantité', icon: ClipboardList },
-                { key: 'vat', label: 'TVA', icon: Zap },
-              ] as const).map((col) => {
-                const hasQty = options.billingType === 'detailed' || options.billingType === 'qty-only'
-                const hasVat = options.billingType === 'detailed' || options.billingType === 'vat-only'
-                const active = col.key === 'qty' ? hasQty : hasVat
-                return (
-                  <button
-                    key={col.key}
-                    onClick={() => {
-                      let newQty = col.key === 'qty' ? !hasQty : hasQty
-                      let newVat = col.key === 'vat' ? !hasVat : hasVat
-                      const bt = newQty && newVat ? 'detailed' : newQty ? 'qty-only' : newVat ? 'vat-only' : 'quick'
-                      onChange({ billingType: bt })
-                    }}
-                    className={cn(
-                      'flex-1 flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
-                      active
-                        ? 'border-primary bg-primary/5 text-foreground'
-                        : 'border-border text-muted-foreground hover:border-muted-foreground/40',
-                    )}
-                  >
-                    <col.icon className="h-3 w-3" /> {col.label}
-                  </button>
-                )
-              })}
+              {[
+                { id: 'quick' as const, label: 'Rapide', icon: Zap },
+                { id: 'detailed' as const, label: 'Complet', icon: ClipboardList },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => onChange({ billingType: t.id })}
+                  className={cn(
+                    'flex-1 flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
+                    options.billingType === t.id
+                      ? 'border-primary bg-primary/5 text-foreground'
+                      : 'border-border text-muted-foreground hover:border-muted-foreground/40',
+                  )}
+                >
+                  <t.icon className="h-3 w-3" /> {t.label}
+                </button>
+              ))}
             </div>
           </div>
 
@@ -635,26 +621,26 @@ export function DocumentOptionsPanel({
 
         <div className="flex justify-between mb-1.5">
           <span className="text-[13px] text-muted-foreground">Total HT</span>
-          <span className="text-[13px] font-semibold text-foreground">{fmtCurrency(subtotal, currency)}</span>
+          <span className="text-[13px] font-semibold text-foreground">{fmtCurrency(subtotal)}</span>
         </div>
 
         {tvaBreakdown.map((e) => (
           <div key={e.rate} className="flex justify-between mb-1">
             <span className="text-xs text-muted-foreground">TVA {e.rate}%</span>
-            <span className="text-xs text-muted-foreground">{fmtCurrency(e.amount, currency)}</span>
+            <span className="text-xs text-muted-foreground">{fmtCurrency(e.amount)}</span>
           </div>
         ))}
 
         {discountAmount > 0 && (
           <div className="flex justify-between mb-1">
             <span className="text-xs text-muted-foreground">Remise</span>
-            <span className="text-xs text-red-400">-{fmtCurrency(discountAmount, currency)}</span>
+            <span className="text-xs text-red-400">-{fmtCurrency(discountAmount)}</span>
           </div>
         )}
 
         <div className="border-t-2 border-foreground/20 pt-2 mt-2 flex justify-between">
           <span className="text-[15px] font-bold text-foreground">Total TTC</span>
-          <span className="text-[15px] font-bold" style={{ color: accentColor }}>{fmtCurrency(total, currency)}</span>
+          <span className="text-[15px] font-bold" style={{ color: accentColor }}>{fmtCurrency(total)}</span>
         </div>
       </div>
     </div>

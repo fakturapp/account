@@ -8,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { useToast } from '@/components/ui/toast'
 import { Spinner } from '@/components/ui/spinner'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
+import { useCompanySettings } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
 import { A4Sheet, ClientModal, type DocumentLine, type ClientInfo, type CompanyInfo } from '@/components/shared/a4-sheet'
 import { DocumentOptionsPanel } from '@/components/shared/document-options'
@@ -22,7 +23,6 @@ import { useTrackFeature } from '@/hooks/use-analytics'
 import { FirstDocumentBanner } from '@/components/shared/first-document-banner'
 import { ProductCatalogModal, type CatalogProduct } from '@/components/products/product-catalog-modal'
 import { DocumentZoom, loadDocumentZoom, useZoomSpacing } from '@/components/shared/document-zoom'
-import { formatCurrency } from '@/lib/currency'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -46,11 +46,42 @@ function getDefaultValidity() {
   return d.toISOString().split('T')[0]
 }
 
+const QUOTE_OPTIONS_KEY = 'faktur_quote_options'
+
+function loadSavedOptions(): Partial<Record<string, any>> | null {
+  try {
+    const raw = localStorage.getItem(QUOTE_OPTIONS_KEY)
+    return raw ? JSON.parse(raw) : null
+  } catch { return null }
+}
+
+function saveOptionsToStorage(opts: Record<string, any>) {
+  try {
+    const toSave = {
+      billingType: opts.billingType,
+      language: opts.language,
+      signatureField: opts.signatureField,
+      freeField: opts.freeField,
+      showNotes: opts.showNotes,
+      vatExemptReason: opts.vatExemptReason,
+      footerText: opts.footerText,
+      showSubject: opts.showSubject,
+      showDeliveryAddress: opts.showDeliveryAddress,
+      showAcceptanceConditions: opts.showAcceptanceConditions,
+      showFreeField: opts.showFreeField,
+      showFooterText: opts.showFooterText,
+      footerMode: opts.footerMode,
+    }
+    localStorage.setItem(QUOTE_OPTIONS_KEY, JSON.stringify(toSave))
+  } catch { }
+}
+
 export default function NewQuotePage() {
   const router = useRouter()
   const { toast } = useToast()
   const trackFeature = useTrackFeature()
-  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, persistSettings, uploadLogo } = useInvoiceSettings()
+  const { settings: invoiceSettings, companyLogoUrl, loading: settingsLoading, refreshSettings, updateSettings, uploadLogo } = useInvoiceSettings()
+  const { paymentForm: companyPaymentForm } = useCompanySettings()
 
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -77,7 +108,7 @@ export default function NewQuotePage() {
   ])
 
   const [options, setOptions] = useState({
-    billingType: 'quick' as 'quick' | 'detailed' | 'qty-only' | 'vat-only',
+    billingType: 'quick' as 'quick' | 'detailed',
     subject: '',
     issueDate: getToday(),
     validityDate: getDefaultValidity(),
@@ -125,23 +156,24 @@ export default function NewQuotePage() {
 
   useEffect(() => {
     if (!settingsLoading) {
+      const saved = loadSavedOptions()
       setOptions((prev) => ({
         ...prev,
-        billingType: invoiceSettings.billingType,
-        subject: invoiceSettings.defaultSubject || prev.subject,
-        acceptanceConditions: invoiceSettings.defaultAcceptanceConditions || prev.acceptanceConditions,
-        signatureField: invoiceSettings.defaultSignatureField ?? prev.signatureField,
-        freeField: invoiceSettings.defaultFreeField || prev.freeField,
-        showNotes: invoiceSettings.defaultShowNotes ?? prev.showNotes,
-        vatExemptReason: invoiceSettings.defaultVatExempt ? 'not_subject' : prev.vatExemptReason,
-        footerText: invoiceSettings.defaultFooterText || prev.footerText,
-        showDeliveryAddress: invoiceSettings.defaultShowDeliveryAddress ?? prev.showDeliveryAddress,
-        language: invoiceSettings.defaultLanguage || prev.language,
-        showSubject: !!invoiceSettings.defaultSubject || prev.showSubject,
-        showAcceptanceConditions: !!invoiceSettings.defaultAcceptanceConditions || prev.showAcceptanceConditions,
-        showFreeField: !!invoiceSettings.defaultFreeField || prev.showFreeField,
-        showFooterText: !!invoiceSettings.defaultFooterText || prev.showFooterText,
-        footerMode: invoiceSettings.footerMode || prev.footerMode,
+        billingType: saved?.billingType || invoiceSettings.billingType,
+        subject: saved?.subject || invoiceSettings.defaultSubject || prev.subject,
+        acceptanceConditions: saved?.acceptanceConditions || invoiceSettings.defaultAcceptanceConditions || prev.acceptanceConditions,
+        signatureField: saved?.signatureField ?? invoiceSettings.defaultSignatureField ?? prev.signatureField,
+        freeField: saved?.freeField || invoiceSettings.defaultFreeField || prev.freeField,
+        showNotes: saved?.showNotes ?? invoiceSettings.defaultShowNotes ?? prev.showNotes,
+        vatExemptReason: saved?.vatExemptReason || (invoiceSettings.defaultVatExempt ? 'not_subject' : prev.vatExemptReason),
+        footerText: saved?.footerText || invoiceSettings.defaultFooterText || prev.footerText,
+        showDeliveryAddress: saved?.showDeliveryAddress ?? invoiceSettings.defaultShowDeliveryAddress ?? prev.showDeliveryAddress,
+        language: saved?.language || invoiceSettings.defaultLanguage || prev.language,
+        showSubject: saved?.showSubject ?? (!!(invoiceSettings.defaultSubject) || prev.showSubject),
+        showAcceptanceConditions: saved?.showAcceptanceConditions ?? (!!(invoiceSettings.defaultAcceptanceConditions) || prev.showAcceptanceConditions),
+        showFreeField: saved?.showFreeField ?? (!!(invoiceSettings.defaultFreeField) || prev.showFreeField),
+        showFooterText: saved?.showFooterText ?? (!!(invoiceSettings.defaultFooterText) || prev.showFooterText),
+        footerMode: saved?.footerMode || invoiceSettings.footerMode || prev.footerMode,
       }))
       setAccentColor(invoiceSettings.accentColor)
     }
@@ -211,8 +243,22 @@ export default function NewQuotePage() {
     setIsDirty(true); setValidationErrors([])
   }, [])
 
+  const handleMoveLine = useCallback((fromIndex: number, toIndex: number) => {
+    setLines((prev) => {
+      const next = [...prev]
+      const [moved] = next.splice(fromIndex, 1)
+      next.splice(toIndex, 0, moved)
+      return next
+    })
+    setIsDirty(true)
+  }, [])
+
   const handleOptionsChange = useCallback((partial: Partial<typeof options>) => {
-    setOptions((prev) => ({ ...prev, ...partial }))
+    setOptions((prev) => {
+      const next = { ...prev, ...partial }
+      saveOptionsToStorage(next)
+      return next
+    })
     setIsDirty(true); setValidationErrors([])
   }, [])
 
@@ -241,37 +287,27 @@ export default function NewQuotePage() {
     ? localLogoUrl
     : (invoiceSettings.logoSource === 'company' ? companyLogoUrl : invoiceSettings.logoUrl) || companyLogoUrl
 
-  const handleLogoChange = useCallback(async (url: string | null, saveToSettings: boolean) => {
+  const handleLogoChange = useCallback((url: string | null, saveToSettings: boolean) => {
     setLocalLogoUrl(url)
     if (saveToSettings) {
-      const partial =
-        url === null
-          ? { logoUrl: null, logoSource: 'custom' as const }
-          : url === companyLogoUrl
-            ? { logoSource: 'company' as const }
-            : { logoUrl: url, logoSource: 'custom' as const }
-      const { error } = await persistSettings(partial)
-      if (error) toast(error, 'error')
+      if (url === null) updateSettings({ logoUrl: null, logoSource: 'custom' })
+      else if (url === companyLogoUrl) updateSettings({ logoSource: 'company' })
+      else updateSettings({ logoUrl: url, logoSource: 'custom' })
     }
     setIsDirty(true)
-  }, [companyLogoUrl, persistSettings, toast])
+  }, [companyLogoUrl, updateSettings])
 
-  const handleLogoUpload = useCallback(async (file: File, saveToSettings: boolean) => {
+  const handleLogoUpload = useCallback((file: File, saveToSettings: boolean) => {
     const reader = new FileReader()
     reader.onload = () => setLocalLogoUrl(reader.result as string)
     reader.readAsDataURL(file)
-    if (saveToSettings) {
-      const logoUrl = await uploadLogo(file)
-      const { error } = await persistSettings({ logoUrl: logoUrl || null, logoSource: 'custom' })
-      if (error) toast(error, 'error')
-    }
+    if (saveToSettings) { uploadLogo(file); updateSettings({ logoSource: 'custom' }) }
     setIsDirty(true)
-  }, [persistSettings, toast, uploadLogo])
+  }, [uploadLogo, updateSettings])
 
-  const handleLogoBorderRadiusChange = useCallback(async (radius: number) => {
-    const { error } = await persistSettings({ logoBorderRadius: radius })
-    if (error) toast(error, 'error')
-  }, [persistSettings, toast])
+  const handleLogoBorderRadiusChange = useCallback((radius: number) => {
+    updateSettings({ logoBorderRadius: radius })
+  }, [updateSettings])
 
   // Calculations
   const { subtotal, taxAmount, discountAmount, total, tvaBreakdown } = useMemo(() => {
@@ -280,11 +316,11 @@ export default function NewQuotePage() {
 
     for (const line of lines) {
       if (line.type === 'section') continue
-      const lt = (options.billingType === 'quick' || options.billingType === 'vat-only') ? line.unitPrice : line.quantity * line.unitPrice
-      const lTax = (options.billingType === 'detailed' || options.billingType === 'vat-only') ? lt * (line.vatRate / 100) : 0
+      const lt = options.billingType === 'quick' ? line.unitPrice : line.quantity * line.unitPrice
+      const lTax = options.billingType === 'detailed' ? lt * (line.vatRate / 100) : 0
       sub += lt; tax += lTax
 
-      if (options.billingType === 'detailed' || options.billingType === 'vat-only') {
+      if (options.billingType === 'detailed') {
         const rate = line.vatRate
         if (!tvaMap[rate]) tvaMap[rate] = { base: 0, amount: 0 }
         tvaMap[rate].base += lt; tvaMap[rate].amount += lTax
@@ -336,7 +372,7 @@ export default function NewQuotePage() {
       validityDate: options.validityDate || undefined,
       billingType: options.billingType,
       accentColor,
-      logoUrl: effectiveLogoUrl || undefined,
+      logoUrl: (invoiceSettings.logoSource === 'company' ? companyLogoUrl : invoiceSettings.logoUrl) || undefined,
       language: options.language,
       notes: notes || undefined,
       acceptanceConditions: options.showAcceptanceConditions ? (options.acceptanceConditions || undefined) : undefined,
@@ -377,18 +413,16 @@ export default function NewQuotePage() {
         email: company.email,
         siren: company.siren,
         vatNumber: company.vatNumber,
-        paymentConditions: company.paymentConditions,
-        currency: company.currency,
       } : undefined,
       lines: lines
         .filter((l) => l.description.trim())
         .map((l) => ({
           description: l.description,
           saleType: l.type === 'section' ? 'section' : l.saleType || undefined,
-          quantity: l.type === 'section' ? 1 : (options.billingType === 'quick' || options.billingType === 'vat-only') ? 1 : l.quantity,
+          quantity: l.type === 'section' ? 1 : options.billingType === 'quick' ? 1 : l.quantity,
           unit: l.type === 'section' ? undefined : l.unit || undefined,
           unitPrice: l.type === 'section' ? 0 : l.unitPrice,
-          vatRate: l.type === 'section' ? 0 : (options.billingType === 'quick' || options.billingType === 'qty-only') ? 0 : l.vatRate,
+          vatRate: l.type === 'section' ? 0 : options.billingType === 'quick' ? 0 : l.vatRate,
         })),
     }
 
@@ -630,6 +664,7 @@ export default function NewQuotePage() {
             onAddLine={handleAddLine}
             onCatalogClick={() => setCatalogModalOpen(true)}
             onRemoveLine={handleRemoveLine}
+            onMoveLine={handleMoveLine}
             subtotal={subtotal}
             taxAmount={taxAmount}
             discountAmount={discountAmount}
@@ -646,8 +681,8 @@ export default function NewQuotePage() {
             showClientSiren={!!options.clientSiren}
             clientVatNumber={options.clientVatNumber}
             showClientVatNumber={!!options.clientVatNumber}
-            paymentMethods={invoiceSettings.paymentMethods}
-            customPaymentMethod={invoiceSettings.customPaymentMethod}
+            paymentMethods={companyPaymentForm.paymentMethods}
+            customPaymentMethod={companyPaymentForm.customPaymentMethod}
             subject={options.subject}
             onSubjectChange={(v) => handleOptionsChange({ subject: v })}
             template={invoiceSettings.template}
@@ -792,7 +827,7 @@ export default function NewQuotePage() {
           className="pointer-events-auto inline-flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 shadow-lg shadow-black/5"
         >
           <div className="text-sm text-muted-foreground">
-            Total : <span className="font-bold text-foreground">{formatCurrency(total, company?.currency || 'EUR')}</span>
+            Total : <span className="font-bold text-foreground">{total.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' })}</span>
           </div>
           <Button onClick={handleSave} disabled={saving} size="sm" className="min-w-[140px] rounded-xl">
             {saving ? (<><Spinner /> Enregistrement...</>) : (<><Save className="h-4 w-4 mr-1.5" /> Sauvegarder</>)}

@@ -10,13 +10,13 @@ import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/componen
 import { StatusDropdown, invoiceStatusOptions } from '@/components/shared/status-dropdown'
 import { useToast } from '@/components/ui/toast'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
+import { useCompanySettings } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
 import { A4Sheet, type DocumentLine, type ClientInfo, type CompanyInfo } from '@/components/shared/a4-sheet'
 import { SendEmailModal } from '@/components/shared/send-email-modal'
 import { EmailHistoryModal } from '@/components/shared/email-history-modal'
 import { useTrackFeature } from '@/hooks/use-analytics'
 import { useEmail } from '@/lib/email-context'
-import { getFakturDesktopBridge } from '@/lib/is-desktop'
 import { PaymentLinkModal } from '@/components/invoices/payment-link-modal'
 import { PaymentLinkCard } from '@/components/invoices/payment-link-card'
 import { ConfirmPaymentModal } from '@/components/invoices/confirm-payment-modal'
@@ -35,6 +35,8 @@ import {
   History,
   FileMinus2,
   Link2,
+  Eye,
+  ChevronDown,
 } from 'lucide-react'
 
 interface InvoiceDetail {
@@ -44,7 +46,7 @@ interface InvoiceDetail {
   subject: string | null
   issueDate: string
   dueDate: string | null
-  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
+  billingType: 'quick' | 'detailed'
   accentColor: string | null
   logoUrl: string | null
   language: string | null
@@ -98,6 +100,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
   const { toast } = useToast()
   const trackFeature = useTrackFeature()
   const { settings: invoiceSettings, companyLogoUrl } = useInvoiceSettings()
+  const { paymentForm: companyPaymentForm } = useCompanySettings()
   const [loading, setLoading] = useState(true)
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null)
   const [company, setCompany] = useState<CompanyInfo | null>(null)
@@ -129,6 +132,14 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
   const [hasStripeConfigured, setHasStripeConfigured] = useState(false)
   const { hasEmailConfigured } = useEmail()
   const commentTimeout = useRef<ReturnType<typeof setTimeout>>(undefined)
+  const [displayOptions, setDisplayOptions] = useState({
+    showAmount: true,
+    showVat: true,
+    showVatPercent: true,
+    showQuantity: true,
+    showUnit: true,
+    showUnitPrice: true,
+  })
 
   useEffect(() => {
     if (!invoiceId) return
@@ -351,17 +362,6 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
     const { blob, error } = await api.downloadBlob(`/invoices/${invoiceId}/pdf`)
     setPrinting(false)
     if (error || !blob) { toast(error || 'Erreur', 'error'); return }
-
-    const bridge = getFakturDesktopBridge()
-    if (bridge?.printDocument) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        bridge.printDocument!({ dataUrl: reader.result as string, filename: 'facture.pdf' })
-      }
-      reader.readAsDataURL(blob)
-      return
-    }
-
     const url = URL.createObjectURL(blob)
     const iframe = document.createElement('iframe')
     iframe.style.position = 'fixed'
@@ -471,8 +471,8 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                   showClientSiren={!!invoice.clientSiren}
                   clientVatNumber={invoice.clientVatNumber || ''}
                   showClientVatNumber={!!invoice.clientVatNumber}
-                  paymentMethods={invoiceSettings.paymentMethods}
-                  customPaymentMethod={invoiceSettings.customPaymentMethod}
+                  paymentMethods={companyPaymentForm.paymentMethods}
+                  customPaymentMethod={companyPaymentForm.customPaymentMethod}
                   paymentMethod={invoice.paymentMethod}
                   bankAccountInfo={bankAccountInfo}
                   subject={invoice.subject || ''}
@@ -487,6 +487,13 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                   footerMode={invoiceSettings.footerMode}
                   documentFont={invoiceSettings.documentFont}
                   vatExemptReason={invoice.vatExemptReason || 'none'}
+                  columnVisibility={invoice.billingType === 'detailed' ? {
+                    showQuantity: displayOptions.showQuantity,
+                    showUnit: displayOptions.showUnit,
+                    showUnitPrice: displayOptions.showUnitPrice,
+                    showVatPercent: displayOptions.showVatPercent,
+                    showAmount: displayOptions.showAmount,
+                  } : undefined}
                 />
                 {/* Download & Print buttons */}
                 <div className="flex justify-center gap-2 mt-3">
@@ -681,6 +688,51 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                     </Dropdown>
                   </div>
 
+                  {/* Display options */}
+                  {invoice.billingType === 'detailed' && (
+                    <div className="px-5 py-4 border-b border-separator">
+                      <button
+                        onClick={() => {
+                          const el = document.getElementById('display-options-panel')
+                          if (el) el.classList.toggle('hidden')
+                        }}
+                        className="w-full flex items-center justify-between text-sm font-semibold text-foreground"
+                      >
+                        <span className="flex items-center gap-2"><Eye className="h-4 w-4 text-muted-foreground" /> Colonnes affichées</span>
+                        <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                      <div id="display-options-panel" className="mt-3 space-y-2">
+                        {[
+                          { key: 'showAmount' as const, label: 'Montant HT' },
+                          { key: 'showVat' as const, label: 'TVA (montant)' },
+                          { key: 'showVatPercent' as const, label: '% TVA' },
+                          { key: 'showQuantity' as const, label: 'Quantité' },
+                          { key: 'showUnit' as const, label: 'Unité' },
+                          { key: 'showUnitPrice' as const, label: 'Prix unitaire HT' },
+                        ].map(({ key, label }) => (
+                          <label key={key} className="flex items-center gap-2.5 cursor-pointer select-none">
+                            <span
+                              className={`h-[18px] w-[18px] shrink-0 rounded-[5px] border-2 transition-all flex items-center justify-center ${
+                                displayOptions[key] ? 'bg-indigo-500 border-indigo-500' : 'border-zinc-600 bg-transparent'
+                              }`}
+                              onClick={(e) => {
+                                e.preventDefault()
+                                setDisplayOptions((prev) => ({ ...prev, [key]: !prev[key] }))
+                              }}
+                            >
+                              {displayOptions[key] && (
+                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                  <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                              )}
+                            </span>
+                            <span className="text-xs text-muted-foreground">{label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Payment link section */}
                   <PaymentLinkCard
                     invoiceId={invoice.id}
@@ -777,8 +829,8 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
             invoiceDueDate={invoice.dueDate}
             hasBankAccount={!!invoice.bankAccountId}
             hasStripeConfigured={hasStripeConfigured}
-            enabledPaymentMethods={invoiceSettings.paymentMethods}
-            customPaymentMethodLabel={invoiceSettings.customPaymentMethod}
+            enabledPaymentMethods={companyPaymentForm.paymentMethods}
+            customPaymentMethodLabel={companyPaymentForm.customPaymentMethod}
             onCreated={(link) => {
               setPaymentLinkInfo({
                 id: link.id,

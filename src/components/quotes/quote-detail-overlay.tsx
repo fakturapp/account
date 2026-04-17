@@ -10,12 +10,12 @@ import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/componen
 import { StatusDropdown, quoteStatusOptions } from '@/components/shared/status-dropdown'
 import { useToast } from '@/components/ui/toast'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
+import { useCompanySettings } from '@/lib/company-settings-context'
 import { api } from '@/lib/api'
 import { A4Sheet, type DocumentLine, type ClientInfo, type CompanyInfo } from '@/components/shared/a4-sheet'
 import { SendEmailModal } from '@/components/shared/send-email-modal'
 import { EmailHistoryModal } from '@/components/shared/email-history-modal'
 import { useEmail } from '@/lib/email-context'
-import { getFakturDesktopBridge } from '@/lib/is-desktop'
 import {
   X,
   Send,
@@ -37,7 +37,7 @@ interface QuoteDetail {
   subject: string | null
   issueDate: string
   validityDate: string | null
-  billingType: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
+  billingType: 'quick' | 'detailed'
   accentColor: string | null
   logoUrl: string | null
   language: string | null
@@ -85,6 +85,7 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
   const router = useRouter()
   const { toast } = useToast()
   const { settings: invoiceSettings, companyLogoUrl } = useInvoiceSettings()
+  const { paymentForm: companyPaymentForm } = useCompanySettings()
   const [loading, setLoading] = useState(true)
   const [quote, setQuote] = useState<QuoteDetail | null>(null)
   const [company, setCompany] = useState<CompanyInfo | null>(null)
@@ -245,17 +246,6 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
     const { blob, error } = await api.downloadBlob(`/quotes/${quoteId}/pdf`)
     setPrinting(false)
     if (error || !blob) { toast(error || 'Erreur', 'error'); return }
-
-    const bridge = getFakturDesktopBridge()
-    if (bridge?.printDocument) {
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        bridge.printDocument!({ dataUrl: reader.result as string, filename: 'devis.pdf' })
-      }
-      reader.readAsDataURL(blob)
-      return
-    }
-
     const url = URL.createObjectURL(blob)
     const iframe = document.createElement('iframe')
     iframe.style.position = 'fixed'
@@ -365,8 +355,8 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
                   showClientSiren={!!quote.clientSiren}
                   clientVatNumber={quote.clientVatNumber || ''}
                   showClientVatNumber={!!quote.clientVatNumber}
-                  paymentMethods={invoiceSettings.paymentMethods}
-                  customPaymentMethod={invoiceSettings.customPaymentMethod}
+                  paymentMethods={companyPaymentForm.paymentMethods}
+                  customPaymentMethod={companyPaymentForm.customPaymentMethod}
                   subject={quote.subject || ''}
                   onSubjectChange={noop}
                   template={invoiceSettings.template}

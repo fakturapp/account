@@ -89,24 +89,16 @@ function LoginContent() {
 
     if (token) {
       window.history.replaceState({}, '', '/login')
-      ;(async () => {
-        const { error: bootstrapError } = await api.post('/auth/session/bootstrap', { token })
-        if (bootstrapError) {
-          setError('Erreur lors de la connexion automatique.')
-          return
-        }
-
-        const { data, error: err } = await api.get<{ user: any }>('/auth/me')
+      localStorage.setItem('faktur_token', token)
+      api.get<{ user: any }>('/auth/me').then(({ data, error: err }) => {
         if (err || !data?.user) {
+          localStorage.removeItem('faktur_token')
           setError('Erreur lors de la connexion automatique.')
           return
         }
-
         login(token, data.user)
         setRedirecting(true)
         router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
-      })().catch(() => {
-        setError('Erreur lors de la connexion automatique.')
       })
     } else if (oauthError) {
       window.history.replaceState({}, '', '/login')
@@ -185,12 +177,7 @@ function LoginContent() {
   async function handleGoogleLogin() {
     setError('')
     setGoogleLoading(true)
-    const redirectTarget = searchParams.get('redirect')
-    const safeRedirect =
-      redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/dashboard'
-    const { data, error: err } = await api.get<{ url: string }>(
-      `/auth/oauth/google/url?returnTo=${encodeURIComponent(safeRedirect)}`
-    )
+    const { data, error: err } = await api.get<{ url: string }>('/auth/oauth/google/url')
     if (err || !data?.url) {
       setGoogleLoading(false)
       return setError(err || 'Impossible de se connecter avec Google.')

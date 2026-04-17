@@ -153,12 +153,7 @@ function RegisterContent() {
   async function handleGoogleLogin() {
     setError('')
     setGoogleLoading(true)
-    const redirectTarget = searchParams.get('redirect')
-    const safeRedirect =
-      redirectTarget && redirectTarget.startsWith('/') ? redirectTarget : '/dashboard'
-    const { data, error: err } = await api.get<{ url: string }>(
-      `/auth/oauth/google/url?returnTo=${encodeURIComponent(safeRedirect)}`
-    )
+    const { data, error: err } = await api.get<{ url: string }>('/auth/oauth/google/url')
     if (err || !data?.url) {
       setGoogleLoading(false)
       return setError(err || 'Impossible de se connecter avec Google.')
@@ -216,12 +211,8 @@ function RegisterContent() {
 
   function handleStepPasswordNext(e: React.FormEvent) {
     e.preventDefault()
-    if (password.length < 12) {
-      setError('Le mot de passe doit contenir au moins 12 caractères')
-      return
-    }
-    if (!/[A-Z]/.test(password) || !/[a-z]/.test(password) || !/\d/.test(password) || !/[^A-Za-z0-9]/.test(password)) {
-      setError('Le mot de passe doit inclure une majuscule, une minuscule, un chiffre et un symbole')
+    if (password.length < 8) {
+      setError('Le mot de passe doit contenir au moins 8 caractères')
       return
     }
     if (password !== passwordConfirmation) {
@@ -535,10 +526,10 @@ function RegisterContent() {
                         <Input
                           id="password"
                           type={showPassword ? 'text' : 'password'}
-                          placeholder="12 caracteres minimum"
+                          placeholder="8 caractères minimum"
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          minLength={12}
+                          minLength={8}
                           required
                           autoFocus
                           className="h-11 pr-10"
@@ -584,7 +575,7 @@ function RegisterContent() {
                           type={showPasswordConfirm ? 'text' : 'password'}
                           value={passwordConfirmation}
                           onChange={(e) => setPasswordConfirmation(e.target.value)}
-                          minLength={12}
+                          minLength={8}
                           required
                           className="h-11 pr-10"
                         />

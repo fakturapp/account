@@ -28,7 +28,7 @@ const steps: Step[] = [
 ]
 
 export default function OnboardingLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, logout } = useAuth()
+  const { user, loading } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
 
@@ -187,7 +187,7 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
               </p>
             </div>
             <button
-              onClick={() => { void logout() }}
+              onClick={() => { localStorage.removeItem('faktur_token'); window.location.href = '/login' }}
               className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:text-danger hover:bg-danger-soft transition-colors"
               title="Se déconnecter"
             >

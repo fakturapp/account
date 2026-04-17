@@ -62,7 +62,7 @@ interface DocumentOverflowParams {
   freeField?: string
   footerText?: string
   font?: string
-  billingType?: 'quick' | 'detailed' | 'qty-only' | 'vat-only'
+  billingType?: 'quick' | 'detailed'
 }
 
 interface DocumentOverflowResult {

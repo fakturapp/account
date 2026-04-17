@@ -39,7 +39,6 @@ export interface FakturDesktopBridge {
   logout?: (opts?: { wipeAll?: boolean }) => Promise<{ ok: boolean }>
   openVaultUnlock?: () => Promise<{ ok: boolean }>
   openExternal?: (url: string) => Promise<{ ok: boolean }>
-  printDocument?: (opts: { dataUrl: string; filename?: string }) => Promise<{ ok: boolean }>
   onSessionChange?: (cb: (payload: unknown) => void) => () => void
 
   getPendingUpdate?: () => Promise<FakturDesktopUpdateInfo | null>

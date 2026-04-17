@@ -5,68 +5,31 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
 let vaultLockListeners: (() => void)[] = []
 export function onVaultLocked(cb: () => void) {
   vaultLockListeners.push(cb)
-  return () => {
-    vaultLockListeners = vaultLockListeners.filter((l) => l !== cb)
-  }
+  return () => { vaultLockListeners = vaultLockListeners.filter((l) => l !== cb) }
 }
 function notifyVaultLocked() {
   vaultLockListeners.forEach((cb) => cb())
 }
 
-function clearClientSessionHints() {
-  try {
-    localStorage.removeItem('faktur_vault_locked')
-  } catch {
-    // Ignore storage failures
-  }
-}
-
-function isPublicClientPath(pathname: string): boolean {
-  return (
-    pathname === '/login' ||
-    pathname === '/register' ||
-    pathname.startsWith('/forgot-password') ||
-    pathname.startsWith('/reset-password') ||
-    pathname.startsWith('/verify-email') ||
-    pathname.startsWith('/invite') ||
-    pathname.startsWith('/legal') ||
-    pathname.startsWith('/share') ||
-    pathname.startsWith('/checkout') ||
-    pathname.startsWith('/oauth')
-  )
-}
-
-function extractApiMessage(data: any): string {
-  return (
-    data?.message ||
-    data?.error?.message ||
-    (Array.isArray(data?.errors) && data.errors[0]?.message) ||
-    (Array.isArray(data?.error?.details?.errors) && data.error.details.errors[0]?.message) ||
-    'Something went wrong'
-  )
+function extractErrorMessage(data: any): string {
+  if (data?.error?.message) return data.error.message
+  if (data?.message) return data.message
+  if (Array.isArray(data?.errors) && data.errors[0]?.message) return data.errors[0].message
+  return 'Something went wrong'
 }
 
 function handleVaultOrSession(data: any, status: number): { error: string } | null {
-  const errorCode = data?.code || data?.error?.error_code
-
-  if (status === 423 && errorCode === 'vault_locked') {
+  const errorCode = data?.error?.details?.error_code || data?.code
+  if (status === 423 && (errorCode === 'VAULT_LOCKED' || errorCode === 'vault_locked')) {
     notifyVaultLocked()
     return { error: 'VAULT_LOCKED' }
   }
-
-  if (
-    status === 401 &&
-    (errorCode === 'SESSION_EXPIRED' ||
-      errorCode === 'account_session_invalid' ||
-      errorCode === 'account_session_expired')
-  ) {
-    clearClientSessionHints()
-    if (!isPublicClientPath(window.location.pathname)) {
-      window.location.href = '/login'
-    }
+  if (status === 401 && (errorCode === 'SESSION_EXPIRED' || errorCode === 'account_session_expired')) {
+    localStorage.removeItem('faktur_token')
+    localStorage.removeItem('faktur_vault_key')
+    window.location.href = '/login'
     return { error: 'Session expired' }
   }
-
   return null
 }
 
@@ -77,31 +40,37 @@ async function request<T = unknown>(
   const sandboxed = tutorialIntercept<T>(endpoint, options)
   if (sandboxed) return sandboxed
 
+  const token = typeof window !== 'undefined' ? localStorage.getItem('faktur_token') : null
+  const vaultKey = typeof window !== 'undefined' ? localStorage.getItem('faktur_vault_key') : null
+
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...((options.headers as Record<string, string>) || {}),
   }
 
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  if (vaultKey) {
+    headers['X-Vault-Key'] = vaultKey
+  }
+
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      credentials: 'include',
-      headers,
-    })
+    const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers })
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractApiMessage(data) }
+      return { error: extractErrorMessage(data) }
     }
 
-    const data = await res.json().catch(() => ({}))
+    const data = await res.json()
 
     if (!res.ok) {
-      return { error: extractApiMessage(data) }
+      return { error: extractErrorMessage(data) }
     }
-    return { data: data as T }
+    return { data }
   } catch {
     return { error: 'Network error. Please try again.' }
   }
@@ -111,10 +80,21 @@ async function uploadRequest<T = unknown>(
   endpoint: string,
   formData: FormData
 ): Promise<{ data?: T; error?: string }> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('faktur_token') : null
+  const vaultKey = typeof window !== 'undefined' ? localStorage.getItem('faktur_vault_key') : null
+
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  if (vaultKey) {
+    headers['X-Vault-Key'] = vaultKey
+  }
+
   try {
     const res = await fetch(`${API_URL}${endpoint}`, {
       method: 'POST',
-      credentials: 'include',
+      headers,
       body: formData,
     })
 
@@ -122,40 +102,89 @@ async function uploadRequest<T = unknown>(
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractApiMessage(data) }
+      return { error: extractErrorMessage(data) }
     }
 
-    const data = await res.json().catch(() => ({}))
+    const data = await res.json()
 
     if (!res.ok) {
-      return { error: extractApiMessage(data) }
+      return { error: extractErrorMessage(data) }
     }
-    return { data: data as T }
+    return { data }
   } catch {
     return { error: 'Network error. Please try again.' }
   }
 }
 
-async function blobRequest(
+async function blobRequest(endpoint: string): Promise<{ blob?: Blob; filename?: string; error?: string }> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('faktur_token') : null
+  const vaultKey = typeof window !== 'undefined' ? localStorage.getItem('faktur_vault_key') : null
+
+  const headers: Record<string, string> = {}
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  if (vaultKey) {
+    headers['X-Vault-Key'] = vaultKey
+  }
+
+  try {
+    const res = await fetch(`${API_URL}${endpoint}`, { method: 'GET', headers })
+
+    if (res.status === 423 || res.status === 401) {
+      const data = await res.json().catch(() => ({}))
+      const handled = handleVaultOrSession(data, res.status)
+      if (handled) return handled
+      return { error: extractErrorMessage(data) }
+    }
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}))
+      return { error: extractErrorMessage(data) || 'Download failed' }
+    }
+
+    const blob = await res.blob()
+    const disposition = res.headers.get('Content-Disposition') || ''
+    const match = disposition.match(/filename="?([^"]+)"?/)
+    const filename = match?.[1] || 'download'
+    return { blob, filename }
+  } catch {
+    return { error: 'Network error. Please try again.' }
+  }
+}
+
+async function postBlobRequest(
   endpoint: string,
-  options: RequestInit = { method: 'GET' }
+  body: unknown
 ): Promise<{ blob?: Blob; filename?: string; error?: string }> {
+  const token = typeof window !== 'undefined' ? localStorage.getItem('faktur_token') : null
+  const vaultKey = typeof window !== 'undefined' ? localStorage.getItem('faktur_vault_key') : null
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+  if (vaultKey) {
+    headers['X-Vault-Key'] = vaultKey
+  }
+
   try {
     const res = await fetch(`${API_URL}${endpoint}`, {
-      ...options,
-      credentials: 'include',
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
     })
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: extractApiMessage(data) }
+      return { error: extractErrorMessage(data) }
     }
 
     if (!res.ok) {
-      const data = await res.json().catch(() => ({ message: 'Download failed' }))
-      return { error: extractApiMessage(data) }
+      const data = await res.json().catch(() => ({}))
+      return { error: extractErrorMessage(data) || 'Download failed' }
     }
 
     const blob = await res.blob()
@@ -178,17 +207,9 @@ export const api = {
   patch: <T = unknown>(endpoint: string, body: unknown, opts?: { headers?: Record<string, string> }) =>
     request<T>(endpoint, { method: 'PATCH', body: JSON.stringify(body), headers: opts?.headers }),
   delete: <T = unknown>(endpoint: string, body?: unknown, opts?: { headers?: Record<string, string> }) =>
-    request<T>(endpoint, {
-      method: 'DELETE',
-      body: body ? JSON.stringify(body) : undefined,
-      headers: opts?.headers,
-    }),
-  upload: <T = unknown>(endpoint: string, formData: FormData) => uploadRequest<T>(endpoint, formData),
+    request<T>(endpoint, { method: 'DELETE', body: body ? JSON.stringify(body) : undefined, headers: opts?.headers }),
+  upload: <T = unknown>(endpoint: string, formData: FormData) =>
+    uploadRequest<T>(endpoint, formData),
   downloadBlob: (endpoint: string) => blobRequest(endpoint),
-  postBlob: (endpoint: string, body: unknown) =>
-    blobRequest(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    }),
+  postBlob: (endpoint: string, body: unknown) => postBlobRequest(endpoint, body),
 }
