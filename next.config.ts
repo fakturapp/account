@@ -5,12 +5,19 @@ const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
 const backendOrigin = new URL(backendUrl).origin
 const backendWsOrigin = backendOrigin.replace(/^http/i, 'ws')
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
+const isProd = process.env.NODE_ENV === 'production'
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
-  "img-src 'self' data: blob: https://*.googleusercontent.com",
+  [
+    "img-src 'self' data: blob:",
+    backendOrigin,
+    'https://*.googleusercontent.com',
+    'https://challenges.cloudflare.com',
+    'https://danbenba.dev',
+  ].join(' '),
   "font-src 'self' data:",
   "style-src 'self' 'unsafe-inline'",
   [
@@ -26,9 +33,10 @@ const csp = [
     'https://js.stripe.com',
     'https://api.stripe.com',
   ].join(' '),
+  "worker-src 'self' blob:",
   "frame-src 'self' https://challenges.cloudflare.com https://js.stripe.com https://hooks.stripe.com",
   "form-action 'self' https://accounts.google.com",
-  "upgrade-insecure-requests",
+  ...(isProd ? ['upgrade-insecure-requests'] : []),
 ].join('; ')
 
 const nextConfig: NextConfig = {
