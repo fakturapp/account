@@ -379,11 +379,12 @@ export function DocumentOptionsPanel({
 
         {/* ── Moyen de paiement section (invoices only) ── */}
         {documentType === 'invoice' && onPaymentMethodChange && (() => {
+          const normalizedPaymentMethod = paymentMethod === 'other' ? 'custom' : paymentMethod
           const filterable = [
             { id: 'bank_transfer', label: 'Virement', icon: Landmark, enabledKey: 'bank_transfer' },
             { id: 'cash', label: 'Espèces', icon: Banknote, enabledKey: 'cash' },
             {
-              id: 'other',
+              id: 'custom',
               label: customPaymentMethodLabel?.trim() || 'Autre',
               icon: MoreHorizontal,
               enabledKey: 'custom',
@@ -407,12 +408,12 @@ export function DocumentOptionsPanel({
                   <button
                     key={t.id}
                     onClick={() => {
-                      onPaymentMethodChange(paymentMethod === t.id ? '' : t.id)
-                      if (paymentMethod === t.id && onBankAccountChange) onBankAccountChange('')
+                      onPaymentMethodChange(normalizedPaymentMethod === t.id ? '' : t.id)
+                      if (normalizedPaymentMethod === t.id && onBankAccountChange) onBankAccountChange('')
                     }}
                     className={cn(
                       'flex-1 min-w-[72px] flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-all',
-                      paymentMethod === t.id
+                      normalizedPaymentMethod === t.id
                         ? 'border-primary bg-primary/5 text-foreground'
                         : 'border-border text-muted-foreground hover:border-muted-foreground/40',
                     )}

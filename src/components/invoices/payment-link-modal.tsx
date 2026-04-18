@@ -123,6 +123,10 @@ export function PaymentLinkModal({
   customPaymentMethodLabel,
   onCreated,
 }: PaymentLinkModalProps) {
+  const defaultPaymentMethod =
+    invoicePaymentMethod === 'bank_transfer' || invoicePaymentMethod === 'stripe'
+      ? invoicePaymentMethod
+      : 'bank_transfer'
   const showBankTransfer = !enabledPaymentMethods || enabledPaymentMethods.includes('bank_transfer')
   const showCash = !enabledPaymentMethods || enabledPaymentMethods.includes('cash')
   const showCustom = !enabledPaymentMethods || enabledPaymentMethods.includes('custom')
@@ -133,7 +137,7 @@ export function PaymentLinkModal({
   const [copied, setCopied] = useState(false)
 
   // Step 1 - Method
-  const [paymentMethod, setPaymentMethod] = useState(invoicePaymentMethod || 'bank_transfer')
+  const [paymentMethod, setPaymentMethod] = useState(defaultPaymentMethod)
   const [paymentType, setPaymentType] = useState<'full' | 'installments'>('full')
 
   // Step 2 - Options
@@ -159,7 +163,7 @@ export function PaymentLinkModal({
 
   function handleClose() {
     setStep(1)
-    setPaymentMethod(invoicePaymentMethod || 'bank_transfer')
+    setPaymentMethod(defaultPaymentMethod)
     setPaymentType('full')
     setShowIban(true)
     setIncludePdf(true)
