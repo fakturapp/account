@@ -14,7 +14,7 @@ export const metadata: Metadata = {
     template: '%s | Faktur',
   },
   description:
-    'Faktur simplifie votre facturation. Creez des devis et factures professionnels en quelques clics. Gratuit, securise et concu pour les entrepreneurs.',
+    'Faktur simplifie votre facturation. Créez des devis et factures professionnels en quelques clics. Gratuit, sécurisé et conçu pour les entrepreneurs.',
   keywords: [
     'facturation',
     'facture',
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     siteName: 'Faktur',
     title: 'Faktur - Facturation professionnelle gratuite',
     description:
-      'Creez des devis et factures professionnels en quelques clics. Gratuit, securise et concu pour les entrepreneurs.',
+      'Créez des devis et factures professionnels en quelques clics. Gratuit, sécurisé et conçu pour les entrepreneurs.',
     images: [
       {
         url: '/og-image.png',
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Faktur - Facturation professionnelle gratuite',
     description:
-      'Creez des devis et factures professionnels en quelques clics. Gratuit et securise.',
+      'Créez des devis et factures professionnels en quelques clics. Gratuit et sécurisé.',
     images: ['/og-image.png'],
   },
   robots: {
@@ -83,7 +83,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="min-h-screen antialiased">
+      <body className="min-h-screen antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
         {process.env.NODE_ENV === 'development' && <Agentation />}
       </body>
