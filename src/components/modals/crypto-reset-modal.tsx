@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { api } from '@/lib/api'
-import { Shield, AlertTriangle, Trash2, KeyRound, Loader2, CheckCircle2, Lock, Key } from 'lucide-react'
+import { Shield, AlertTriangle, Trash2, KeyRound, Loader2, CheckCircle2, Lock, Key, LogOut, RefreshCw } from 'lucide-react'
 
 function formatRecoveryKeyInput(value: string): string {
   const raw = value.replace(/[^0-9a-fA-F]/g, '').toUpperCase().slice(0, 32)
@@ -16,6 +16,8 @@ interface CryptoResetModalProps {
   hasRecoveryKey: boolean
   onRecovered: () => void
   onWiped: () => void
+  onLogout?: () => void | Promise<void>
+  onRefresh?: () => void | Promise<void>
 }
 
 const backdropVariants = {
@@ -46,6 +48,8 @@ export function CryptoResetModal({
   hasRecoveryKey,
   onRecovered,
   onWiped,
+  onLogout,
+  onRefresh,
 }: CryptoResetModalProps) {
   const [mode, setMode] = useState<'choose' | 'recover' | 'recover-key' | 'wipe'>('choose')
   const [oldPassword, setOldPassword] = useState('')
@@ -56,6 +60,18 @@ export function CryptoResetModal({
   const [wipeConfirmText, setWipeConfirmText] = useState('')
   const [wipePassword, setWipePassword] = useState('')
   const [wiped, setWiped] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+
+  async function handleRefresh() {
+    if (!onRefresh || refreshing) return
+    setRefreshing(true)
+    setError('')
+    try {
+      await onRefresh()
+    } finally {
+      setRefreshing(false)
+    }
+  }
 
   async function handleRecover() {
     if (!oldPassword.trim()) {
@@ -167,10 +183,22 @@ export function CryptoResetModal({
                     >
                       <Shield className="h-5 w-5 text-amber-500" />
                     </motion.div>
-                    <div>
+                    <div className="flex-1 min-w-0">
                       <h2 className="text-lg font-semibold text-foreground">Donn&eacute;es chiffr&eacute;es</h2>
                       <p className="text-xs text-muted-foreground">R&eacute;cup&eacute;ration du coffre de donn&eacute;es</p>
                     </div>
+                    {onRefresh && (
+                      <button
+                        type="button"
+                        onClick={handleRefresh}
+                        disabled={refreshing}
+                        title="Actualiser l&apos;&eacute;tat du coffre"
+                        aria-label="Actualiser l&apos;&eacute;tat du coffre"
+                        className="flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors disabled:opacity-50"
+                      >
+                        <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                      </button>
+                    )}
                   </div>
                 </motion.div>
 
@@ -243,6 +271,17 @@ export function CryptoResetModal({
                               <p className="text-xs text-muted-foreground">Je n&apos;ai ni mon ancien mot de passe, ni ma clef</p>
                             </div>
                           </motion.button>
+
+                          {onLogout && (
+                            <button
+                              type="button"
+                              onClick={() => { void onLogout() }}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <LogOut className="h-3.5 w-3.5" />
+                              Se d&eacute;connecter
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -300,6 +339,17 @@ export function CryptoResetModal({
                               R&eacute;cup&eacute;rer
                             </motion.button>
                           </div>
+
+                          {onLogout && (
+                            <button
+                              type="button"
+                              onClick={() => { void onLogout() }}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <LogOut className="h-3.5 w-3.5" />
+                              Se d&eacute;connecter
+                            </button>
+                          )}
                         </div>
                       )}
 
@@ -358,6 +408,17 @@ export function CryptoResetModal({
                               R&eacute;cup&eacute;rer
                             </motion.button>
                           </div>
+
+                          {onLogout && (
+                            <button
+                              type="button"
+                              onClick={() => { void onLogout() }}
+                              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <LogOut className="h-3.5 w-3.5" />
+                              Se d&eacute;connecter
+                            </button>
+                          )}
                         </div>
                       )}
 

@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-import { Lock, Eye, EyeOff, KeyRound, ExternalLink, LogOut } from 'lucide-react'
+import { Lock, Eye, EyeOff, KeyRound, ExternalLink, LogOut, ShieldAlert } from 'lucide-react'
 import { api, onVaultLocked } from '@/lib/api'
 import { isFakturDesktop } from '@/lib/is-desktop'
 import { useAuth } from '@/lib/auth'
@@ -18,7 +18,12 @@ function formatRecoveryKeyInput(value: string): string {
   return raw.match(/.{1,4}/g)?.join('-') ?? ''
 }
 
-export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean }) {
+interface VaultUnlockModalProps {
+  forceOpen?: boolean
+  onStartRecovery?: () => void
+}
+
+export function VaultUnlockModal({ forceOpen = false, onStartRecovery }: VaultUnlockModalProps) {
   const { logout } = useAuth()
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<UnlockMode>('password')
@@ -220,9 +225,36 @@ export function VaultUnlockModal({ forceOpen = false }: { forceOpen?: boolean })
           </Field>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="flex-col gap-2">
           <Button type="submit" className="w-full" disabled={loading || !isValid}>
             {loading ? <><Spinner /> Déverrouillage...</> : 'Déverrouiller'}
+          </Button>
+          {onStartRecovery && (
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                setOpen(false)
+                onStartRecovery()
+              }}
+              disabled={loading}
+            >
+              <ShieldAlert className="h-3.5 w-3.5 mr-1.5" />
+              Lancer la récupération
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full text-muted-foreground hover:text-foreground"
+            onClick={async () => {
+              await logout()
+            }}
+            disabled={loading}
+          >
+            <LogOut className="h-3.5 w-3.5 mr-1.5" />
+            Se déconnecter
           </Button>
         </DialogFooter>
       </form>

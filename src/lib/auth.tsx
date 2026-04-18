@@ -277,26 +277,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     router.replace('/login')
   }
 
+  const [forceCryptoReset, setForceCryptoReset] = useState(false)
+
   async function handleCryptoRecovered() {
+    setForceCryptoReset(false)
     await refreshUser()
   }
 
   async function handleCryptoWiped() {
+    setForceCryptoReset(false)
     await refreshUser()
     router.replace('/onboarding/team')
+  }
+
+  async function handleCryptoRefresh() {
+    await refreshUser()
+    setForceCryptoReset(false)
   }
 
   return (
     <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
       <CryptoResetModal
-        open={!!user?.cryptoResetNeeded}
+        open={!!user?.cryptoResetNeeded || forceCryptoReset}
         canRecoverWithPassword={!!user?.canRecoverWithPassword}
         hasRecoveryKey={!!user?.hasRecoveryKey}
         onRecovered={handleCryptoRecovered}
         onWiped={handleCryptoWiped}
+        onLogout={() => logout()}
+        onRefresh={handleCryptoRefresh}
       />
-      <VaultUnlockModal forceOpen={!!user?.vaultLocked && !user?.cryptoResetNeeded} />
+      <VaultUnlockModal
+        forceOpen={!!user?.vaultLocked && !user?.cryptoResetNeeded && !forceCryptoReset}
+        onStartRecovery={() => setForceCryptoReset(true)}
+      />
       <RecoveryKeySetupModal
         open={
           !!user &&
