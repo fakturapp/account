@@ -65,8 +65,6 @@ export interface CompanyForm {
 export interface PaymentForm {
   paymentConditions: string
   currency: string
-  paymentMethods: string[]
-  customPaymentMethod: string
 }
 
 interface CompanySettingsContextType {
@@ -86,7 +84,7 @@ interface CompanySettingsContextType {
   setLogoUrl: (url: string | null) => void
   setForm: React.Dispatch<React.SetStateAction<CompanyForm>>
   setPaymentForm: React.Dispatch<React.SetStateAction<PaymentForm>>
-  savePayment: () => Promise<void>
+  savePayment: () => Promise<boolean>
   resetPayment: () => void
   loadBankAccounts: () => Promise<void>
 }
@@ -97,7 +95,7 @@ const defaultForm: CompanyForm = {
 }
 
 const defaultPaymentForm: PaymentForm = {
-  paymentConditions: '', currency: 'EUR', paymentMethods: ['bank_transfer'], customPaymentMethod: '',
+  paymentConditions: '', currency: 'EUR',
 }
 
 const CompanySettingsContext = createContext<CompanySettingsContextType>({
@@ -107,7 +105,7 @@ const CompanySettingsContext = createContext<CompanySettingsContextType>({
   paymentHasChanges: false, paymentSaving: false, paymentSaveError: null,
   setCompany: () => {}, setNoCompany: () => {}, setLogoUrl: () => {},
   setForm: () => {}, setPaymentForm: () => {},
-  savePayment: async () => {}, resetPayment: () => {},
+  savePayment: async () => false, resetPayment: () => {},
   loadBankAccounts: async () => {},
 })
 
@@ -163,8 +161,6 @@ export function CompanySettingsProvider({ children }: { children: React.ReactNod
         const initialPaymentForm: PaymentForm = {
           paymentConditions: data.company.paymentConditions || '',
           currency: data.company.currency || 'EUR',
-          paymentMethods: data.company.paymentMethods || ['bank_transfer'],
-          customPaymentMethod: data.company.customPaymentMethod || '',
         }
         setPaymentForm(initialPaymentForm)
         setSavedPaymentForm(initialPaymentForm)
@@ -182,15 +178,14 @@ export function CompanySettingsProvider({ children }: { children: React.ReactNod
     const { error } = await api.put('/company', {
       paymentConditions: next.paymentConditions,
       currency: next.currency,
-      paymentMethods: next.paymentMethods,
-      customPaymentMethod: next.customPaymentMethod,
     })
     setPaymentSaving(false)
     if (error) {
       setPaymentSaveError(error)
-      return
+      return false
     }
     setSavedPaymentForm({ ...next })
+    return true
   }, [])
 
   const resetPayment = useCallback(() => {
