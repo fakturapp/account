@@ -25,6 +25,8 @@ export interface Company {
   bankName: string | null
   paymentConditions: string | null
   currency: string
+  paymentMethods: string[]
+  customPaymentMethod: string | null
 }
 
 export interface BankAccountItem {
@@ -161,8 +163,8 @@ export function CompanySettingsProvider({ children }: { children: React.ReactNod
         const initialPaymentForm: PaymentForm = {
           paymentConditions: data.company.paymentConditions || '',
           currency: data.company.currency || 'EUR',
-          paymentMethods: (data.company as any).paymentMethods || ['bank_transfer'],
-          customPaymentMethod: (data.company as any).customPaymentMethod || '',
+          paymentMethods: data.company.paymentMethods || ['bank_transfer'],
+          customPaymentMethod: data.company.customPaymentMethod || '',
         }
         setPaymentForm(initialPaymentForm)
         setSavedPaymentForm(initialPaymentForm)
