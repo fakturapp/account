@@ -1,6 +1,11 @@
 import { tutorialIntercept } from './tutorial-sandbox'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
+const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || ''
+
+function resolveApiUrl(endpoint: string) {
+  return `${API_URL}${API_PREFIX}${endpoint}`
+}
 
 let vaultLockListeners: (() => void)[] = []
 export function onVaultLocked(cb: () => void) {
@@ -76,7 +81,7 @@ async function request<T = unknown>(
   }
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, { ...options, headers })
+    const res = await fetch(resolveApiUrl(endpoint), { ...options, headers })
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
@@ -112,7 +117,7 @@ async function uploadRequest<T = unknown>(
   }
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    const res = await fetch(resolveApiUrl(endpoint), {
       method: 'POST',
       headers,
       body: formData,
@@ -149,7 +154,7 @@ async function blobRequest(endpoint: string): Promise<{ blob?: Blob; filename?: 
   }
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, { method: 'GET', headers })
+    const res = await fetch(resolveApiUrl(endpoint), { method: 'GET', headers })
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
@@ -189,7 +194,7 @@ async function postBlobRequest(
   }
 
   try {
-    const res = await fetch(`${API_URL}${endpoint}`, {
+    const res = await fetch(resolveApiUrl(endpoint), {
       method: 'POST',
       headers,
       body: JSON.stringify(body),
@@ -232,4 +237,85 @@ export const api = {
     uploadRequest<T>(endpoint, formData),
   downloadBlob: (endpoint: string) => blobRequest(endpoint),
   postBlob: (endpoint: string, body: unknown) => postBlobRequest(endpoint, body),
+}
+
+async function publicRequest<T = unknown>(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<{ data?: T; error?: string; status: number }> {
+  const headers: Record<string, string> = {
+    ...((options.headers as Record<string, string>) || {}),
+  }
+
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  try {
+    const res = await fetch(resolveApiUrl(endpoint), { ...options, headers })
+    const data = await res.json().catch(() => ({}))
+
+    if (!res.ok) {
+      return {
+        error: parseErrorPayload(data).message,
+        status: res.status,
+      }
+    }
+
+    return {
+      data,
+      status: res.status,
+    }
+  } catch {
+    return {
+      error: 'Network error. Please try again.',
+      status: 0,
+    }
+  }
+}
+
+async function publicBlobRequest(
+  endpoint: string,
+  options: RequestInit = {}
+): Promise<{ blob?: Blob; filename?: string; error?: string; status: number }> {
+  try {
+    const res = await fetch(resolveApiUrl(endpoint), options)
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({ message: 'Download failed' }))
+      return {
+        error: parseErrorPayload(data).message || 'Download failed',
+        status: res.status,
+      }
+    }
+
+    const blob = await res.blob()
+    const disposition = res.headers.get('Content-Disposition') || ''
+    const match = disposition.match(/filename="?([^"]+)"?/)
+    const filename = match?.[1] || 'download'
+
+    return {
+      blob,
+      filename,
+      status: res.status,
+    }
+  } catch {
+    return {
+      error: 'Network error. Please try again.',
+      status: 0,
+    }
+  }
+}
+
+export const publicApi = {
+  get: <T = unknown>(endpoint: string, opts?: { headers?: Record<string, string> }) =>
+    publicRequest<T>(endpoint, { method: 'GET', headers: opts?.headers }),
+  post: <T = unknown>(endpoint: string, body?: unknown, opts?: { headers?: Record<string, string> }) =>
+    publicRequest<T>(endpoint, {
+      method: 'POST',
+      body: body === undefined ? undefined : JSON.stringify(body),
+      headers: opts?.headers,
+    }),
+  downloadBlob: (endpoint: string, opts?: { headers?: Record<string, string> }) =>
+    publicBlobRequest(endpoint, { method: 'GET', headers: opts?.headers }),
 }

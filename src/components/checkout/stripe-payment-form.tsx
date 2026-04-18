@@ -4,10 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { loadStripe, type Stripe, type Appearance } from '@stripe/stripe-js'
 import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-stripe-js'
 import { Spinner } from '@/components/ui/spinner'
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
-const PFX = process.env.NEXT_PUBLIC_API_PREFIX || ''
-const apiUrl = (p: string) => `${API}${PFX}${p}`
+import { publicApi } from '@/lib/api'
 
 const appearance: Appearance = {
   theme: 'night',
@@ -45,7 +42,15 @@ interface StripePaymentFormProps {
   onError: (msg: string) => void
 }
 
-function PaymentForm({ amount, onSuccess, onError }: { amount: string; onSuccess: () => void; onError: (msg: string) => void }) {
+function PaymentForm({
+  amount,
+  onSuccess,
+  onError,
+}: {
+  amount: string
+  onSuccess: () => void
+  onError: (msg: string) => void
+}) {
   const stripe = useStripe()
   const elements = useElements()
   const [paying, setPaying] = useState(false)
@@ -74,9 +79,9 @@ function PaymentForm({ amount, onSuccess, onError }: { amount: string; onSuccess
     })
 
     if (confirmError) {
-      setError(confirmError.message || 'Le paiement a échoué')
+      setError(confirmError.message || 'Le paiement a echoue')
       setPaying(false)
-      onError(confirmError.message || 'Le paiement a échoué')
+      onError(confirmError.message || 'Le paiement a echoue')
       return
     }
 
@@ -105,18 +110,32 @@ function PaymentForm({ amount, onSuccess, onError }: { amount: string; onSuccess
         {paying ? <Spinner className="text-white" /> : `Payer ${amount}`}
       </button>
 
-      {/* Stripe badge */}
       <div className="flex items-center justify-center gap-2 pt-1">
-        <svg className="h-4 w-4 text-white/20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" />
+        <svg
+          className="h-4 w-4 text-white/20"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          <path d="m9 12 2 2 4-4" />
         </svg>
-        <span className="text-[11px] text-white/20 font-medium">Sécurisé par Stripe</span>
+        <span className="text-[11px] text-white/20 font-medium">Securise par Stripe</span>
       </div>
     </form>
   )
 }
 
-export function StripePaymentForm({ token, amount, invoiceNumber, onSuccess, onError }: StripePaymentFormProps) {
+export function StripePaymentForm({
+  token,
+  amount,
+  invoiceNumber,
+  onSuccess,
+  onError,
+}: StripePaymentFormProps) {
   const [stripePromise, setStripePromise] = useState<Promise<Stripe | null> | null>(null)
   const [clientSecret, setClientSecret] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
@@ -124,21 +143,19 @@ export function StripePaymentForm({ token, amount, invoiceNumber, onSuccess, onE
 
   const initStripe = useCallback(async () => {
     try {
-      const res = await fetch(apiUrl(`/checkout/${token}/create-stripe-intent`), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      })
+      const { data, error } = await publicApi.post<{
+        clientSecret: string
+        publishableKey: string
+      }>(`/checkout/${token}/create-stripe-intent`, {})
 
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({}))
-        setError(data.message || 'Impossible de créer le paiement')
+      if (error || !data) {
+        setError(error || 'Impossible de creer le paiement')
         setLoading(false)
         return
       }
 
-      const { clientSecret: cs, publishableKey } = await res.json()
-      setStripePromise(loadStripe(publishableKey))
-      setClientSecret(cs)
+      setStripePromise(loadStripe(data.publishableKey))
+      setClientSecret(data.clientSecret)
     } catch {
       setError('Erreur de connexion')
     }
@@ -153,7 +170,7 @@ export function StripePaymentForm({ token, amount, invoiceNumber, onSuccess, onE
     return (
       <div className="flex flex-col items-center py-8">
         <Spinner size="lg" className="text-indigo-400" />
-        <p className="mt-4 text-sm text-white/40">Préparation du paiement...</p>
+        <p className="mt-4 text-sm text-white/40">Preparation du paiement...</p>
       </div>
     )
   }
