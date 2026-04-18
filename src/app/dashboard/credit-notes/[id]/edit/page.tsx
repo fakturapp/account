@@ -137,7 +137,7 @@ function EditCreditNoteContent() {
           showAcceptanceConditions: !!cn.acceptanceConditions,
           showFreeField: !!cn.freeField,
           showFooterText: !!cn.footerText,
-          footerMode: ((invoiceSettings.footerMode as string) === 'vat_exempt' ? 'company_info' : invoiceSettings.footerMode) || 'company_info',
+          footerMode: invoiceSettings.footerMode || 'company_info',
           facturX: false,
         })
 

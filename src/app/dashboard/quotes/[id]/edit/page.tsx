@@ -158,7 +158,7 @@ function EditQuoteContent() {
           showUnitColumn: q.showUnitColumn !== false,
           showUnitPriceColumn: q.showUnitPriceColumn !== false,
           showVatColumn: q.showVatColumn !== false,
-          footerMode: ((invoiceSettings.footerMode as string) === 'vat_exempt' ? 'company_info' : invoiceSettings.footerMode) || 'company_info',
+          footerMode: invoiceSettings.footerMode || 'company_info',
           facturX: q.facturX || false,
         })
 

@@ -178,7 +178,7 @@ function EditInvoiceContent() {
           showUnitColumn: inv.showUnitColumn !== false,
           showUnitPriceColumn: inv.showUnitPriceColumn !== false,
           showVatColumn: inv.showVatColumn !== false,
-          footerMode: ((invoiceSettings.footerMode as string) === 'vat_exempt' ? 'company_info' : invoiceSettings.footerMode) || 'company_info',
+          footerMode: invoiceSettings.footerMode || 'company_info',
           facturX: inv.facturX || false,
         })
 
