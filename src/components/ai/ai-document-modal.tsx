@@ -81,7 +81,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
   )
   const [showModelDropdown, setShowModelDropdown] = useState(false)
   const [billingType, setBillingType] = useState<'quick' | 'detailed'>('detailed')
-  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash' | 'other'>('bank_transfer')
+  const [paymentMethod, setPaymentMethod] = useState<'bank_transfer' | 'cash' | 'custom'>('bank_transfer')
   const [showOptions, setShowOptions] = useState(false)
   const [aiOptions, setAiOptions] = useState({
     includeSubject: true,
@@ -415,7 +415,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
                 {([
                   { id: 'bank_transfer' as const, label: 'Virement', Icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
                   { id: 'cash' as const, label: 'Espèces', Icon: Banknote, color: 'text-green-500', bg: 'bg-green-500/10' },
-                  { id: 'other' as const, label: 'Carte', Icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                  { id: 'custom' as const, label: 'Autre', Icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-500/10' },
                 ]).map((pm) => (
                   <button
                     key={pm.id}

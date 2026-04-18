@@ -19,6 +19,15 @@ export function MarkPaidInfoModal({ open, onClose, onSubmit, onSkip }: MarkPaidI
   const [paymentMethod, setPaymentMethod] = useState('')
   const [notes, setNotes] = useState('')
 
+  const paymentMethodLabel =
+    paymentMethod === 'bank_transfer'
+      ? 'Virement bancaire'
+      : paymentMethod === 'cash'
+        ? 'Espèces'
+        : paymentMethod === 'custom'
+          ? 'Autre'
+          : 'Non spécifié'
+
   function handleSubmit() {
     onSubmit({
       paymentDate: paymentDate || undefined,
@@ -48,7 +57,7 @@ export function MarkPaidInfoModal({ open, onClose, onSubmit, onSkip }: MarkPaidI
 
       <div className="mt-4 space-y-4">
         <div>
-          <label className="text-sm font-medium text-foreground mb-1.5 block">
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
             Date de paiement
           </label>
           <Input
@@ -59,39 +68,43 @@ export function MarkPaidInfoModal({ open, onClose, onSubmit, onSkip }: MarkPaidI
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground mb-1.5 block">
+          <label className="mb-1.5 block text-sm font-medium text-foreground">
             Méthode de paiement
           </label>
           <div className="relative">
             <Dropdown
               trigger={
-                <button className="flex w-full items-center justify-between gap-2 h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary/50 transition-colors">
-                  <span>
-                    {paymentMethod === 'bank_transfer' ? 'Virement bancaire' : 
-                     paymentMethod === 'cash' ? 'Espèces' : 
-                     paymentMethod === 'other' ? 'Autre' : 'Non spécifié'}
-                  </span>
+                <button className="flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 text-sm text-foreground outline-none transition-colors focus:border-primary/50">
+                  <span>{paymentMethodLabel}</span>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               }
               className="w-full min-w-[200px]"
             >
-              <DropdownItem selected={paymentMethod === ''} onClick={() => setPaymentMethod('')}>Non spécifié</DropdownItem>
-              <DropdownItem selected={paymentMethod === 'bank_transfer'} onClick={() => setPaymentMethod('bank_transfer')}>Virement bancaire</DropdownItem>
-              <DropdownItem selected={paymentMethod === 'cash'} onClick={() => setPaymentMethod('cash')}>Espèces</DropdownItem>
-              <DropdownItem selected={paymentMethod === 'other'} onClick={() => setPaymentMethod('other')}>Autre</DropdownItem>
+              <DropdownItem selected={paymentMethod === ''} onClick={() => setPaymentMethod('')}>
+                Non spécifié
+              </DropdownItem>
+              <DropdownItem selected={paymentMethod === 'bank_transfer'} onClick={() => setPaymentMethod('bank_transfer')}>
+                Virement bancaire
+              </DropdownItem>
+              <DropdownItem selected={paymentMethod === 'cash'} onClick={() => setPaymentMethod('cash')}>
+                Espèces
+              </DropdownItem>
+              <DropdownItem selected={paymentMethod === 'custom'} onClick={() => setPaymentMethod('custom')}>
+                Autre
+              </DropdownItem>
             </Dropdown>
           </div>
         </div>
 
         <div>
-          <label className="text-sm font-medium text-foreground mb-1.5 block">Notes</label>
+          <label className="mb-1.5 block text-sm font-medium text-foreground">Notes</label>
           <textarea
             rows={2}
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             placeholder="Informations complémentaires..."
-            className="w-full rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground/50 outline-none resize-none focus:border-primary/50 transition-colors"
+            className="w-full resize-none rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm text-foreground outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-primary/50"
           />
         </div>
       </div>

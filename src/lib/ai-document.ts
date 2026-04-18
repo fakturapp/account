@@ -13,7 +13,7 @@ export interface AiDocumentData {
   acceptanceConditions?: string
   clientId?: string
   billingType?: 'quick' | 'detailed'
-  paymentMethod?: 'bank_transfer' | 'cash' | 'other'
+  paymentMethod?: 'bank_transfer' | 'cash' | 'custom'
 }
 
 const STORAGE_KEY = 'faktur_ai_document'
