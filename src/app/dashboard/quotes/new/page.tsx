@@ -218,7 +218,7 @@ export default function NewQuotePage() {
         ...prev,
         subject: aiDoc.subject,
         showSubject: true,
-        billingType: 'detailed',
+        billingType: aiDoc.billingType || 'detailed',
         acceptanceConditions: aiDoc.acceptanceConditions || prev.acceptanceConditions,
         showAcceptanceConditions: !!(aiDoc.acceptanceConditions) || prev.showAcceptanceConditions,
       }))

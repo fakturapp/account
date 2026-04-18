@@ -188,7 +188,7 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
       acceptanceConditions: data.document.acceptanceConditions || '',
       clientId: selectedClient?.id,
       billingType,
-      paymentMethod,
+      paymentMethod: type === 'invoice' ? paymentMethod : undefined,
     }
 
     storeAiDocument(aiDoc)
@@ -408,33 +408,34 @@ export function AiDocumentModal({ open, onClose, type }: AiDocumentModalProps) {
               </div>
             </div>
 
-            {/* Payment method */}
-            <div className="mt-3">
-              <p className="text-xs font-medium text-muted-foreground mb-2">Mode de paiement</p>
-              <div className="flex gap-1.5">
-                {([
-                  { id: 'bank_transfer' as const, label: 'Virement', Icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
-                  { id: 'cash' as const, label: 'Espèces', Icon: Banknote, color: 'text-green-500', bg: 'bg-green-500/10' },
-                  { id: 'custom' as const, label: 'Autre', Icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-500/10' },
-                ]).map((pm) => (
-                  <button
-                    key={pm.id}
-                    onClick={() => setPaymentMethod(pm.id)}
-                    className={cn(
-                      'flex-1 flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all',
-                      paymentMethod === pm.id
-                        ? 'border-primary/40 bg-primary/5'
-                        : 'border-border hover:bg-muted/50 hover:border-primary/20'
-                    )}
-                  >
-                    <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg', pm.bg)}>
-                      <pm.Icon className={cn('h-3.5 w-3.5', pm.color)} />
-                    </div>
-                    <span className="text-[10px] font-medium text-foreground">{pm.label}</span>
-                  </button>
-                ))}
+            {type === 'invoice' && (
+              <div className="mt-3">
+                <p className="text-xs font-medium text-muted-foreground mb-2">Mode de paiement</p>
+                <div className="flex gap-1.5">
+                  {([
+                    { id: 'bank_transfer' as const, label: 'Virement', Icon: Landmark, color: 'text-blue-500', bg: 'bg-blue-500/10' },
+                    { id: 'cash' as const, label: 'Espèces', Icon: Banknote, color: 'text-green-500', bg: 'bg-green-500/10' },
+                    { id: 'custom' as const, label: 'Autre', Icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-500/10' },
+                  ]).map((pm) => (
+                    <button
+                      key={pm.id}
+                      onClick={() => setPaymentMethod(pm.id)}
+                      className={cn(
+                        'flex-1 flex flex-col items-center gap-1.5 rounded-xl border p-2.5 transition-all',
+                        paymentMethod === pm.id
+                          ? 'border-primary/40 bg-primary/5'
+                          : 'border-border hover:bg-muted/50 hover:border-primary/20'
+                      )}
+                    >
+                      <div className={cn('flex h-7 w-7 items-center justify-center rounded-lg', pm.bg)}>
+                        <pm.Icon className={cn('h-3.5 w-3.5', pm.color)} />
+                      </div>
+                      <span className="text-[10px] font-medium text-foreground">{pm.label}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Options (collapsible) */}
             <div className="mt-3 rounded-xl border border-border overflow-hidden">

@@ -254,11 +254,12 @@ export default function NewInvoicePage() {
         ...prev,
         subject: aiDoc.subject,
         showSubject: true,
-        billingType: 'detailed',
+        billingType: aiDoc.billingType || 'detailed',
         acceptanceConditions: aiDoc.acceptanceConditions || prev.acceptanceConditions,
         showAcceptanceConditions: !!(aiDoc.acceptanceConditions) || prev.showAcceptanceConditions,
       }))
       setNotes(aiDoc.notes || '')
+      if (aiDoc.paymentMethod) setPaymentMethod(aiDoc.paymentMethod)
       setLines(
         aiDoc.lines.map((line) => ({
           id: generateId(),
