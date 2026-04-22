@@ -80,11 +80,16 @@ export function CryptoResetModal({
     }
     setLoading(true)
     setError('')
-    const { error: apiError } = await api.post('/auth/crypto/recover', { oldPassword })
+    const { data, error: apiError } = await api.post<{ vaultKey?: string }>('/auth/crypto/recover', {
+      oldPassword,
+    })
     setLoading(false)
     if (apiError) {
       setError(apiError)
     } else {
+      if (data?.vaultKey) {
+        localStorage.setItem('faktur_vault_key', data.vaultKey)
+      }
       onRecovered()
     }
   }
@@ -96,13 +101,16 @@ export function CryptoResetModal({
     }
     setLoading(true)
     setError('')
-    const { error: apiError } = await api.post('/auth/crypto/recover', {
+    const { data, error: apiError } = await api.post<{ vaultKey?: string }>('/auth/crypto/recover', {
       recoveryKey: recoveryKey.replace(/-/g, '').trim(),
     })
     setLoading(false)
     if (apiError) {
       setError(apiError)
     } else {
+      if (data?.vaultKey) {
+        localStorage.setItem('faktur_vault_key', data.vaultKey)
+      }
       onRecovered()
     }
   }

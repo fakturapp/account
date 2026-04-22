@@ -288,13 +288,16 @@ export default function AccountPage() {
 
   async function executeChangePassword() {
     setPasswordLoading(true)
-    const { error } = await api.put('/account/password', {
+    const { data, error } = await api.put<{ vaultKey?: string }>('/account/password', {
       currentPassword,
       password: newPassword,
       password_confirmation: confirmPassword,
     })
     setPasswordLoading(false)
     if (error) return toast(error, 'error')
+    if (data?.vaultKey) {
+      localStorage.setItem('faktur_vault_key', data.vaultKey)
+    }
     setCurrentPassword('')
     setNewPassword('')
     setConfirmPassword('')

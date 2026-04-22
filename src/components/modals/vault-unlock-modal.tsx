@@ -58,7 +58,10 @@ export function VaultUnlockModal({ forceOpen = false, onStartRecovery }: VaultUn
         ? { password }
         : { recoveryKey: recoveryKey.replace(/-/g, '').trim() }
 
-    const { data, error: err } = await api.post<{ vaultKey?: string }>('/auth/vault/unlock', body)
+    const { data, error: err } = await api.post<{
+      vaultKey?: string
+      requiresCryptoRecovery?: boolean
+    }>('/auth/vault/unlock', body)
     setLoading(false)
 
     if (err && err !== 'VAULT_LOCKED') {
@@ -69,6 +72,17 @@ export function VaultUnlockModal({ forceOpen = false, onStartRecovery }: VaultUn
       if (data?.vaultKey) {
         localStorage.setItem('faktur_vault_key', data.vaultKey)
       }
+
+      if (data?.requiresCryptoRecovery) {
+        setOpen(false)
+        setPassword('')
+        setRecoveryKey('')
+        setShowPassword(false)
+        setError('')
+        onStartRecovery?.()
+        return
+      }
+
       setOpen(false)
       setPassword('')
       setRecoveryKey('')
