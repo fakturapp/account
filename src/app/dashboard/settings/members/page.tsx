@@ -13,16 +13,19 @@ import { FormSelect } from '@/components/ui/dropdown'
 import { Separator } from '@/components/ui/separator'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
+import { Tooltip } from '@/components/ui/tooltip'
 import { useAuth } from '@/lib/auth'
 import { useToast } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
+import { RecoveryKeyModal } from '@/components/modals/recovery-key-modal'
 import {
   Users,
   UserPlus,
   Crown,
   Shield,
+  KeyRound,
   Eye,
   UserCog,
   Copy,
@@ -63,6 +66,8 @@ interface Team {
   iconUrl: string | null
   ownerId: string
   members: TeamMember[]
+  recoveryKeyAvailable: boolean
+  recoveryKeyUnavailableReason: 'legacy_team' | null
 }
 
 const roleLabels: Record<string, string> = {
@@ -95,6 +100,9 @@ export default function TeamPage() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
+  const [loadingRecoveryKey, setLoadingRecoveryKey] = useState(false)
+  const [recoveryKeyModalOpen, setRecoveryKeyModalOpen] = useState(false)
+  const [recoveryKeyValue, setRecoveryKeyValue] = useState<string | null>(null)
 
   const [inviteOpen, setInviteOpen] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
@@ -174,6 +182,26 @@ export default function TeamPage() {
       toast('Invitation envoyée', 'success')
       loadTeam()
     }
+  }
+
+  async function handleOpenRecoveryKey() {
+    if (!team?.recoveryKeyAvailable) {
+      return
+    }
+
+    setLoadingRecoveryKey(true)
+    const { data, error } = await api.get<{ recoveryKey: string }>('/team/recovery-key')
+    setLoadingRecoveryKey(false)
+
+    if (error || !data?.recoveryKey) {
+      return toast(
+        error || "Impossible de récupérer la clef de secours pour cette équipe.",
+        'error'
+      )
+    }
+
+    setRecoveryKeyValue(data.recoveryKey)
+    setRecoveryKeyModalOpen(true)
   }
 
   function handleCopyLink() {
@@ -399,6 +427,28 @@ export default function TeamPage() {
                     >
                       <Settings className="h-4 w-4 mr-2" /> Paramètres
                     </Button>
+                    {team?.recoveryKeyAvailable ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleOpenRecoveryKey}
+                        disabled={loadingRecoveryKey}
+                      >
+                        {loadingRecoveryKey ? (
+                          <><Spinner /> Chargement...</>
+                        ) : (
+                          <><KeyRound className="h-4 w-4 mr-2" /> Clef de secours</>
+                        )}
+                      </Button>
+                    ) : (
+                      <Tooltip content="Cette équipe a été créée avant le stockage chiffré serveur de la clef de secours. Générez-en une nouvelle pour la rendre consultable ici.">
+                        <span className="inline-flex">
+                          <Button variant="outline" size="sm" disabled>
+                            <KeyRound className="h-4 w-4 mr-2" /> Clef de secours
+                          </Button>
+                        </span>
+                      </Tooltip>
+                    )}
                     <Button size="sm" onClick={() => setInviteOpen(true)}>
                       <UserPlus className="h-4 w-4 mr-2" /> Inviter
                     </Button>
@@ -1081,6 +1131,19 @@ export default function TeamPage() {
           </Button>
         </DialogFooter>
       </Dialog>
+      {recoveryKeyValue && (
+        <RecoveryKeyModal
+          open={recoveryKeyModalOpen}
+          recoveryKey={recoveryKeyValue}
+          onClose={() => {
+            setRecoveryKeyModalOpen(false)
+            setRecoveryKeyValue(null)
+          }}
+          title="Clef de secours de l'équipe"
+          description="Voici la clef de secours actuellement stockée pour votre accès chiffré sur cette équipe. Conservez-la hors ligne dans un endroit sûr."
+          minVisibleSeconds={0}
+        />
+      )}
     </motion.div>
   )
 }
