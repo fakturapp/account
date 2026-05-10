@@ -380,6 +380,45 @@ export function DocumentOptionsPanel({
         </CollapsibleSection>
 
         {/* ── Moyen de paiement section (invoices only) ── */}
+        {documentType === 'invoice' && eInvoicingEnabled && (
+          <CollapsibleSection title="E-facturation" defaultOpen>
+            <div className="space-y-3">
+              <div>
+                <label className="text-xs text-muted-foreground font-medium block mb-1">
+                  Nature de l&apos;operation
+                </label>
+                <div className="grid grid-cols-3 gap-1">
+                  {([
+                    { id: 'service', label: 'Service' },
+                    { id: 'goods', label: 'Biens' },
+                    { id: 'mixed', label: 'Mixte' },
+                  ] as const).map((cat) => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => onChange({ operationCategory: cat.id })}
+                      className={cn(
+                        'rounded-lg border px-2 py-1.5 text-xs font-medium transition-all',
+                        (options.operationCategory || 'service') === cat.id
+                          ? 'border-primary bg-primary/5 text-foreground'
+                          : 'border-border text-muted-foreground hover:border-muted-foreground/40',
+                      )}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <OptionCheckbox
+                checked={!!options.vatOnDebits}
+                onToggle={() => onChange({ vatOnDebits: !options.vatOnDebits })}
+                label="TVA sur les debits"
+              />
+            </div>
+          </CollapsibleSection>
+        )}
+
         {documentType === 'invoice' && onPaymentMethodChange && (() => {
           const normalizedPaymentMethod = paymentMethod === 'other' ? 'custom' : paymentMethod
           const filterable = [
