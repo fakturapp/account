@@ -116,6 +116,8 @@ function EditInvoiceContent() {
     showVatColumn: true,
     footerMode: 'company_info' as 'company_info' | 'custom',
     facturX: false,
+    operationCategory: 'service' as 'service' | 'goods' | 'mixed',
+    vatOnDebits: false,
   })
 
   const [notes, setNotes] = useState('')
@@ -178,6 +180,8 @@ function EditInvoiceContent() {
           showVatColumn: inv.showVatColumn !== false,
           footerMode: invoiceSettings.footerMode || 'company_info',
           facturX: inv.facturX || false,
+          operationCategory: inv.operationCategory || invoiceSettings.defaultOperationCategory || 'service',
+          vatOnDebits: inv.vatOnDebits || false,
         })
 
         if (inv.paymentMethod) setPaymentMethod(inv.paymentMethod)
@@ -439,6 +443,8 @@ function EditInvoiceContent() {
       paymentMethod: paymentMethod || undefined,
       bankAccountId: bankAccountId || undefined,
       vatExemptReason: options.vatExemptReason,
+      vatOnDebits: options.vatOnDebits,
+      operationCategory: options.operationCategory,
       clientSnapshot: selectedClient ? {
         id: selectedClient.id,
         type: selectedClient.type,
@@ -781,6 +787,7 @@ function EditInvoiceContent() {
               language={options.language}
               showNotes={options.showNotes}
               vatExemptReason={options.vatExemptReason}
+              vatOnDebits={options.vatOnDebits}
               footerText={options.footerText}
               documentFont={invoiceSettings.documentFont}
               showSubject={options.showSubject}
