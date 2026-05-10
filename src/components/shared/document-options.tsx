@@ -45,6 +45,8 @@ export interface DocumentOptions {
   showUnitPriceColumn?: boolean
   showVatColumn?: boolean
   facturX: boolean
+  operationCategory?: 'service' | 'goods' | 'mixed'
+  vatOnDebits?: boolean
 }
 
 interface DocumentOptionsProps {
