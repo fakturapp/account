@@ -75,6 +75,8 @@ function saveOptionsToStorage(opts: Record<string, any>) {
       showVatColumn: opts.showVatColumn,
       footerMode: opts.footerMode,
       paymentMethod: opts.paymentMethod,
+      operationCategory: opts.operationCategory,
+      vatOnDebits: opts.vatOnDebits,
     }
     localStorage.setItem(INVOICE_OPTIONS_KEY, JSON.stringify(toSave))
   } catch { }
@@ -142,6 +144,8 @@ export default function NewInvoicePage() {
     showVatColumn: true,
     footerMode: 'company_info' as 'company_info' | 'custom',
     facturX: false,
+    operationCategory: 'service' as 'service' | 'goods' | 'mixed',
+    vatOnDebits: false,
   })
 
   const [notes, setNotes] = useState('')
@@ -221,6 +225,8 @@ export default function NewInvoicePage() {
         showUnitPriceColumn: invoiceSettings.defaultShowUnitPriceColumn ?? saved?.showUnitPriceColumn ?? prev.showUnitPriceColumn,
         showVatColumn: invoiceSettings.defaultShowVatColumn ?? saved?.showVatColumn ?? prev.showVatColumn,
         footerMode: saved?.footerMode || invoiceSettings.footerMode || prev.footerMode,
+        operationCategory: saved?.operationCategory || invoiceSettings.defaultOperationCategory || prev.operationCategory,
+        vatOnDebits: saved?.vatOnDebits ?? invoiceSettings.defaultVatOnDebits ?? prev.vatOnDebits,
       }))
       setLines((prev) => {
         if (prev.length !== 1) return prev
@@ -460,6 +466,8 @@ export default function NewInvoicePage() {
       paymentMethod: paymentMethod || undefined,
       bankAccountId: bankAccountId || undefined,
       vatExemptReason: options.vatExemptReason,
+      vatOnDebits: options.vatOnDebits,
+      operationCategory: options.operationCategory,
       clientSnapshot: selectedClient ? {
         id: selectedClient.id,
         type: selectedClient.type,
@@ -744,6 +752,7 @@ export default function NewInvoicePage() {
               language={options.language}
               showNotes={options.showNotes}
               vatExemptReason={options.vatExemptReason}
+              vatOnDebits={options.vatOnDebits}
               footerText={options.footerText}
               documentFont={invoiceSettings.documentFont}
               showSubject={options.showSubject}
