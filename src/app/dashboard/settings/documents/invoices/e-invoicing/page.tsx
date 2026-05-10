@@ -186,6 +186,24 @@ export default function EInvoicingPage() {
                       </div>
                     </div>
 
+                    <div className="flex items-center justify-between rounded-lg border border-border p-3">
+                      <div>
+                        <p className="text-xs font-medium text-foreground">TVA sur les debits par defaut</p>
+                        <p className="text-[10px] text-muted-foreground">Ajoute la mention dans les factures et le XML Factur-X</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => updateSettings({ defaultVatOnDebits: !settings.defaultVatOnDebits })}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors shrink-0 ${
+                          settings.defaultVatOnDebits ? 'bg-primary' : 'bg-muted-foreground/30'
+                        }`}
+                      >
+                        <span className={`inline-block h-4 w-4 rounded-full bg-white transition-transform shadow-sm ${
+                          settings.defaultVatOnDebits ? 'translate-x-6' : 'translate-x-1'
+                        }`} />
+                      </button>
+                    </div>
+
                     {/* Sandbox indicator */}
                     <div className="flex items-center gap-2 rounded-lg border border-border p-3">
                       <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0" />
