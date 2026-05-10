@@ -102,7 +102,7 @@ export default function EInvoicingPage() {
             <div className="flex items-start gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4 mb-4">
               <Info className="h-4 w-4 text-accent shrink-0 mt-0.5" />
               <p className="text-xs text-foreground leading-relaxed">
-                A partir de septembre 2026, toutes les entreprises francaises doivent emettre des factures electroniques au format structure (Factur-X, UBL ou CII) via une Plateforme de Dematerialisation Partenaire (PDP).
+                A partir de septembre 2026, les factures B2B devront passer par une plateforme agreee. Faktur prepare les formats structures et l'envoi via le prestataire configure.
               </p>
             </div>
 
@@ -114,7 +114,7 @@ export default function EInvoicingPage() {
                 </div>
                 <div>
                   <p className="text-sm font-medium text-foreground">Activer la facturation electronique</p>
-                  <p className="text-xs text-muted-foreground">Genere automatiquement le format Factur-X pour vos documents</p>
+                  <p className="text-xs text-muted-foreground">Prepare les champs et exports structures pour vos factures</p>
                 </div>
               </div>
               <button
@@ -161,8 +161,8 @@ export default function EInvoicingPage() {
                       </div>
                       <p className="text-[10px] text-muted-foreground mt-1">
                         {settings.pdpApiKey && settings.pdpApiKey !== '••••••••'
-                          ? 'Connecte a B2Brouter — les factures seront envoyees a la PDP'
-                          : 'Mode sandbox actif — les factures sont generees localement sans envoi PDP'}
+                          ? 'Connecte a B2Brouter — envoi via le prestataire configure'
+                          : 'Mode sandbox actif — les factures sont generees localement sans envoi externe'}
                       </p>
                     </div>
 
@@ -195,7 +195,7 @@ export default function EInvoicingPage() {
                         </p>
                         <p className="text-[10px] text-muted-foreground">
                           {settings.pdpApiKey && settings.pdpApiKey !== '••••••••'
-                            ? 'Les factures sont envoyees via B2Brouter vers la DGFiP'
+                            ? 'Les factures sont transmises via B2Brouter selon votre configuration'
                             : 'Aucune facture n\'est envoyee — generation Factur-X locale uniquement'}
                         </p>
                       </div>
@@ -205,11 +205,11 @@ export default function EInvoicingPage() {
                     <div className="rounded-lg border border-border p-3 space-y-2">
                       <p className="text-xs font-medium text-foreground mb-2">Fonctionnalites incluses</p>
                       {[
-                        'Generation automatique Factur-X EN16931 (PDF/A-3)',
+                        'Generation XML Factur-X/CII de travail',
                         'Mentions obligatoires reforme 2026',
                         'SIREN client et categorie d\'operation',
-                        'Envoi via B2Brouter vers la DGFiP (avec cle API)',
-                        'Suivi des statuts en temps reel',
+                        'Envoi via B2Brouter selon la configuration du compte',
+                        'Validation structurelle de premier niveau',
                       ].map((feature) => (
                         <div key={feature} className="flex items-center gap-2">
                           <Check className="h-3.5 w-3.5 text-accent shrink-0" />
@@ -235,12 +235,12 @@ export default function EInvoicingPage() {
           </DialogHeader>
           <div className="space-y-3 mb-6">
             <p className="text-sm text-muted-foreground leading-relaxed">
-              En activant cette option, vos documents seront generes au format Factur-X (PDF/A-3) conforme aux exigences de la reforme francaise.
+              En activant cette option, Faktur prepare les champs et exports de travail utiles pour la reforme francaise.
             </p>
             <div className="rounded-lg border border-border p-3 space-y-2">
               {[
-                'Vos PDF incluront les metadonnees XML structurees',
-                'Compatible avec toutes les PDP agreees',
+                'Un XML Factur-X/CII pourra etre produit pour validation',
+                'Base de travail pour les formats attendus par la reforme',
                 'Aucun impact sur vos documents existants',
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2">
@@ -279,12 +279,12 @@ export default function EInvoicingPage() {
               </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Nous travaillons activement sur cette fonctionnalite. Elle sera <strong className="text-foreground">pleinement operationnelle avant septembre 2026</strong>, bien avant l&apos;entree en vigueur de la reforme.
+              Cette fonctionnalite doit etre completee avec les tests d&apos;interop, les certifications et les exigences DGFiP avant un usage reglementaire complet.
             </p>
             <div className="rounded-lg border border-border p-3 space-y-2">
               {[
                 'Les formats generes peuvent evoluer',
-                'Certaines PDP ne sont pas encore connectees',
+                'Les integrations et tests officiels restent a valider',
                 'Vos donnees existantes ne seront pas affectees',
               ].map((item) => (
                 <div key={item} className="flex items-start gap-2">
