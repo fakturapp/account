@@ -881,6 +881,7 @@ interface A4SheetProps {
   language?: string
   showNotes?: boolean
   vatExemptReason?: 'none' | 'not_subject' | 'france_no_vat' | 'outside_france'
+  vatOnDebits?: boolean
   footerText?: string
   documentFont?: string
   showSubject?: boolean
@@ -919,7 +920,7 @@ export function A4Sheet({
   deliveryAddress, showDeliveryAddress, clientSiren, showClientSiren,
   clientVatNumber, showClientVatNumber, paymentMethods, customPaymentMethod,
   subject, onSubjectChange, template, darkMode, language,
-  showNotes = true, vatExemptReason = 'none', footerText, documentFont = 'Lexend',
+  showNotes = true, vatExemptReason = 'none', vatOnDebits = false, footerText, documentFont = 'Lexend',
   showSubject = true, showAcceptanceConditions = false, showFreeField = false, showFooterText = false,
   footerMode = 'company_info',
   documentType = 'quote',
@@ -1663,6 +1664,12 @@ export function A4Sheet({
                     : vatExemptReason === 'france_no_vat'
                       ? (lang === 'en' ? 'VAT exemption, article 261 of the CGI' : 'Exonération de TVA, article 261 du CGI')
                       : (lang === 'en' ? 'VAT not applicable — service performed outside France, article 259-1 of the CGI' : 'TVA non applicable — prestation de services réalisée hors de France, article 259-1 du CGI')}
+                </div>
+              )}
+
+              {vatOnDebits && (
+                <div className="mb-3 text-[10px] italic" style={{ color: T.textMuted }}>
+                  {lang === 'en' ? 'VAT payable on debits' : 'TVA acquittée d’après les débits'}
                 </div>
               )}
 
