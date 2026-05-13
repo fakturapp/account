@@ -1,40 +1,51 @@
 "use client";
 
 /**
- * Tooltip — adapted pixel-perfect from HeroUI v3
+ * Tooltip — adapted from HeroUI v3 (literal copy + Faktur imports)
  *
  * Source: heroui/packages/react/src/components/tooltip/tooltip.tsx
  *
- * Uses react-aria-components TooltipTrigger which auto-attaches to
- * its focusable child. Tooltip.Trigger is a transparent wrapper
- * (just passes children through) — the user puts a Button or other
- * focusable element inside.
+ * Faktur adaptations :
+ *  - imports from "react-aria-components" (single entry instead of subpaths)
+ *  - composeSlotClassName / composeTwRenderProps from "@/lib/compose-tw-render-props"
+ *  - dom.div replaced by a plain div (Faktur doesn't ship the polymorphic helper)
+ *  - delay/closeDelay defaults applied at Root (Faktur house style)
+ *  - legacy <Tooltip content="..." /> wrapper kept for backward compatibility
+ *    with the rest of the codebase.
  */
 
-import type { ComponentPropsWithRef, ReactElement, ReactNode } from "react";
+import type {
+  ComponentPropsWithRef,
+  ReactElement,
+  ReactNode,
+} from "react";
 import React, { createContext, useContext, useMemo } from "react";
 import {
+  Focusable as FocusablePrimitive,
   OverlayArrow,
   Tooltip as TooltipPrimitive,
   TooltipTrigger as TooltipTriggerPrimitive,
 } from "react-aria-components";
 
-import { composeTwRenderProps } from "@/lib/compose-tw-render-props";
+import {
+  composeSlotClassName,
+  composeTwRenderProps,
+} from "@/lib/compose-tw-render-props";
 
 import { tooltipVariants, type TooltipVariants } from "./tooltip.styles";
 
-/* ------------------------------------------------------------------
- * Context
- * ------------------------------------------------------------------ */
-interface TooltipContextValue {
+/* -------------------------------------------------------------------------------------------------
+ * Tooltip Context
+ * -----------------------------------------------------------------------------------------------*/
+type TooltipContextValue = {
   slots?: ReturnType<typeof tooltipVariants>;
-}
+};
 
 const TooltipContext = createContext<TooltipContextValue>({});
 
-/* ------------------------------------------------------------------
- * Root — uses TooltipTriggerPrimitive which wraps a focusable element
- * ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------------------------------
+ * Tooltip Root
+ * -----------------------------------------------------------------------------------------------*/
 type TooltipRootProps = ComponentPropsWithRef<typeof TooltipTriggerPrimitive>;
 
 const TooltipRoot = ({ children, ...props }: TooltipRootProps) => {
@@ -42,32 +53,26 @@ const TooltipRoot = ({ children, ...props }: TooltipRootProps) => {
 
   return (
     <TooltipContext.Provider value={{ slots }}>
-      <TooltipTriggerPrimitive delay={400} closeDelay={200} {...props}>
+      <TooltipTriggerPrimitive
+        delay={400}
+        closeDelay={200}
+        data-slot="tooltip-root"
+        {...props}
+      >
         {children}
       </TooltipTriggerPrimitive>
     </TooltipContext.Provider>
   );
 };
 
-/* ------------------------------------------------------------------
- * Trigger — transparent pass-through wrapper
- * ------------------------------------------------------------------ */
-interface TooltipTriggerProps {
-  children: ReactNode;
-}
-
-const TooltipTrigger = ({ children }: TooltipTriggerProps) => {
-  return <>{children}</>;
-};
-
-/* ------------------------------------------------------------------
- * Content
- * ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------------------------------
+ * Tooltip Content
+ * -----------------------------------------------------------------------------------------------*/
 interface TooltipContentProps
   extends Omit<ComponentPropsWithRef<typeof TooltipPrimitive>, "children">,
     TooltipVariants {
   showArrow?: boolean;
-  children: ReactNode;
+  children: React.ReactNode;
 }
 
 const TooltipContent = ({
@@ -91,14 +96,14 @@ const TooltipContent = ({
   );
 };
 
-/* ------------------------------------------------------------------
- * Arrow — same SVG path as HeroUI v3
- * ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------------------------------
+ * Tooltip Arrow
+ * -----------------------------------------------------------------------------------------------*/
 type TooltipArrowProps = Omit<
   ComponentPropsWithRef<typeof OverlayArrow>,
   "children"
 > & {
-  children?: ReactNode;
+  children?: React.ReactNode;
 };
 
 const TooltipArrow = ({ children, className, ...props }: TooltipArrowProps) => {
@@ -116,9 +121,15 @@ const TooltipArrow = ({ children, className, ...props }: TooltipArrowProps) => {
   );
 
   const arrow = React.isValidElement(children)
-    ? React.cloneElement(children as ReactElement<{ "data-slot"?: string }>, {
-        "data-slot": "overlay-arrow",
-      })
+    ? React.cloneElement(
+        children as ReactElement<{
+          className?: string;
+          "data-slot"?: "overlay-arrow";
+        }>,
+        {
+          "data-slot": "overlay-arrow",
+        },
+      )
     : defaultArrow;
 
   return (
@@ -128,18 +139,56 @@ const TooltipArrow = ({ children, className, ...props }: TooltipArrowProps) => {
   );
 };
 
-/* ------------------------------------------------------------------
- * Legacy Tooltip — simple wrapper for backward compatibility
- *
- * Keeps the `<Tooltip content="..." />` API used across the codebase.
- * Now includes the arrow by default to match HeroUI v3 stories.
- * ------------------------------------------------------------------ */
+/* -------------------------------------------------------------------------------------------------
+ * Tooltip Trigger
+ * -----------------------------------------------------------------------------------------------*/
+interface TooltipTriggerProps {
+  children?: ReactNode;
+  className?: string;
+  asChild?: boolean;
+}
+
+const TooltipTrigger = ({
+  children,
+  className,
+  asChild,
+  ...props
+}: TooltipTriggerProps) => {
+  const { slots } = useContext(TooltipContext);
+
+  // asChild: render children as-is, letting them inherit the
+  // react-aria-components focus tracking via FocusablePrimitive.
+  if (asChild) {
+    return (
+      <FocusablePrimitive>{children as React.ReactElement<any, any>}</FocusablePrimitive>
+    );
+  }
+
+  return (
+    <FocusablePrimitive>
+      <div
+        className={composeSlotClassName(slots?.trigger, className)}
+        data-slot="tooltip-trigger"
+        role="button"
+        {...(props as Record<string, unknown>)}
+      >
+        {children}
+      </div>
+    </FocusablePrimitive>
+  );
+};
+
+/* -------------------------------------------------------------------------------------------------
+ * Legacy <Tooltip content="..." /> — simple wrapper used across the codebase
+ * Includes the arrow by default to match HeroUI v3 storybook examples.
+ * -----------------------------------------------------------------------------------------------*/
 interface LegacyTooltipProps {
   content: ReactNode;
   children: ReactNode;
   side?: "top" | "bottom" | "left" | "right";
   showArrow?: boolean;
   className?: string;
+  delay?: number;
 }
 
 function Tooltip({
@@ -148,10 +197,11 @@ function Tooltip({
   side,
   showArrow = true,
   className,
+  delay = 300,
 }: LegacyTooltipProps) {
   return (
-    <TooltipRoot delay={300}>
-      <TooltipTrigger>{children}</TooltipTrigger>
+    <TooltipRoot delay={delay}>
+      {children}
       <TooltipContent
         placement={side}
         showArrow={showArrow}
@@ -164,11 +214,15 @@ function Tooltip({
   );
 }
 
+/* -------------------------------------------------------------------------------------------------
+ * Exports
+ * -----------------------------------------------------------------------------------------------*/
 export { Tooltip, TooltipRoot, TooltipTrigger, TooltipContent, TooltipArrow };
+
 export type {
   TooltipRootProps,
-  TooltipTriggerProps,
-  TooltipContentProps,
   TooltipArrowProps,
+  TooltipContentProps,
+  TooltipTriggerProps,
   LegacyTooltipProps,
 };
