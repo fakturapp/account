@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Field, FieldLabel } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import {
   CheckboxRoot,
@@ -63,7 +63,10 @@ export function TeamEncryptionMigrationModal({ open, teamId, teamName, onClose, 
     })
     setSubmitting(false)
     if (error) return toast(error, 'error')
-    toast('Mode Privé confirmé pour ' + teamName, 'success')
+    t.success('Mode Privé confirmé', {
+      description: `« ${teamName} » conserve le chiffrement de bout en bout.`,
+      indicator: <Lock className="h-4 w-4" />,
+    })
     reset()
     onResolved()
   }
@@ -77,7 +80,10 @@ export function TeamEncryptionMigrationModal({ open, teamId, teamName, onClose, 
     })
     setSubmitting(false)
     if (error) return toast(error, 'error')
-    toast(teamName + ' est désormais en Mode Standard', 'success')
+    t.success('Équipe migrée en Mode Standard', {
+      description: `« ${teamName} » n'a plus besoin de votre mot de passe pour déchiffrer ses données.`,
+      indicator: <Cloud className="h-4 w-4" />,
+    })
     reset()
     onResolved()
   }

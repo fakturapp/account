@@ -21,6 +21,7 @@ import { startRegistration } from '@simplewebauthn/browser'
 import { User, Shield, Monitor, Trash2, Smartphone, Copy, Check, Camera, Globe, MapPin, Download, Lock, AlertTriangle, Calendar, Link2, Unlink, Eye, EyeOff, Fingerprint, KeyRound, Plus, ShieldCheck, Bug } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
 import { Tooltip } from '@/components/ui/tooltip'
+import { toast as t } from '@/components/ui/toast'
 import { useDevMode } from '@/lib/dev-mode'
 
 const tabs = [
@@ -79,7 +80,10 @@ export default function AccountPage() {
   function confirmEnableDevMode() {
     setDevModeEnabled(true)
     setDevModeConfirmOpen(false)
-    toast('Mode développeur activé', 'success')
+    t.success('Mode développeur activé', {
+      description: 'Les notifications d’erreur affichent maintenant un bouton « Détails » avec le payload brut.',
+      indicator: <Bug className="h-4 w-4" />,
+    })
   }
 
   // Email change (multi-step)
@@ -323,7 +327,10 @@ export default function AccountPage() {
     setNewPassword('')
     setConfirmPassword('')
     setSecurityVerified(false)
-    toast('Mot de passe modifié', 'success')
+    t.success('Mot de passe modifié', {
+      description: 'Vos sessions actives restent connectées avec la nouvelle clef.',
+      indicator: <Lock className="h-4 w-4" />,
+    })
   }
 
   function handleSetup2FA() {
@@ -356,7 +363,10 @@ export default function AccountPage() {
       setRecoveryCodes(data.recoveryCodes)
       setTwoFactorStep('recovery')
       await refreshUser()
-      toast('2FA activée', 'success')
+      t.success('Authentification à deux facteurs activée', {
+        description: 'Conservez vos codes de récupération en lieu sûr — ils servent si vous perdez votre appareil.',
+        indicator: <ShieldCheck className="h-4 w-4" />,
+      })
     }
   }
 
@@ -373,7 +383,9 @@ export default function AccountPage() {
     setDisableOpen(false)
     setDisableCode('')
     await refreshUser()
-    toast('2FA désactivée', 'success')
+    t.warning('Authentification à deux facteurs désactivée', {
+      description: 'Votre compte n’est plus protégé par un second facteur.',
+    })
   }
 
   function handleCopyRecoveryCodes() {
@@ -524,7 +536,10 @@ export default function AccountPage() {
       setPasskeyName('')
       await loadPasskeys()
       await refreshUser()
-      toast('Clé d\'accès enregistrée', 'success')
+      t.success('Clé d’accès enregistrée', {
+        description: 'Vous pouvez désormais vous connecter avec votre empreinte, votre visage ou un code PIN.',
+        indicator: <Fingerprint className="h-4 w-4" />,
+      })
     } catch (err: any) {
       setPasskeyAdding(false)
       if (err.name === 'NotAllowedError') return // User cancelled

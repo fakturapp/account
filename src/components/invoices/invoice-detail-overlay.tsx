@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
 import { Tooltip } from '@/components/ui/tooltip'
+import { toast as t } from '@/components/ui/toast'
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { StatusDropdown, invoiceStatusOptions } from '@/components/shared/status-dropdown'
@@ -305,7 +306,14 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
     setDuplicating(false)
     if (error) { toast(error, 'error'); return }
     if (data?.invoice) {
-      toast(`Facture ${data.invoice.invoiceNumber} créée`, 'success')
+      t.success(`Facture ${data.invoice.invoiceNumber} créée`, {
+        description: 'Une copie a été ouverte en édition. Ajustez le contenu puis enregistrez.',
+        actionProps: {
+          children: 'Ouvrir',
+          variant: 'outline',
+          onPress: () => router.push(`/dashboard/invoices/${data.invoice.id}/edit`),
+        },
+      })
       onClose()
       router.push(`/dashboard/invoices/${data.invoice.id}/edit`)
     }
@@ -318,7 +326,9 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
     if (error) { toast(error, 'error'); return }
     if (data?.creditNote) {
       trackFeature('credit_note.create')
-      toast(`Avoir ${data.creditNote.creditNoteNumber} créé`, 'success')
+      t.success(`Avoir ${data.creditNote.creditNoteNumber} créé`, {
+        description: 'L’avoir reprend les lignes de la facture en valeurs négatives.',
+      })
       onClose()
       router.push(`/dashboard/credit-notes/${data.creditNote.id}/edit`)
     }
@@ -330,7 +340,9 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
     const { error } = await api.delete(`/invoices/${invoiceId}`)
     setDeleting(false)
     if (error) { toast(error, 'error'); return }
-    toast('Facture supprimée', 'success')
+    t.success('Facture supprimée', {
+      description: 'La facture et ses lignes ont été retirées définitivement.',
+    })
     setShowDeleteConfirm(false)
     onDelete(invoiceId)
     onClose()

@@ -15,7 +15,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { Tooltip } from '@/components/ui/tooltip'
 import { useAuth } from '@/lib/auth'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -186,7 +186,17 @@ export default function TeamPage() {
     if (error) return toast(error, 'error')
     if (data?.invitation) {
       setInviteResult({ url: data.invitation.inviteUrl, token: data.invitation.token })
-      toast('Invitation envoyée', 'success')
+      t.success('Invitation envoyée', {
+        description: `${inviteEmail} a reçu un lien pour rejoindre l'équipe.`,
+        actionProps: {
+          children: 'Copier le lien',
+          variant: 'outline',
+          onPress: () => {
+            navigator.clipboard.writeText(data.invitation.inviteUrl).catch(() => {})
+            t.success('Lien copié dans le presse-papiers')
+          },
+        },
+      })
       loadTeam()
     }
   }
@@ -233,7 +243,9 @@ export default function TeamPage() {
   async function handleRevokeInvite(memberId: string) {
     const { error } = await api.delete(`/team/invite/${memberId}`)
     if (error) return toast(error, 'error')
-    toast('Invitation révoquée', 'success')
+    t.success('Invitation révoquée', {
+      description: "L'invitation a été annulée et le lien n'est plus utilisable.",
+    })
     loadTeam()
   }
 
@@ -257,7 +269,9 @@ export default function TeamPage() {
     })
     setTransferring(false)
     if (error) return toast(error, 'error')
-    toast('Propriété transférée', 'success')
+    t.success('Propriété transférée', {
+      description: `${transferTarget.user?.fullName || transferTarget.user?.email || 'Le membre'} est désormais propriétaire de l'équipe.`,
+    })
     setTransferOpen(false)
     setTransferPassword('')
     loadTeam()
@@ -306,7 +320,9 @@ export default function TeamPage() {
     })
     setDeleting(false)
     if (error) return toast(error, 'error')
-    toast('Équipe supprimée', 'success')
+    t.success('Équipe supprimée', {
+      description: 'Toutes les données associées ont été définitivement effacées.',
+    })
     setDeleteOpen(false)
     await refreshUser()
     if (data?.switchedToTeamId) {
