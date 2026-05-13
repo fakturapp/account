@@ -18,7 +18,14 @@ import { useToast } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { startRegistration } from '@simplewebauthn/browser'
-import { User, Shield, Monitor, Trash2, Smartphone, Copy, Check, Camera, Globe, MapPin, Download, Lock, AlertTriangle, Calendar, Link2, Unlink, Eye, EyeOff, Fingerprint, KeyRound, Plus, ShieldCheck } from 'lucide-react'
+import { User, Shield, Monitor, Trash2, Smartphone, Copy, Check, Camera, Globe, MapPin, Download, Lock, AlertTriangle, Calendar, Link2, Unlink, Eye, EyeOff, Fingerprint, KeyRound, Plus, ShieldCheck, Bug } from 'lucide-react'
+import {
+  CheckboxRoot,
+  CheckboxControl,
+  CheckboxIndicator,
+  CheckboxContent,
+} from '@/components/ui/checkbox'
+import { useDevMode } from '@/lib/dev-mode'
 
 const tabs = [
   { id: 'profile', label: 'Profil', icon: <User className="h-4 w-4" /> },
@@ -60,6 +67,9 @@ export default function AccountPage() {
   const [profileLoading, setProfileLoading] = useState(false)
   const [avatarUploading, setAvatarUploading] = useState(false)
   const [nameModalOpen, setNameModalOpen] = useState(false)
+
+  // Developer mode
+  const [devMode, setDevModeEnabled] = useDevMode()
 
   // Email change (multi-step)
   const [emailStep, setEmailStep] = useState<'idle' | 'verify_current' | 'enter_new' | 'verify_new'>('idle')
@@ -614,6 +624,32 @@ export default function AccountPage() {
                   Modifier
                 </Button>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* General — Developer mode */}
+          <Card>
+            <CardContent className="p-5">
+              <CheckboxRoot
+                isSelected={devMode}
+                onChange={(checked) => setDevModeEnabled(!!checked)}
+                className="flex items-start gap-3 cursor-pointer w-full"
+              >
+                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
+                  <Bug className="h-4 w-4 text-accent" />
+                </div>
+                <CheckboxContent className="flex-1 min-w-0">
+                  <h3 className="text-sm font-semibold text-foreground">Mode développeur</h3>
+                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                    Affiche un bouton « Détails » sur les notifications d&apos;erreur permettant de
+                    voir le payload brut renvoyé par l&apos;API (status, URL, body). Utile pour
+                    diagnostiquer un bug ou rapporter une erreur.
+                  </p>
+                </CheckboxContent>
+                <CheckboxControl className="mt-1">
+                  <CheckboxIndicator />
+                </CheckboxControl>
+              </CheckboxRoot>
             </CardContent>
           </Card>
         </div>
