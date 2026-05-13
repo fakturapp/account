@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Spinner } from '@/components/ui/spinner'
 import { Button } from '@/components/ui/button'
+import { Tooltip } from '@/components/ui/tooltip'
 import { Dropdown, DropdownItem, DropdownSeparator } from '@/components/ui/dropdown'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { StatusDropdown, quoteStatusOptions } from '@/components/shared/status-dropdown'
@@ -416,12 +417,15 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-separator">
                   <h3 className="text-lg font-bold text-foreground">{quote.quoteNumber}</h3>
-                  <button
-                    onClick={onClose}
-                    className="h-7 w-7 rounded-full bg-overlay shadow-surface flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <X className="h-3.5 w-3.5" />
-                  </button>
+                  <Tooltip content="Fermer" side="left">
+                    <button
+                      onClick={onClose}
+                      aria-label="Fermer"
+                      className="h-7 w-7 rounded-full bg-overlay shadow-surface flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </Tooltip>
                 </div>
 
                 <div className="flex-1 overflow-auto">
