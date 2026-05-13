@@ -10,6 +10,7 @@ import { Field, FieldGroup, FieldLabel, FieldDescription, FieldError } from '@/c
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import { useOnboardingNav } from '@/lib/onboarding-nav'
 import { Spinner } from '@/components/ui/spinner'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { IbanInput } from '@/components/ui/iban-input'
@@ -81,6 +82,7 @@ const countries = [
 
 export default function OnboardingCompanyPage() {
   const router = useRouter()
+  const nav = useOnboardingNav()
   const { refreshUser } = useAuth()
   const [step, setStep] = useState(0)
   const [error, setError] = useState('')
@@ -161,7 +163,7 @@ export default function OnboardingCompanyPage() {
     setLoading(false)
     if (err) return setError(err)
     await refreshUser()
-    router.push('/onboarding/personalization')
+    nav('/onboarding/personalization')
   }
 
   async function handleSkip() {
@@ -170,7 +172,7 @@ export default function OnboardingCompanyPage() {
     setLoading(false)
     if (err) return setError(err)
     await refreshUser()
-    router.push('/onboarding/personalization')
+    nav('/onboarding/personalization')
   }
 
   return (
@@ -524,7 +526,7 @@ export default function OnboardingCompanyPage() {
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => router.push('/onboarding/team')}
+                  onClick={() => nav('/onboarding/team')}
                   className="gap-1.5"
                 >
                   <ChevronLeft className="h-4 w-4" /> Précédent

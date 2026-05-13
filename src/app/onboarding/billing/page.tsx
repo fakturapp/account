@@ -11,6 +11,7 @@ import { Dropdown, DropdownItem } from '@/components/ui/dropdown'
 import { Spinner } from '@/components/ui/spinner'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import { useOnboardingNav } from '@/lib/onboarding-nav'
 import {
   Receipt,
   Zap,
@@ -60,6 +61,7 @@ const paymentMethods = [
 
 export default function OnboardingBillingPage() {
   const router = useRouter()
+  const nav = useOnboardingNav()
   const { refreshUser } = useAuth()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -348,7 +350,7 @@ export default function OnboardingBillingPage() {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push('/onboarding/email')}
+              onClick={() => nav('/onboarding/email')}
               className="gap-1.5"
             >
               <ChevronLeft className="h-4 w-4" /> Précédent

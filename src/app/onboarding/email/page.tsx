@@ -11,6 +11,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
 import { api } from '@/lib/api'
+import { useOnboardingNav } from '@/lib/onboarding-nav'
 import {
   Mail, Check, Plus, ChevronLeft, ChevronRight, Zap, Eye, EyeOff, Key,
   Send, Server, ArrowLeft, X, CheckCircle2, XCircle, ArrowRight,
@@ -40,6 +41,7 @@ const providerLabel: Record<string, string> = { gmail: 'Gmail', resend: 'Resend'
 
 function OnboardingEmailContent() {
   const router = useRouter()
+  const nav = useOnboardingNav()
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [accounts, setAccounts] = useState<EmailAccountItem[]>([])
@@ -341,7 +343,7 @@ function OnboardingEmailContent() {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push('/onboarding/personalization')}
+              onClick={() => nav('/onboarding/personalization')}
               className="gap-1.5"
             >
               <ChevronLeft className="h-4 w-4" /> Précédent
@@ -350,13 +352,13 @@ function OnboardingEmailContent() {
               type="button"
               variant="outline"
               className="flex-1"
-              onClick={() => router.push('/onboarding/billing')}
+              onClick={() => nav('/onboarding/billing')}
             >
               Passer cette étape
             </Button>
             <Button
               className="flex-1 gap-1.5"
-              onClick={() => router.push('/onboarding/billing')}
+              onClick={() => nav('/onboarding/billing')}
             >
               Suivant <ChevronRight className="h-4 w-4" />
             </Button>

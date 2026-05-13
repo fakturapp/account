@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
 import { api } from '@/lib/api'
+import { useOnboardingNav } from '@/lib/onboarding-nav'
 import { TEMPLATES } from '@/lib/invoice-templates'
 import { TemplateThumbnail } from '@/components/shared/template-thumbnail'
 import { Paintbrush, Check, ImagePlus, Trash2, ChevronLeft, Moon, Sun, Type } from 'lucide-react'
@@ -41,6 +42,7 @@ const fontOptions = [
 
 export default function OnboardingPersonalizationPage() {
   const router = useRouter()
+  const nav = useOnboardingNav()
   const [selectedTemplate, setSelectedTemplate] = useState('classique')
   const [selectedColor, setSelectedColor] = useState('#6366f1')
   const [selectedFont, setSelectedFont] = useState('default')
@@ -71,11 +73,11 @@ export default function OnboardingPersonalizationPage() {
       darkMode,
       logoUrl,
     }))
-    router.push('/onboarding/email')
+    nav('/onboarding/email')
   }
 
   function handleSkip() {
-    router.push('/onboarding/email')
+    nav('/onboarding/email')
   }
 
   return (
@@ -240,7 +242,7 @@ export default function OnboardingPersonalizationPage() {
             <Button
               type="button"
               variant="ghost"
-              onClick={() => router.push('/onboarding/company')}
+              onClick={() => nav('/onboarding/company')}
               className="gap-1.5"
             >
               <ChevronLeft className="h-4 w-4" /> Précédent

@@ -6,6 +6,7 @@ import { motion, type Variants } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { RecoveryKeyDisplay } from '@/components/shared/recovery-key-display'
+import { useOnboardingNav } from '@/lib/onboarding-nav'
 import { KeyRound } from 'lucide-react'
 
 const fadeUp = {
@@ -19,6 +20,7 @@ const fadeUp = {
 
 export default function OnboardingRecoveryKeyPage() {
   const router = useRouter()
+  const nav = useOnboardingNav()
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null)
 
   useEffect(() => {
@@ -32,7 +34,7 @@ export default function OnboardingRecoveryKeyPage() {
 
   function handleContinue() {
     sessionStorage.removeItem('zenvoice_recovery_key')
-    router.push('/onboarding/company')
+    nav('/onboarding/company')
   }
 
   if (!recoveryKey) return null
