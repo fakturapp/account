@@ -21,26 +21,38 @@
   display: block;
 }
 
-/* Placement variants - Bottom */
+/* Placement variants - Bottom (same content-offset logic as top) */
 .toast-region--bottom {
-  @apply bottom-4 left-1/2 -translate-x-1/2;
+  @apply bottom-4;
+  left: calc(50% + var(--toast-left-offset, 0px) / 2);
+  transform: translateX(-50%);
 }
 
 .toast-region--bottom-start {
-  @apply bottom-4 left-4;
+  @apply bottom-4;
+  left: calc(1rem + var(--toast-left-offset, 0px));
 }
 
 .toast-region--bottom-end {
   @apply right-4 bottom-4;
 }
 
-/* Placement variants - Top */
+/* Placement variants - Top
+ *
+ * `--toast-left-offset` est posée par le dashboard layout pour décaler
+ * le centre du toast d'une moitié de sidebar, afin de centrer dans la
+ * zone de contenu plutôt que dans la viewport totale.
+ * Par défaut 0px → centrage viewport (pour les pages publiques sans sidebar).
+ */
 .toast-region--top {
-  @apply top-4 left-1/2 -translate-x-1/2;
+  @apply top-4;
+  left: calc(50% + var(--toast-left-offset, 0px) / 2);
+  transform: translateX(-50%);
 }
 
 .toast-region--top-start {
-  @apply top-4 left-4;
+  @apply top-4;
+  left: calc(1rem + var(--toast-left-offset, 0px));
 }
 
 .toast-region--top-end {

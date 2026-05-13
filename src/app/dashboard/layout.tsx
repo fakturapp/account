@@ -68,6 +68,18 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     setIsDesktopRuntime(isFakturDesktop())
   }, [])
 
+  // Toast centering: offset the toast region to the right by the sidebar
+  // width so toasts are centered in the content area, not the viewport.
+  // Set on :root so the global ToastProvider (mounted at app root) picks
+  // it up. Reset on unmount → public pages get viewport-centered toasts.
+  useEffect(() => {
+    const offset = sidebarCollapsed ? '4rem' : 'var(--sidebar-width, 16rem)'
+    document.documentElement.style.setProperty('--toast-left-offset', offset)
+    return () => {
+      document.documentElement.style.removeProperty('--toast-left-offset')
+    }
+  }, [sidebarCollapsed])
+
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     setIsPopup(params.get('popup') === 'true')
