@@ -15,6 +15,11 @@ import { useToast } from '@/components/ui/toast'
 import { RecoveryKeyModal } from '@/components/modals/recovery-key-modal'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import {
+  EncryptionModeChooser,
+  type EncryptionMode,
+  type EncryptionAcks,
+} from '@/components/team/encryption-mode-chooser'
 
 interface TeamActionResponse {
   team: { id: string; name: string }
@@ -30,6 +35,8 @@ export default function CreateTeamPage() {
 
   const [name, setName] = useState('')
   const [loading, setLoading] = useState(false)
+  const [encryptionMode, setEncryptionMode] = useState<EncryptionMode>('standard')
+  const [acks, setAcks] = useState<EncryptionAcks>({ dataLoss: false, notResponsible: false })
 
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importName, setImportName] = useState('')
@@ -37,6 +44,8 @@ export default function CreateTeamPage() {
   const [isEncrypted, setIsEncrypted] = useState(false)
   const [importing, setImporting] = useState(false)
   const [dragOver, setDragOver] = useState(false)
+  const [importEncryptionMode, setImportEncryptionMode] = useState<EncryptionMode>('standard')
+  const [importAcks, setImportAcks] = useState<EncryptionAcks>({ dataLoss: false, notResponsible: false })
   const [recoveryKeyModal, setRecoveryKeyModal] = useState<{
     recoveryKey: string
     successMessage: string
@@ -57,11 +66,25 @@ export default function CreateTeamPage() {
     }
   }
 
+  const createAcksValid =
+    encryptionMode === 'standard' || (acks.dataLoss && acks.notResponsible)
+  const importAcksValid =
+    importEncryptionMode === 'standard' || (importAcks.dataLoss && importAcks.notResponsible)
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
+    if (!createAcksValid) {
+      toast('Veuillez accepter les avertissements pour activer le Mode Privé.', 'error')
+      return
+    }
     setLoading(true)
 
-    const { data, error } = await api.post<TeamActionResponse>('/team/create', { name })
+    const { data, error } = await api.post<TeamActionResponse>('/team/create', {
+      name,
+      encryptionMode,
+      ackDataLoss: acks.dataLoss,
+      ackNotResponsible: acks.notResponsible,
+    })
     setLoading(false)
 
     if (error) return toast(error, 'error')
@@ -104,11 +127,18 @@ export default function CreateTeamPage() {
   async function handleImport(e: React.FormEvent) {
     e.preventDefault()
     if (!importFile) return
+    if (!importAcksValid) {
+      toast('Veuillez accepter les avertissements pour activer le Mode Privé.', 'error')
+      return
+    }
 
     setImporting(true)
     const formData = new FormData()
     formData.append('file', importFile)
     formData.append('teamName', importName)
+    formData.append('encryptionMode', importEncryptionMode)
+    formData.append('ackDataLoss', String(importAcks.dataLoss))
+    formData.append('ackNotResponsible', String(importAcks.notResponsible))
     if (isEncrypted && importPassword) {
       formData.append('decryptionPassword', importPassword)
     }
@@ -231,7 +261,18 @@ export default function CreateTeamPage() {
                       </FieldDescription>
                     </Field>
 
-                    <Button type="submit" className="w-full" disabled={loading || name.length < 2}>
+                    <EncryptionModeChooser
+                      value={encryptionMode}
+                      onChange={setEncryptionMode}
+                      acks={acks}
+                      onAcksChange={setAcks}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="w-full"
+                      disabled={loading || name.length < 2 || !createAcksValid}
+                    >
                       {loading ? <><Spinner /> Creation...</> : "Creer l'equipe"}
                     </Button>
                   </FieldGroup>
@@ -342,6 +383,13 @@ export default function CreateTeamPage() {
                       </FieldDescription>
                     </Field>
 
+                    <EncryptionModeChooser
+                      value={importEncryptionMode}
+                      onChange={setImportEncryptionMode}
+                      acks={importAcks}
+                      onAcksChange={setImportAcks}
+                    />
+
                     <Button
                       type="submit"
                       className="w-full"
@@ -349,7 +397,8 @@ export default function CreateTeamPage() {
                         importing ||
                         !importFile ||
                         importName.length < 2 ||
-                        (isEncrypted && !importPassword)
+                        (isEncrypted && !importPassword) ||
+                        !importAcksValid
                       }
                     >
                       {importing ? (
