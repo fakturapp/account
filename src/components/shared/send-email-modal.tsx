@@ -6,7 +6,7 @@ import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/componen
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { useEmail } from '@/lib/email-context'
 import { api } from '@/lib/api'
 import { Send, Paperclip, ChevronDown, Plus, X, Trash2, CheckCircle2 } from 'lucide-react'
@@ -156,16 +156,25 @@ export function SendEmailModal({
       formData.append('attachments', att.file)
     }
 
+    const loadingId = t('Envoi du document en cours…', {
+      description: to ? `Destinataire : ${to}` : undefined,
+      isLoading: true,
+      timeout: 0,
+    })
+
     const { error } = await api.upload('/email/send', formData)
     setSending(false)
+    t.close(loadingId)
 
     if (error) {
-      toast(error, 'error')
+      t.danger("Échec de l’envoi", { description: error })
       return
     }
 
     trackFeature('email.send')
-    toast('Email envoyé avec succès', 'success')
+    t.success('Email envoyé', {
+      description: to ? `Le document a été envoyé à ${to}.` : undefined,
+    })
     onSent?.()
     onClose()
   }

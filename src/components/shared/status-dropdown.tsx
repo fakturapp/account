@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Dropdown, DropdownItem } from '@/components/ui/dropdown'
 import { api } from '@/lib/api'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { Spinner } from '@/components/ui/spinner'
 import {
   FileEdit,
@@ -50,6 +50,10 @@ export function StatusDropdown({ id, currentStatus, options, endpoint, onStatusC
       toast(error, 'error')
       return
     }
+    const target = options.find((o) => o.value === newStatus)
+    t.success('Statut mis à jour', {
+      description: target ? `Nouveau statut : ${target.label}` : undefined,
+    })
     onStatusChange(id, newStatus)
   }
 
