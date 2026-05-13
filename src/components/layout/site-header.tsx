@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { usePathname } from 'next/navigation'
 import { Separator } from '@/components/ui/separator'
 import { SettingsSearchModal } from '@/components/settings/settings-search-modal'
+import { Tooltip } from '@/components/ui/tooltip'
 import { PanelLeft, Search } from 'lucide-react'
 
 const routeTitles: Record<string, string> = {
@@ -67,12 +68,15 @@ export function SiteHeader({ onToggleSidebar }: SiteHeaderProps) {
     <header className="relative z-20 flex h-(--header-height) shrink-0 items-center gap-2 bg-transparent transition-[width,height] ease-linear">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         {onToggleSidebar && (
-          <button
-            onClick={onToggleSidebar}
-            className="-ml-1 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all duration-200"
-          >
-            <PanelLeft className="h-3.5 w-3.5" />
-          </button>
+          <Tooltip content="Afficher / masquer la barre latérale" side="bottom">
+            <button
+              onClick={onToggleSidebar}
+              aria-label="Basculer la barre latérale"
+              className="-ml-1 flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:bg-black/5 dark:hover:bg-white/5 hover:text-foreground transition-all duration-200"
+            >
+              <PanelLeft className="h-3.5 w-3.5" />
+            </button>
+          </Tooltip>
         )}
         <Separator orientation="vertical" className="mx-2 data-[orientation=vertical]:h-4 opacity-30" />
         <h1 className="text-[13px] font-medium text-muted-foreground">{routeTitles[title] || 'Dashboard'}</h1>

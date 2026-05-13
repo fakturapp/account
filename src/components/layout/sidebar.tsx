@@ -267,8 +267,8 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
   }
 
   if (!hasChildren) {
-    return (
-      <Link href={item.href} className={rowClass} data-tutorial={tutorialMap[item.href]}>
+    const link = (
+      <Link href={item.href} className={rowClass} data-tutorial={tutorialMap[item.href]} aria-label={item.label}>
         <item.icon className={iconClass} />
         {!collapsed && (
           <motion.span {...labelFade} className="whitespace-nowrap">
@@ -277,27 +277,44 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
         )}
       </Link>
     )
+    return collapsed ? (
+      <Tooltip content={item.label} side="right">
+        {link}
+      </Tooltip>
+    ) : (
+      link
+    )
   }
+
+  const toggleBtn = (
+    <button onClick={handleToggle} className={rowClass} aria-label={item.label}>
+      <item.icon className={iconClass} />
+      {!collapsed && (
+        <>
+          <motion.span {...labelFade} className="flex-1 text-left whitespace-nowrap">
+            {item.label}
+          </motion.span>
+          <motion.div
+            initial={{ opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0, rotate: expanded ? 90 : 0 }}
+            transition={{ duration: 0.22, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
+          >
+            <ChevronRight className="h-3 w-3 opacity-40" />
+          </motion.div>
+        </>
+      )}
+    </button>
+  )
 
   return (
     <div>
-      <button onClick={handleToggle} className={rowClass}>
-        <item.icon className={iconClass} />
-        {!collapsed && (
-          <>
-            <motion.span {...labelFade} className="flex-1 text-left whitespace-nowrap">
-              {item.label}
-            </motion.span>
-            <motion.div
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0, rotate: expanded ? 90 : 0 }}
-              transition={{ duration: 0.22, delay: 0.08, ease: [0.25, 0.46, 0.45, 0.94] }}
-            >
-              <ChevronRight className="h-3 w-3 opacity-40" />
-            </motion.div>
-          </>
-        )}
-      </button>
+      {collapsed ? (
+        <Tooltip content={item.label} side="right">
+          {toggleBtn}
+        </Tooltip>
+      ) : (
+        toggleBtn
+      )}
       <AnimatePresence initial={false}>
         {expanded && !collapsed && (
           <motion.div
