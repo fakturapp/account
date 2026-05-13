@@ -29,6 +29,7 @@ import { TutorialBanner } from '@/components/tutorial/tutorial-banner'
 import { TutorialOverlay } from '@/components/tutorial/tutorial-overlay'
 import { TutorialOfferModal } from '@/components/tutorial/tutorial-offer-modal'
 import { TutorialLevelComplete } from '@/components/tutorial/tutorial-level-complete'
+import { TeamEncryptionBanner } from '@/components/team/team-encryption-banner'
 
 interface TeamListItem {
   id: string
@@ -267,6 +268,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       >
         <SiteHeader onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)} />
         <RouteProgressBar />
+        <TeamEncryptionBanner />
 
         <main className="relative flex-1 overflow-y-auto" data-tutorial="main-content">
           <div className="relative @container/main flex flex-1 flex-col gap-2">
