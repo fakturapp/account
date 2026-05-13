@@ -1,10 +1,16 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState, useEffect } from 'react'
 import { KeyRound } from 'lucide-react'
 import { Dialog, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { RecoveryKeyDisplay } from '@/components/shared/recovery-key-display'
+import {
+  CheckboxRoot,
+  CheckboxControl,
+  CheckboxIndicator,
+  CheckboxContent,
+} from '@/components/ui/checkbox'
 
 interface RecoveryKeyModalProps {
   open: boolean
@@ -12,6 +18,8 @@ interface RecoveryKeyModalProps {
   onClose: () => void
   title?: string
   description?: string
+  /** Kept for backward compatibility but no longer honored — the modal
+   *  now stays open until the user ticks the ack checkbox. */
   minVisibleSeconds?: number
 }
 
@@ -21,33 +29,14 @@ export function RecoveryKeyModal({
   onClose,
   title = 'Nouvelle clef de secours',
   description = 'Une nouvelle clef de secours a été générée pour votre compte. Elle remplace la précédente pour toutes vos équipes actives.',
-  minVisibleSeconds = 10,
 }: RecoveryKeyModalProps) {
-  const [remainingSeconds, setRemainingSeconds] = useState(minVisibleSeconds)
+  const [ackSaved, setAckSaved] = useState(false)
 
   useEffect(() => {
-    if (!open) {
-      setRemainingSeconds(minVisibleSeconds)
-      return
-    }
+    if (!open) setAckSaved(false)
+  }, [open])
 
-    setRemainingSeconds(minVisibleSeconds)
-
-    const interval = window.setInterval(() => {
-      setRemainingSeconds((current) => {
-        if (current <= 1) {
-          window.clearInterval(interval)
-          return 0
-        }
-
-        return current - 1
-      })
-    }, 1000)
-
-    return () => window.clearInterval(interval)
-  }, [open, recoveryKey, minVisibleSeconds])
-
-  const canClose = remainingSeconds === 0
+  const canClose = ackSaved
 
   return (
     <Dialog
@@ -70,16 +59,36 @@ export function RecoveryKeyModal({
       <div className="space-y-4">
         <RecoveryKeyDisplay recoveryKey={recoveryKey} />
 
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
-          {canClose
-            ? 'Vous pouvez maintenant fermer cette fenêtre.'
-            : `Cette fenêtre restera ouverte encore ${remainingSeconds}s pour vous laisser le temps de noter la clef.`}
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/10 px-4 py-3 text-[13px] text-amber-100/90">
+          Conservez cette clef <strong>en dehors de Faktur</strong> (gestionnaire de mots de passe,
+          coffre-fort, papier dans un endroit sûr…). Sans elle, et sans votre mot de passe, vos
+          données seront définitivement perdues.
         </div>
+
+        <CheckboxRoot
+          isSelected={ackSaved}
+          onChange={(checked) => setAckSaved(!!checked)}
+          className="flex items-start gap-3 cursor-pointer rounded-lg border border-border bg-surface px-3 py-2.5"
+        >
+          <CheckboxControl className="mt-0.5">
+            <CheckboxIndicator />
+          </CheckboxControl>
+          <CheckboxContent className="text-sm text-foreground leading-tight">
+            Je confirme avoir téléchargé ma clef de secours et l’avoir stockée dans un lieu sûr.
+          </CheckboxContent>
+        </CheckboxRoot>
       </div>
 
       <DialogFooter>
-        <Button type="button" onClick={onClose} disabled={!canClose} className="w-full">
-          {canClose ? "J'ai noté la clef" : `Disponible dans ${remainingSeconds}s`}
+        <Button
+          type="button"
+          onClick={() => {
+            if (canClose) onClose()
+          }}
+          disabled={!canClose}
+          className="w-full"
+        >
+          {canClose ? 'Continuer' : 'Cochez la case ci-dessus pour continuer'}
         </Button>
       </DialogFooter>
     </Dialog>
