@@ -1,8 +1,10 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { usePathname, useRouter } from 'next/navigation'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Spinner } from '@/components/ui/spinner'
 import { motion, AnimatePresence } from 'framer-motion'
 import { CheckCircle2, Users, Shield, Building2, Palette, Mail, Receipt, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -16,11 +18,14 @@ interface Step {
   label: string
   path: string
   icon: React.ElementType
+  /** When true, this step is only relevant for end-to-end encrypted teams
+   *  (Mode Privé). It is hidden when the user's current team is Standard. */
+  privateOnly?: boolean
 }
 
-const steps: Step[] = [
+const ALL_STEPS: Step[] = [
   { id: 'team', label: 'Équipe', path: '/onboarding/team', icon: Users },
-  { id: 'recovery-key', label: 'Sécurité', path: '/onboarding/recovery-key', icon: Shield },
+  { id: 'recovery-key', label: 'Sécurité', path: '/onboarding/recovery-key', icon: Shield, privateOnly: true },
   { id: 'company', label: 'Entreprise', path: '/onboarding/company', icon: Building2 },
   { id: 'personalization', label: 'Apparence', path: '/onboarding/personalization', icon: Palette },
   { id: 'email', label: 'Email', path: '/onboarding/email', icon: Mail },
@@ -31,6 +36,27 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const { user, loading } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
+
+  // Filter steps: drop the security step for Standard-mode users.
+  const isStandardTeam = user?.currentTeamEncryptionMode === 'standard'
+  const steps = ALL_STEPS.filter((s) => !s.privateOnly || !isStandardTeam)
+
+  // Page transition overlay: hide the new page's empty state during nav,
+  // showing a spinner instead until the new path is committed.
+  const [navigating, setNavigating] = useState(false)
+  const prevPathRef = useRef(pathname)
+  useEffect(() => {
+    if (prevPathRef.current !== pathname) {
+      prevPathRef.current = pathname
+      setNavigating(false)
+    }
+  }, [pathname])
+  useEffect(() => {
+    // Listen for global transition signals from step pages (router.push)
+    function onStart() { setNavigating(true) }
+    window.addEventListener('faktur:onboarding-navigate', onStart)
+    return () => window.removeEventListener('faktur:onboarding-navigate', onStart)
+  }, [])
 
   if (loading || !user) {
     return (
@@ -225,6 +251,24 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         </div>
         </div>
       </main>
+
+      {/* Navigation overlay — masque le flash de l'ancienne page pendant
+       *  que Next.js prépare la suivante. Déclenché via l'event global
+       *  `faktur:onboarding-navigate` posé par les pages d'onboarding. */}
+      <AnimatePresence>
+        {navigating && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[1000] flex flex-col items-center justify-center bg-background/85 backdrop-blur-sm"
+          >
+            <Spinner size="lg" className="text-accent" />
+            <p className="mt-4 text-sm font-medium text-foreground">Préparation de l’étape suivante…</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
