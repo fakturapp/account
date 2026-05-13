@@ -1,10 +1,21 @@
 import { tutorialIntercept } from './tutorial-sandbox'
+import { captureApiError } from './dev-mode'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
 const API_PREFIX = process.env.NEXT_PUBLIC_API_PREFIX || ''
 
 function resolveApiUrl(endpoint: string) {
   return `${API_URL}${API_PREFIX}${endpoint}`
+}
+
+function recordApiError(method: string, endpoint: string, status: number, body: unknown) {
+  captureApiError({
+    url: resolveApiUrl(endpoint),
+    method,
+    status,
+    body,
+    ts: Date.now(),
+  })
 }
 
 let vaultLockListeners: (() => void)[] = []
@@ -85,6 +96,7 @@ async function request<T = unknown>(
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
+      recordApiError(options.method || 'GET', endpoint, res.status, data)
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
       return { error: parseErrorPayload(data).message || 'Unauthorized' }
@@ -93,10 +105,12 @@ async function request<T = unknown>(
     const data = await res.json()
 
     if (!res.ok) {
+      recordApiError(options.method || 'GET', endpoint, res.status, data)
       return { error: parseErrorPayload(data).message }
     }
     return { data }
-  } catch {
+  } catch (err) {
+    recordApiError(options.method || 'GET', endpoint, 0, { networkError: String(err) })
     return { error: 'Network error. Please try again.' }
   }
 }
@@ -125,6 +139,7 @@ async function uploadRequest<T = unknown>(
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
+      recordApiError('POST', endpoint, res.status, data)
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
       return { error: parseErrorPayload(data).message || 'Unauthorized' }
@@ -133,10 +148,12 @@ async function uploadRequest<T = unknown>(
     const data = await res.json()
 
     if (!res.ok) {
+      recordApiError('POST', endpoint, res.status, data)
       return { error: parseErrorPayload(data).message }
     }
     return { data }
-  } catch {
+  } catch (err) {
+    recordApiError('POST', endpoint, 0, { networkError: String(err) })
     return { error: 'Network error. Please try again.' }
   }
 }
