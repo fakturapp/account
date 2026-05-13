@@ -13,6 +13,7 @@ import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
 import { RecoveryKeyModal } from '@/components/modals/recovery-key-modal'
+import { toast as t } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
 import {
@@ -99,7 +100,14 @@ export default function CreateTeamPage() {
       return
     }
 
-    toast(`Equipe "${data?.team.name}" creee`, 'success')
+    t.success(`Équipe « ${data?.team.name} » créée`, {
+      description: 'Vous pouvez désormais inviter des membres et créer des factures.',
+      actionProps: {
+        children: 'Inviter un membre',
+        variant: 'outline',
+        onPress: () => router.push('/dashboard/settings/members'),
+      },
+    })
   }
 
   const handleFileSelect = useCallback((file: File) => {
@@ -159,7 +167,9 @@ export default function CreateTeamPage() {
       return
     }
 
-    toast(`Equipe "${data?.team.name}" importee`, 'success')
+    t.success(`Équipe « ${data?.team.name} » importée`, {
+      description: 'Vos données ont été restaurées avec succès.',
+    })
     router.push('/dashboard')
   }
 

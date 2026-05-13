@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Dialog, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import {
   Link2,
@@ -69,7 +69,10 @@ export function PaymentLinkCard({
     if (!linkUrl) return
     await navigator.clipboard.writeText(linkUrl)
     setCopied(true)
-    toast('Lien copié', 'success')
+    t.success('Lien de paiement copié', {
+      description: 'Collez-le dans un email ou un message pour envoyer à votre client.',
+      indicator: <Link2 className="h-4 w-4" />,
+    })
     setTimeout(() => setCopied(false), 2000)
   }
 

@@ -12,7 +12,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { PhoneInput } from '@/components/ui/phone-input'
 import { api } from '@/lib/api'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import {
   X,
   Building2,
@@ -138,7 +138,9 @@ export function ClientEditPanel({ open, clientId, onClose, onUpdated, onDeleted 
     if (error) {
       toast(error, 'error')
     } else {
-      toast('Client mis à jour', 'success')
+      t.success('Client mis à jour', {
+        description: 'Les modifications ont été enregistrées.',
+      })
       onUpdated()
     }
   }
@@ -151,7 +153,9 @@ export function ClientEditPanel({ open, clientId, onClose, onUpdated, onDeleted 
     if (error) {
       toast(error, 'error')
     } else {
-      toast('Client supprimé', 'success')
+      t.success('Client supprimé', {
+        description: 'Les factures et devis liés sont conservés.',
+      })
       onClose()
       onDeleted()
     }
