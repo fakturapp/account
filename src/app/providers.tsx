@@ -16,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <AnalyticsProvider>
           <AuthProvider>
             <HealthCheckProvider>{children}</HealthCheckProvider>
-            <ToastProvider placement="bottom end" />
+            <ToastProvider placement="top" />
             <ApiErrorDetailsDialog />
           </AuthProvider>
           <CookieConsent />

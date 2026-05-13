@@ -57,13 +57,16 @@
  * Arrondi: rounded-2xl (20px) — moins agressif que rounded-3xl (modales).
  * Fond identique (overlay) pour tous les variants — heroui style.
  * Seuls le titre + l'icône changent de couleur par variant.
+ *
+ * items-center: l'icône s'aligne sur le centre vertical du bloc
+ * titre+description (vs items-start qui collait l'icône au haut).
  */
 .toast {
   position: absolute;
   left: 0;
   right: 0;
 
-  @apply pointer-events-auto flex flex-row items-start justify-start gap-2.5 px-4 py-3 rounded-2xl;
+  @apply pointer-events-auto flex flex-row items-center justify-start gap-2.5 px-4 py-3 rounded-2xl;
   background-color: var(--color-overlay);
   color: var(--color-overlay-foreground);
   box-shadow: var(--shadow-overlay);
