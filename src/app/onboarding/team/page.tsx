@@ -16,6 +16,7 @@ import {
   type EncryptionMode,
   type EncryptionAcks,
 } from '@/components/team/encryption-mode-chooser'
+import { ConfirmPasswordModal } from '@/components/team/confirm-password-modal'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -34,15 +35,71 @@ export default function OnboardingTeamPage() {
   const [acks, setAcks] = useState<EncryptionAcks>({ dataLoss: false, notResponsible: false })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [confirmPasswordOpen, setConfirmPasswordOpen] = useState(false)
+  const [confirmPasswordSubmitting, setConfirmPasswordSubmitting] = useState(false)
+
+  function startNav() {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('faktur:onboarding-navigate'))
+    }
+  }
 
   useEffect(() => {
     if (user?.currentTeamId) {
       const hasKey = sessionStorage.getItem('zenvoice_recovery_key')
+      startNav()
       router.replace(hasKey ? '/onboarding/recovery-key' : '/onboarding/company')
     }
   }, [user, router])
 
   const acksValid = encryptionMode === 'standard' || (acks.dataLoss && acks.notResponsible)
+
+  async function submitTeam(confirmPassword?: string) {
+    const { data, error: err, errorCode } = await api.post<{ recoveryKey?: string }>(
+      '/onboarding/team',
+      {
+        name,
+        encryptionMode,
+        ackDataLoss: acks.dataLoss,
+        ackNotResponsible: acks.notResponsible,
+        confirmPassword,
+      },
+    )
+
+    if (err) {
+      if (errorCode === 'KEK_REQUIRED') {
+        setLoading(false)
+        setConfirmPasswordOpen(true)
+        return null
+      }
+      if (errorCode === 'INVALID_PASSWORD') {
+        setConfirmPasswordSubmitting(false)
+        setError('Mot de passe incorrect.')
+        return null
+      }
+      setLoading(false)
+      setConfirmPasswordSubmitting(false)
+      setError(err)
+      return null
+    }
+
+    setConfirmPasswordSubmitting(false)
+    setConfirmPasswordOpen(false)
+    return data
+  }
+
+  async function handleConfirmPassword(password: string) {
+    setError('')
+    setConfirmPasswordSubmitting(true)
+    const data = await submitTeam(password)
+    if (!data) return
+    if (data.recoveryKey) {
+      sessionStorage.setItem('zenvoice_recovery_key', data.recoveryKey)
+    }
+    await refreshUser()
+    startNav()
+    router.push(data.recoveryKey ? '/onboarding/recovery-key' : '/onboarding/company')
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -52,23 +109,16 @@ export default function OnboardingTeamPage() {
       return
     }
     setLoading(true)
+    const data = await submitTeam()
+    if (!data) return
 
-    const { data, error: err } = await api.post<{ recoveryKey?: string }>('/onboarding/team', {
-      name,
-      encryptionMode,
-      ackDataLoss: acks.dataLoss,
-      ackNotResponsible: acks.notResponsible,
-    })
-    setLoading(false)
-
-    if (err) return setError(err)
-
-    if (data?.recoveryKey) {
+    if (data.recoveryKey) {
       sessionStorage.setItem('zenvoice_recovery_key', data.recoveryKey)
     }
 
     await refreshUser()
-    router.push(data?.recoveryKey ? '/onboarding/recovery-key' : '/onboarding/company')
+    startNav()
+    router.push(data.recoveryKey ? '/onboarding/recovery-key' : '/onboarding/company')
   }
 
   return (
@@ -146,6 +196,17 @@ export default function OnboardingTeamPage() {
           </form>
         </CardContent>
       </Card>
+
+      <ConfirmPasswordModal
+        open={confirmPasswordOpen}
+        onClose={() => {
+          if (!confirmPasswordSubmitting) {
+            setConfirmPasswordOpen(false)
+          }
+        }}
+        onConfirm={handleConfirmPassword}
+        submitting={confirmPasswordSubmitting}
+      />
     </motion.div>
   )
 }
