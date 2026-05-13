@@ -19,12 +19,7 @@ import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { startRegistration } from '@simplewebauthn/browser'
 import { User, Shield, Monitor, Trash2, Smartphone, Copy, Check, Camera, Globe, MapPin, Download, Lock, AlertTriangle, Calendar, Link2, Unlink, Eye, EyeOff, Fingerprint, KeyRound, Plus, ShieldCheck, Bug } from 'lucide-react'
-import {
-  CheckboxRoot,
-  CheckboxControl,
-  CheckboxIndicator,
-  CheckboxContent,
-} from '@/components/ui/checkbox'
+import { Switch } from '@/components/ui/switch'
 import { useDevMode } from '@/lib/dev-mode'
 
 const tabs = [
@@ -70,6 +65,21 @@ export default function AccountPage() {
 
   // Developer mode
   const [devMode, setDevModeEnabled] = useDevMode()
+  const [devModeConfirmOpen, setDevModeConfirmOpen] = useState(false)
+
+  function handleDevModeToggle(next: boolean) {
+    if (next && !devMode) {
+      setDevModeConfirmOpen(true)
+      return
+    }
+    setDevModeEnabled(next)
+  }
+
+  function confirmEnableDevMode() {
+    setDevModeEnabled(true)
+    setDevModeConfirmOpen(false)
+    toast('Mode développeur activé', 'success')
+  }
 
   // Email change (multi-step)
   const [emailStep, setEmailStep] = useState<'idle' | 'verify_current' | 'enter_new' | 'verify_new'>('idle')
@@ -630,26 +640,20 @@ export default function AccountPage() {
           {/* General — Developer mode */}
           <Card>
             <CardContent className="p-5">
-              <CheckboxRoot
-                isSelected={devMode}
-                onChange={(checked) => setDevModeEnabled(!!checked)}
-                className="flex items-start gap-3 cursor-pointer w-full"
-              >
+              <div className="flex items-start gap-3">
                 <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
                   <Bug className="h-4 w-4 text-accent" />
                 </div>
-                <CheckboxContent className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0">
                   <h3 className="text-sm font-semibold text-foreground">Mode développeur</h3>
                   <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                    Affiche un bouton « Détails » sur les notifications d&apos;erreur permettant de
-                    voir le payload brut renvoyé par l&apos;API (status, URL, body). Utile pour
-                    diagnostiquer un bug ou rapporter une erreur.
+                    Active des fonctionnalités de diagnostic destinées aux développeurs :
+                    bouton « Détails » sur les notifications d&apos;erreur permettant de voir le
+                    payload brut renvoyé par l&apos;API (status, URL, body).
                   </p>
-                </CheckboxContent>
-                <CheckboxControl className="mt-1">
-                  <CheckboxIndicator />
-                </CheckboxControl>
-              </CheckboxRoot>
+                </div>
+                <Switch checked={devMode} onChange={handleDevModeToggle} className="mt-1" />
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -1372,6 +1376,39 @@ export default function AccountPage() {
           <Button variant="destructive" onClick={handleDeletePasskey} disabled={passkeyDeleting}>
             {passkeyDeleting ? <><Spinner size="sm" /> Suppression...</> : 'Supprimer'}
           </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Developer mode confirmation */}
+      <Dialog open={devModeConfirmOpen} onClose={() => setDevModeConfirmOpen(false)}>
+        <DialogHeader
+          onClose={() => setDevModeConfirmOpen(false)}
+          icon={<Bug className="h-5 w-5 text-accent" />}
+        >
+          <DialogTitle>Activer le Mode développeur</DialogTitle>
+          <DialogDescription>
+            Ce mode active des fonctionnalités de diagnostic destinées aux développeurs.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-3 text-sm text-muted-foreground leading-relaxed">
+          <p>Une fois activé, vous verrez :</p>
+          <ul className="list-disc pl-5 space-y-1.5">
+            <li>
+              Un bouton <strong className="text-foreground">« Détails »</strong> sur chaque
+              notification d&apos;erreur affichant le payload brut renvoyé par l&apos;API.
+            </li>
+            <li>Le code d&apos;erreur, l&apos;URL appelée et la méthode HTTP utilisée.</li>
+            <li>Une option pour copier le tout, utile pour rapporter un bug.</li>
+          </ul>
+          <p className="text-xs italic">
+            Vous pouvez désactiver ce mode à tout moment depuis cette page.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDevModeConfirmOpen(false)}>
+            Annuler
+          </Button>
+          <Button onClick={confirmEnableDevMode}>Activer</Button>
         </DialogFooter>
       </Dialog>
 
