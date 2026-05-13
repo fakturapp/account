@@ -42,7 +42,10 @@ import {
   Building2 as BuildingIcon,
   Upload,
   AlertTriangle,
+  Lock,
+  Cloud,
 } from 'lucide-react'
+import { TeamEncryptionMigrationModal } from '@/components/team/team-encryption-migration-modal'
 
 interface TeamMember {
   id: string
@@ -68,6 +71,8 @@ interface Team {
   members: TeamMember[]
   recoveryKeyAvailable: boolean
   recoveryKeyUnavailableReason: 'legacy_team' | null
+  encryptionMode?: 'private' | 'standard'
+  encryptionModeConfirmedAt?: string | null
 }
 
 const roleLabels: Record<string, string> = {
@@ -139,6 +144,8 @@ export default function TeamPage() {
   const [deleteTeamName, setDeleteTeamName] = useState('')
   const [deletePassword, setDeletePassword] = useState('')
   const [deleting, setDeleting] = useState(false)
+
+  const [encryptionMigrationOpen, setEncryptionMigrationOpen] = useState(false)
 
   const currentMember = team?.members.find((m) => m.userId === user?.id)
   const isAdmin = currentMember && ['super_admin', 'admin'].includes(currentMember.role)
@@ -407,11 +414,36 @@ export default function TeamPage() {
                   )}
                 </button>
                 <div className="mb-1">
-                  <h1 className="text-xl font-bold text-foreground">{team?.name}</h1>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-xl font-bold text-foreground">{team?.name}</h1>
+                    {team?.encryptionMode === 'private' && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-400">
+                        <Lock className="h-3 w-3" /> Mode Privé
+                      </span>
+                    )}
+                    {team?.encryptionMode === 'standard' && (
+                      <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
+                        <Cloud className="h-3 w-3" /> Mode Standard
+                      </span>
+                    )}
+                  </div>
                   <p className="text-sm text-muted-foreground">
                     {totalMembers} membre{totalMembers > 1 ? 's' : ''}
                     {pendingMembers.length > 0 && (
                       <span className="text-amber-400/80"> &middot; {pendingMembers.length} en attente</span>
+                    )}
+                    {isSuperAdmin && team?.encryptionMode === 'private' && (
+                      <>
+                        {' '}
+                        &middot;{' '}
+                        <button
+                          type="button"
+                          onClick={() => setEncryptionMigrationOpen(true)}
+                          className="underline-offset-2 hover:underline text-accent"
+                        >
+                          Passer en Mode Standard
+                        </button>
+                      </>
                     )}
                   </p>
                 </div>
@@ -1142,6 +1174,18 @@ export default function TeamPage() {
           title="Clef de secours de l'équipe"
           description="Voici la clef de secours actuellement stockée pour votre accès chiffré sur cette équipe. Conservez-la hors ligne dans un endroit sûr."
           minVisibleSeconds={0}
+        />
+      )}
+      {team && (
+        <TeamEncryptionMigrationModal
+          open={encryptionMigrationOpen}
+          teamId={team.id}
+          teamName={team.name}
+          onClose={() => setEncryptionMigrationOpen(false)}
+          onResolved={async () => {
+            setEncryptionMigrationOpen(false)
+            await Promise.all([loadTeam(), refreshUser()])
+          }}
         />
       )}
     </motion.div>
