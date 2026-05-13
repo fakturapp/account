@@ -129,27 +129,39 @@ function CollapsibleSection({
 
 
 function OptionCheckbox({
-  checked, onToggle, label, children,
+  checked, onToggle, label, children, tooltip, locked,
 }: {
   checked: boolean
   onToggle: () => void
   label: string
   children?: React.ReactNode
+  /** When provided, hovering the row shows this explanation tooltip. */
+  tooltip?: string
+  /** When true, the row is visually disabled (greyed, no toggle, info cursor). */
+  locked?: boolean
 }) {
+  const row = (
+    <CheckboxRoot
+      isSelected={checked}
+      onChange={locked ? () => {} : onToggle}
+      isDisabled={locked}
+      className={cn(
+        'flex items-center gap-2 py-1 w-full text-left',
+        locked ? 'cursor-help opacity-70' : 'cursor-pointer',
+      )}
+    >
+      <CheckboxControl>
+        <CheckboxIndicator />
+      </CheckboxControl>
+      <CheckboxContent className="text-[13px] text-foreground mt-[1px]">
+        {label}
+      </CheckboxContent>
+    </CheckboxRoot>
+  )
+
   return (
     <div>
-      <CheckboxRoot 
-        isSelected={checked} 
-        onChange={onToggle} 
-        className="flex items-center gap-2 cursor-pointer py-1 w-full text-left"
-      >
-        <CheckboxControl>
-          <CheckboxIndicator />
-        </CheckboxControl>
-        <CheckboxContent className="text-[13px] text-foreground mt-[1px]">
-          {label}
-        </CheckboxContent>
-      </CheckboxRoot>
+      {tooltip ? <Tooltip content={tooltip}>{row}</Tooltip> : row}
       {checked && children && <div className="ml-6 mt-1 mb-1">{children}</div>}
     </div>
   )
@@ -325,15 +337,14 @@ export function DocumentOptionsPanel({
             label="Adresse de livraison"
           />
 
-          {eInvoicingEnabled && (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-2 mb-2">
-              <Shield className="h-3.5 w-3.5 text-primary shrink-0" />
-              <p className="text-[10px] text-primary font-medium">E-facturation active — SIREN et TVA obligatoires</p>
-            </div>
-          )}
-
           <OptionCheckbox
             checked={showSiren || eInvoicingEnabled}
+            locked={eInvoicingEnabled}
+            tooltip={
+              eInvoicingEnabled
+                ? 'E-facturation activée : le SIREN du client est obligatoire et automatiquement inclus dans le document.'
+                : undefined
+            }
             onToggle={() => {
               if (eInvoicingEnabled) return
               setShowSiren(!showSiren)
@@ -342,7 +353,7 @@ export function DocumentOptionsPanel({
                 onChange({ clientSiren: selectedClient.siren })
               }
             }}
-            label={eInvoicingEnabled ? 'SIREN (obligatoire)' : 'SIREN'}
+            label="SIREN"
           >
             {selectedClient?.type === 'company' ? (
               <Input
@@ -359,6 +370,12 @@ export function DocumentOptionsPanel({
 
           <OptionCheckbox
             checked={showVat || eInvoicingEnabled}
+            locked={eInvoicingEnabled}
+            tooltip={
+              eInvoicingEnabled
+                ? 'E-facturation activée : la TVA intracommunautaire est obligatoire et automatiquement incluse dans le document.'
+                : undefined
+            }
             onToggle={() => {
               if (eInvoicingEnabled) return
               setShowVat(!showVat)
@@ -367,7 +384,7 @@ export function DocumentOptionsPanel({
                 onChange({ clientVatNumber: selectedClient.vatNumber })
               }
             }}
-            label={eInvoicingEnabled ? 'TVA intracommunautaire (obligatoire)' : 'TVA intracommunautaire'}
+            label="TVA intracommunautaire"
           >
             <Input
               placeholder="FR12345678901"

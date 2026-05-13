@@ -206,6 +206,11 @@ function Tooltip({
         placement={side}
         showArrow={showArrow}
         className={className}
+        // Force the requested placement even when the trigger is near
+        // the viewport edge. Without this, react-aria flips the tooltip
+        // to the opposite side (e.g. top → bottom) the moment there's
+        // not "enough" room.
+        shouldFlip={false}
       >
         {showArrow && <TooltipArrow />}
         {content}
