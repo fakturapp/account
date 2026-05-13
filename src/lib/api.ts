@@ -72,7 +72,7 @@ function handleVaultOrSession(data: any, status: number): { error: string } | nu
 async function request<T = unknown>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<{ data?: T; error?: string }> {
+): Promise<{ data?: T; error?: string; errorCode?: string }> {
   const sandboxed = tutorialIntercept<T>(endpoint, options)
   if (sandboxed) return sandboxed
 
@@ -99,14 +99,16 @@ async function request<T = unknown>(
       recordApiError(options.method || 'GET', endpoint, res.status, data)
       const handled = handleVaultOrSession(data, res.status)
       if (handled) return handled
-      return { error: parseErrorPayload(data).message || 'Unauthorized' }
+      const parsed = parseErrorPayload(data)
+      return { error: parsed.message || 'Unauthorized', errorCode: parsed.code }
     }
 
     const data = await res.json()
 
     if (!res.ok) {
       recordApiError(options.method || 'GET', endpoint, res.status, data)
-      return { error: parseErrorPayload(data).message }
+      const parsed = parseErrorPayload(data)
+      return { error: parsed.message, errorCode: parsed.code }
     }
     return { data }
   } catch (err) {
