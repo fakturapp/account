@@ -67,12 +67,12 @@ export default function OnboardingTeamPage() {
     )
 
     if (err) {
-      if (errorCode === 'KEK_REQUIRED') {
+      if (errorCode === 'kek_required') {
         setLoading(false)
         setConfirmPasswordOpen(true)
         return null
       }
-      if (errorCode === 'INVALID_PASSWORD') {
+      if (errorCode === 'invalid_password') {
         setConfirmPasswordSubmitting(false)
         setError('Mot de passe incorrect.')
         return null
