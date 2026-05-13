@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/lib/theme'
 import { HealthCheckProvider } from '@/components/health-check'
 import { AnalyticsProvider } from '@/lib/analytics'
 import { CookieConsent } from '@/components/cookie-consent'
+import { ApiErrorDetailsDialog } from '@/components/modals/api-error-details-dialog'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -14,9 +15,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <I18nProvider>
         <AnalyticsProvider>
           <AuthProvider>
-            <ToastProvider>
-              <HealthCheckProvider>{children}</HealthCheckProvider>
-            </ToastProvider>
+            <HealthCheckProvider>{children}</HealthCheckProvider>
+            <ToastProvider placement="bottom end" />
+            <ApiErrorDetailsDialog />
           </AuthProvider>
           <CookieConsent />
         </AnalyticsProvider>
