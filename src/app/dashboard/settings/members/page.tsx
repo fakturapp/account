@@ -423,28 +423,41 @@ export default function TeamPage() {
                   </p>
                   {team?.encryptionMode && (
                     <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1.5">
-                      {team.encryptionMode === 'private' ? (
-                        <Lock className="h-3.5 w-3.5 text-amber-400" />
-                      ) : (
-                        <Cloud className="h-3.5 w-3.5 text-accent" />
-                      )}
-                      <span>
-                        Mode de chiffrement&nbsp;:{' '}
-                        <span className="font-medium text-foreground">
-                          {team.encryptionMode === 'private' ? 'Privé' : 'Standard'}
+                      <Tooltip
+                        content={
+                          team.encryptionMode === 'private'
+                            ? "Chiffrement de bout en bout — seuls vous et votre clef de secours peuvent déchiffrer les données."
+                            : "Chiffrement géré par les serveurs Faktur — aucun mot de passe supplémentaire, aucun verrouillage du coffre."
+                        }
+                        side="top"
+                      >
+                        <span className="inline-flex items-center gap-1.5 cursor-help">
+                          {team.encryptionMode === 'private' ? (
+                            <Lock className="h-3.5 w-3.5 text-amber-400" />
+                          ) : (
+                            <Cloud className="h-3.5 w-3.5 text-accent" />
+                          )}
+                          <span>
+                            Mode de chiffrement&nbsp;:{' '}
+                            <span className="font-medium text-foreground">
+                              {team.encryptionMode === 'private' ? 'Privé' : 'Standard'}
+                            </span>
+                          </span>
                         </span>
-                      </span>
+                      </Tooltip>
                       {isSuperAdmin && team.encryptionMode === 'private' && (
                         <>
                           {' '}
                           &middot;{' '}
-                          <button
-                            type="button"
-                            onClick={() => setEncryptionMigrationOpen(true)}
-                            className="underline-offset-2 hover:underline text-accent"
-                          >
-                            Passer en Standard
-                          </button>
+                          <Tooltip content="Migrer vers le mode Standard pour ne plus avoir besoin du mot de passe pour déchiffrer les données." side="top">
+                            <button
+                              type="button"
+                              onClick={() => setEncryptionMigrationOpen(true)}
+                              className="underline-offset-2 hover:underline text-accent"
+                            >
+                              Passer en Standard
+                            </button>
+                          </Tooltip>
                         </>
                       )}
                     </p>
@@ -597,9 +610,15 @@ export default function TeamPage() {
                       {canManage && (
                         <Dropdown
                           trigger={
-                            <div className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted transition-colors cursor-pointer">
-                              <MoreVertical className="h-4 w-4 text-muted-foreground" />
-                            </div>
+                            <Tooltip content="Actions sur ce membre" side="left">
+                              <div
+                                role="button"
+                                aria-label="Actions sur ce membre"
+                                className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-muted transition-colors cursor-pointer"
+                              >
+                                <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                              </div>
+                            </Tooltip>
                           }
                         >
                           <DropdownItem onClick={() => openRoleDialog(member)}>
@@ -690,13 +709,15 @@ export default function TeamPage() {
                         {roleLabels[member.role]}
                       </div>
                       {isAdmin && (
-                        <button
-                          onClick={() => handleRevokeInvite(member.id)}
-                          className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-destructive/10 transition-colors"
-                          title="Révoquer l'invitation"
-                        >
-                          <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                        </button>
+                        <Tooltip content="Révoquer l'invitation" side="left">
+                          <button
+                            onClick={() => handleRevokeInvite(member.id)}
+                            aria-label="Révoquer l'invitation"
+                            className="flex h-8 w-8 items-center justify-center rounded-lg hover:bg-destructive/10 transition-colors"
+                          >
+                            <X className="h-4 w-4 text-muted-foreground hover:text-destructive" />
+                          </button>
+                        </Tooltip>
                       )}
                     </div>
                   </motion.div>

@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react'
 import { ShieldCheck, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Tooltip } from '@/components/ui/tooltip'
 import { useAuth, type TeamSummary } from '@/lib/auth'
 import { TeamEncryptionMigrationModal } from '@/components/team/team-encryption-migration-modal'
 
@@ -53,17 +54,19 @@ export function TeamEncryptionBanner() {
         <Button size="sm" onClick={() => setOpenTeam(pendingTeam)}>
           Configurer
         </Button>
-        <button
-          type="button"
-          onClick={() => {
-            markDismissed(pendingTeam.id)
-            setDismissedTick((n) => n + 1)
-          }}
-          className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-hover"
-          aria-label="Plus tard"
-        >
-          <X className="h-4 w-4 text-muted-foreground" />
-        </button>
+        <Tooltip content="Plus tard — la bannière réapparaîtra à la prochaine connexion" side="bottom">
+          <button
+            type="button"
+            onClick={() => {
+              markDismissed(pendingTeam.id)
+              setDismissedTick((n) => n + 1)
+            }}
+            className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-hover"
+            aria-label="Plus tard"
+          >
+            <X className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </Tooltip>
       </div>
 
       {openTeam && (
