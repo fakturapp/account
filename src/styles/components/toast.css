@@ -52,17 +52,21 @@
   outline-color: var(--focus, var(--color-primary));
 }
 
-/* Base toast styles */
+/* Base toast styles
+ *
+ * Arrondi: rounded-2xl (20px) — moins agressif que rounded-3xl (modales),
+ * plus chaleureux qu'un rounded-xl (cards). Aligné avec le popover Faktur.
+ */
 .toast {
   position: absolute;
   left: 0;
   right: 0;
 
-  @apply pointer-events-auto flex flex-row items-start justify-start gap-1.5 px-4 py-3;
+  @apply pointer-events-auto flex flex-row items-start justify-start gap-2.5 px-4 py-3 rounded-2xl;
   background-color: var(--color-overlay);
   color: var(--color-overlay-foreground);
   box-shadow: var(--shadow-overlay);
-  border-radius: min(32px, var(--radius-3xl));
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
 }
 
 .toast--bottom,
@@ -188,36 +192,48 @@
   @apply mt-2 sm:mt-0;
 }
 
-/* Variant modifiers */
+/* Variant modifiers
+ *
+ * Chaque variant teinte l'icône + ajoute un bord gauche coloré (4px)
+ * + un soupçon de bg-tint pour différencier sans dénaturer.
+ */
+.toast--accent {
+  border-left: 3px solid var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 6%, var(--color-overlay));
+}
+
+.toast--accent .toast__indicator,
 .toast--accent .toast__title {
   color: var(--color-accent);
 }
 
-.toast--accent .toast__indicator {
-  color: var(--color-accent);
+.toast--success {
+  border-left: 3px solid var(--color-success);
+  background-color: color-mix(in srgb, var(--color-success) 6%, var(--color-overlay));
 }
 
+.toast--success .toast__indicator,
 .toast--success .toast__title {
   color: var(--color-success);
 }
 
-.toast--success .toast__indicator {
-  color: var(--color-success);
+.toast--warning {
+  border-left: 3px solid var(--color-warning);
+  background-color: color-mix(in srgb, var(--color-warning) 6%, var(--color-overlay));
 }
 
+.toast--warning .toast__indicator,
 .toast--warning .toast__title {
   color: var(--color-warning);
 }
 
-.toast--warning .toast__indicator {
-  color: var(--color-warning);
+.toast--danger {
+  border-left: 3px solid var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 6%, var(--color-overlay));
 }
 
+.toast--danger .toast__indicator,
 .toast--danger .toast__title {
-  color: var(--color-danger);
-}
-
-.toast--danger .toast__indicator {
   color: var(--color-danger);
 }
 
