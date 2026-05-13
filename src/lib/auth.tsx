@@ -7,6 +7,13 @@ import { CryptoResetModal } from '@/components/modals/crypto-reset-modal'
 import { VaultUnlockModal } from '@/components/modals/vault-unlock-modal'
 import { RecoveryKeySetupModal } from '@/components/modals/recovery-key-setup-modal'
 
+export interface TeamSummary {
+  id: string
+  name: string
+  encryptionMode: 'private' | 'standard'
+  encryptionModeConfirmedAt: string | null
+}
+
 interface User {
   id: string
   fullName: string | null
@@ -25,6 +32,8 @@ interface User {
   hasPasskeys: boolean
   vaultLocked: boolean
   isAdmin: boolean
+  currentTeamEncryptionMode?: 'private' | 'standard' | null
+  teams?: TeamSummary[]
 }
 
 interface LogoutOptions {
@@ -308,7 +317,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onRefresh={handleCryptoRefresh}
       />
       <VaultUnlockModal
-        forceOpen={!!user?.vaultLocked && !user?.cryptoResetNeeded && !forceCryptoReset}
+        forceOpen={
+          !!user?.vaultLocked &&
+          user?.currentTeamEncryptionMode === 'private' &&
+          !user?.cryptoResetNeeded &&
+          !forceCryptoReset
+        }
         onStartRecovery={() => setForceCryptoReset(true)}
       />
       <RecoveryKeySetupModal
@@ -317,7 +331,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           !user.hasRecoveryKey &&
           user.onboardingCompleted &&
           !user.cryptoResetNeeded &&
-          !user.vaultLocked
+          !user.vaultLocked &&
+          (user.currentTeamEncryptionMode ?? 'private') === 'private'
         }
       />
     </AuthContext.Provider>
