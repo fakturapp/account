@@ -68,7 +68,7 @@ export function SiteHeader({ onToggleSidebar }: SiteHeaderProps) {
     <header className="relative z-20 flex h-(--header-height) shrink-0 items-center gap-2 bg-transparent transition-[width,height] ease-linear">
       <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
         {onToggleSidebar && (
-          <Tooltip content="Afficher / masquer la barre latérale" side="bottom">
+          <Tooltip content="Afficher / masquer la barre latérale" side="right">
             <button
               onClick={onToggleSidebar}
               aria-label="Basculer la barre latérale"

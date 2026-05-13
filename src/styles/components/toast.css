@@ -8,9 +8,14 @@
  *   - bg-default → bg-surface (Faktur token names)
  * ============================================================ */
 
-/* Toast Region - Container for all toasts */
+/* Toast Region - Container for all toasts
+ *
+ * z-index: 10010 — above all modals/dialogs (z-9999) so toasts are
+ * always visible even when a dialog is open (creation flows, error
+ * confirmations, etc.).
+ */
 .toast-region {
-  @apply pointer-events-none fixed z-50 outline-none;
+  @apply pointer-events-none fixed z-[10010] outline-none;
   @apply w-[calc(100vw-2rem)] sm:w-auto sm:min-w-(--toast-width);
 
   display: block;
@@ -138,28 +143,42 @@
   color: var(--color-muted-foreground);
 }
 
-/* Toast close button */
+/* Toast close button — plain <button> styled here, no shared CloseButton */
 .toast__close-button {
-  @apply absolute top-2.5 right-2.5 size-5 opacity-100 sm:pointer-events-none sm:-top-1 sm:-right-1 sm:border sm:opacity-0;
-  background-color: var(--color-surface);
-  border-color: var(--color-border);
+  @apply absolute top-2.5 right-2.5 flex items-center justify-center size-5 rounded-full
+         opacity-100 cursor-pointer outline-none
+         sm:pointer-events-none sm:-top-1.5 sm:-right-1.5 sm:opacity-0;
 
-  transition: opacity 150ms var(--ease-smooth);
+  background-color: var(--color-overlay);
+  color: var(--color-overlay-foreground);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.08);
+
+  transition:
+    opacity 150ms var(--ease-out),
+    background-color 100ms var(--ease-out),
+    color 100ms var(--ease-out);
   @apply motion-reduce:transition-none;
 }
 
-.toast__close-button [data-slot="close-button-icon"] {
+.toast__close-button svg {
   @apply size-3.5 sm:size-3;
+  stroke-width: 2.5;
+}
+
+.toast__close-button:focus-visible {
+  @apply outline-2 outline-offset-2;
+  outline-color: var(--color-accent);
 }
 
 @media (hover: hover) {
-  .toast__close-button:hover,
-  .toast__close-button[data-hovered="true"] {
+  .toast__close-button:hover {
     background-color: var(--color-surface-hover);
+    color: var(--color-foreground);
   }
 }
 
-/* Only show close button on hover for frontmost toast */
+/* Only show close button on hover for frontmost toast (desktop) */
 .toast[data-frontmost="true"]:hover .toast__close-button {
   @apply pointer-events-auto opacity-100;
 }

@@ -40,10 +40,10 @@ import {
   type ToastProps as ToastPrimitiveProps,
   type ToastRegionProps,
 } from "react-aria-components"
-import { CheckCircle2, AlertTriangle, AlertCircle, Info } from "lucide-react"
+import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from "lucide-react"
+import { Button as RACButton } from "react-aria-components"
 
 import { Button } from "@/components/ui/button"
-import { CloseButton } from "@/components/ui/close-button"
 import { Spinner } from "@/components/ui/spinner"
 import {
   composeSlotClassName,
@@ -308,17 +308,25 @@ const ToastDescription = ({ children, className, ...rest }: ToastTextProps) => {
 }
 
 /* ------------------------------------------------------------------
- * Toast Close Button
+ * Toast Close Button — plain RAC Button styled by toast.css
+ * (avoids the shared CloseButton's surface background which made
+ *  the X invisible/dark on light themes)
  * ------------------------------------------------------------------ */
-const ToastCloseButton = ({ className, ...rest }: ComponentPropsWithRef<typeof CloseButton>) => {
+const ToastCloseButton = ({
+  className,
+  ...rest
+}: ComponentPropsWithRef<typeof RACButton>) => {
   const { slots } = useContext(ToastContext)
   return (
-    <CloseButton
+    <RACButton
+      aria-label="Fermer"
       className={composeTwRenderProps(className, slots?.close())}
       data-slot="toast-close"
       slot="close"
       {...rest}
-    />
+    >
+      <X aria-hidden="true" />
+    </RACButton>
   )
 }
 
