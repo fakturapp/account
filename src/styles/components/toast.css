@@ -1,19 +1,5 @@
 @layer components {
-/* ============================================================
- * Toast — literal copy from HeroUI v3
- * Source: heroui/packages/styles/components/toast.css
- * Only adaptations:
- *   - @layer components wrapper (Faktur Tailwind v4)
- *   - ease-smooth → ease-out (utility not configured in Faktur)
- *   - bg-default → bg-surface (Faktur token names)
- * ============================================================ */
 
-/* Toast Region - Container for all toasts
- *
- * z-index: 10010 — above all modals/dialogs (z-9999) so toasts are
- * always visible even when a dialog is open (creation flows, error
- * confirmations, etc.).
- */
 .toast-region {
   @apply pointer-events-none fixed z-[10010] outline-none;
   @apply w-[calc(100vw-2rem)] sm:w-auto sm:min-w-(--toast-width);
@@ -21,7 +7,6 @@
   display: block;
 }
 
-/* Placement variants - Bottom (same content-offset logic as top) */
 .toast-region--bottom {
   @apply bottom-4;
   left: calc(50% + var(--toast-left-offset, 0px) / 2);
@@ -37,13 +22,6 @@
   @apply right-4 bottom-4;
 }
 
-/* Placement variants - Top
- *
- * `--toast-left-offset` est posée par le dashboard layout pour décaler
- * le centre du toast d'une moitié de sidebar, afin de centrer dans la
- * zone de contenu plutôt que dans la viewport totale.
- * Par défaut 0px → centrage viewport (pour les pages publiques sans sidebar).
- */
 .toast-region--top {
   @apply top-4;
   left: calc(50% + var(--toast-left-offset, 0px) / 2);
@@ -64,15 +42,6 @@
   outline-color: var(--focus, var(--color-primary));
 }
 
-/* Base toast styles
- *
- * Arrondi: rounded-2xl (20px) — moins agressif que rounded-3xl (modales).
- * Fond identique (overlay) pour tous les variants — heroui style.
- * Seuls le titre + l'icône changent de couleur par variant.
- *
- * items-center: l'icône s'aligne sur le centre vertical du bloc
- * titre+description (vs items-start qui collait l'icône au haut).
- */
 .toast {
   position: absolute;
   left: 0;
@@ -136,12 +105,6 @@
   @apply flex h-full grow flex-col items-start self-center;
 }
 
-/* Toast indicator
- *
- * Fixed 20px x 20px box → aligns the icon's vertical center with the
- * 20px line-height of the title. Icon itself stays size-4 (16px) and
- * is centered both axes.
- */
 .toast__indicator {
   @apply flex shrink-0 items-center justify-center select-none;
   width: 1.25rem;
@@ -174,7 +137,6 @@
   color: var(--color-muted-foreground);
 }
 
-/* Toast close button — plain <button> styled here, no shared CloseButton */
 .toast__close-button {
   @apply absolute top-2.5 right-2.5 flex items-center justify-center size-5 rounded-full
          opacity-100 cursor-pointer outline-none
@@ -219,9 +181,6 @@
   @apply mt-2 sm:mt-0;
 }
 
-/* Variant modifiers — heroui style: only title + icon are colorized.
- * Toast background stays neutral overlay for all variants.
- */
 .toast--accent .toast__indicator,
 .toast--accent .toast__title {
   color: var(--color-accent);

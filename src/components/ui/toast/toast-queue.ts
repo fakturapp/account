@@ -1,15 +1,5 @@
 "use client"
 
-/**
- * Toast queue + global toast function — adapted from HeroUI v3
- * Source: heroui/packages/react/src/components/toast/toast-queue.ts
- *
- * Faktur adaptations:
- *  - imports UNSTABLE_ToastQueue from the main "react-aria-components" entry
- *  - actionProps typed loosely (label + onPress + className) instead of pulling
- *    HeroUI's full Button props
- */
-
 import type { ReactNode, MouseEvent } from "react"
 import {
   UNSTABLE_ToastQueue as ToastQueuePrimitive,

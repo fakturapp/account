@@ -1,19 +1,5 @@
 "use client";
 
-/**
- * Tooltip — adapted from HeroUI v3 (literal copy + Faktur imports)
- *
- * Source: heroui/packages/react/src/components/tooltip/tooltip.tsx
- *
- * Faktur adaptations :
- *  - imports from "react-aria-components" (single entry instead of subpaths)
- *  - composeSlotClassName / composeTwRenderProps from "@/lib/compose-tw-render-props"
- *  - dom.div replaced by a plain div (Faktur doesn't ship the polymorphic helper)
- *  - delay/closeDelay defaults applied at Root (Faktur house style)
- *  - legacy <Tooltip content="..." /> wrapper kept for backward compatibility
- *    with the rest of the codebase.
- */
-
 import type {
   ComponentPropsWithRef,
   ReactElement,
@@ -34,18 +20,12 @@ import {
 
 import { tooltipVariants, type TooltipVariants } from "./tooltip.styles";
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip Context
- * -----------------------------------------------------------------------------------------------*/
 type TooltipContextValue = {
   slots?: ReturnType<typeof tooltipVariants>;
 };
 
 const TooltipContext = createContext<TooltipContextValue>({});
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip Root
- * -----------------------------------------------------------------------------------------------*/
 type TooltipRootProps = ComponentPropsWithRef<typeof TooltipTriggerPrimitive>;
 
 const TooltipRoot = ({ children, ...props }: TooltipRootProps) => {
@@ -65,9 +45,6 @@ const TooltipRoot = ({ children, ...props }: TooltipRootProps) => {
   );
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip Content
- * -----------------------------------------------------------------------------------------------*/
 interface TooltipContentProps
   extends Omit<ComponentPropsWithRef<typeof TooltipPrimitive>, "children">,
     TooltipVariants {
@@ -96,9 +73,6 @@ const TooltipContent = ({
   );
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip Arrow
- * -----------------------------------------------------------------------------------------------*/
 type TooltipArrowProps = Omit<
   ComponentPropsWithRef<typeof OverlayArrow>,
   "children"
@@ -139,9 +113,6 @@ const TooltipArrow = ({ children, className, ...props }: TooltipArrowProps) => {
   );
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Tooltip Trigger
- * -----------------------------------------------------------------------------------------------*/
 interface TooltipTriggerProps {
   children?: ReactNode;
   className?: string;
@@ -156,8 +127,6 @@ const TooltipTrigger = ({
 }: TooltipTriggerProps) => {
   const { slots } = useContext(TooltipContext);
 
-  // asChild: render children as-is, letting them inherit the
-  // react-aria-components focus tracking via FocusablePrimitive.
   if (asChild) {
     return (
       <FocusablePrimitive>{children as React.ReactElement<any, any>}</FocusablePrimitive>
@@ -178,10 +147,6 @@ const TooltipTrigger = ({
   );
 };
 
-/* -------------------------------------------------------------------------------------------------
- * Legacy <Tooltip content="..." /> — simple wrapper used across the codebase
- * Includes the arrow by default to match HeroUI v3 storybook examples.
- * -----------------------------------------------------------------------------------------------*/
 interface LegacyTooltipProps {
   content: ReactNode;
   children: ReactNode;
@@ -206,10 +171,6 @@ function Tooltip({
         placement={side}
         showArrow={showArrow}
         className={className}
-        // Force the requested placement even when the trigger is near
-        // the viewport edge. Without this, react-aria flips the tooltip
-        // to the opposite side (e.g. top → bottom) the moment there's
-        // not "enough" room.
         shouldFlip={false}
       >
         {showArrow && <TooltipArrow />}
@@ -219,9 +180,6 @@ function Tooltip({
   );
 }
 
-/* -------------------------------------------------------------------------------------------------
- * Exports
- * -----------------------------------------------------------------------------------------------*/
 export { Tooltip, TooltipRoot, TooltipTrigger, TooltipContent, TooltipArrow };
 
 export type {

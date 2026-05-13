@@ -1,12 +1,4 @@
 @layer components {
-/* ============================================================
- * Tooltip — Faktur dark pill (restored design)
- *
- * Dark inverted pill: bg-foreground / text-background, rounded-lg,
- * px-2.5 py-1.5, text-[12px] font-medium. Apparait au-dessus du
- * trigger par défaut (placement top).
- * ============================================================ */
-
 .tooltip {
   @apply max-w-xs origin-(--trigger-anchor-point) rounded-lg px-2.5 py-1.5 text-[12px] font-medium break-words;
   background-color: var(--color-foreground);
@@ -15,7 +7,6 @@
     0 2px 8px rgb(0 0 0 / 0.1),
     0 4px 16px rgb(0 0 0 / 0.06);
 
-  /* Entering animations */
   &[data-entering="true"] {
     @apply animate-in duration-150 ease-out fade-in-0 zoom-in-95;
 
@@ -46,7 +37,6 @@
     @apply motion-reduce:animate-none;
   }
 
-  /* Arrow inherits the dark fill */
   & [data-slot="overlay-arrow"] {
     fill: var(--color-foreground);
   }

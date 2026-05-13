@@ -1,21 +1,5 @@
 "use client"
 
-/**
- * Toast components — adapted from HeroUI v3
- * Source: heroui/packages/react/src/components/toast/toast.tsx
- *
- * Faktur adaptations:
- *  - imports from "react-aria-components" main entry (UNSTABLE_ prefix)
- *  - replaced heroui's dom.div with plain div
- *  - replaced heroui's icons with lucide-react
- *  - replaced heroui's Button with Faktur Button
- *  - replaced heroui's CloseButton with Faktur CloseButton
- *  - inlined useMeasuredHeight (ResizeObserver) and useMediaQuery (matchMedia)
- *  - dataAttr helper inlined
- *  - kept legacy useToast() hook for backward compatibility with the rest
- *    of the codebase (toast(msg, 'error' | 'success' | 'info'))
- */
-
 import type {
   CSSProperties,
   ComponentPropsWithRef,
@@ -66,9 +50,6 @@ import {
 } from "./toast-queue"
 import { toastVariants, type ToastVariants } from "./toast.styles"
 
-/* ------------------------------------------------------------------
- * Helpers (inlined from heroui internal hooks)
- * ------------------------------------------------------------------ */
 function dataAttr(condition: boolean | undefined): string | undefined {
   return condition ? "true" : undefined
 }
@@ -102,9 +83,6 @@ function useMediaQuery(query: string): boolean {
   return matches
 }
 
-/* ------------------------------------------------------------------
- * Toast Context
- * ------------------------------------------------------------------ */
 type ToastContextValue = {
   slots?: ReturnType<typeof toastVariants>
   placement?: ToastVariants["placement"]
@@ -118,9 +96,6 @@ type ToastContextValue = {
 
 const ToastContext = createContext<ToastContextValue>({})
 
-/* ------------------------------------------------------------------
- * Toast
- * ------------------------------------------------------------------ */
 interface ToastProps<T extends object = ToastContentValue>
   extends ToastPrimitiveProps<T>,
     ToastVariants {
@@ -216,9 +191,6 @@ const Toast = <T extends object = ToastContentValue>({
 
 Toast.displayName = "Faktur.Toast"
 
-/* ------------------------------------------------------------------
- * Toast Content
- * ------------------------------------------------------------------ */
 interface ToastContentProps extends ComponentPropsWithRef<typeof ToastContentPrimitive> {}
 
 const ToastContent = ({ children, className, ...rest }: ToastContentProps) => {
@@ -234,9 +206,6 @@ const ToastContent = ({ children, className, ...rest }: ToastContentProps) => {
   )
 }
 
-/* ------------------------------------------------------------------
- * Toast Indicator
- * ------------------------------------------------------------------ */
 interface ToastIndicatorProps {
   children?: ReactNode
   className?: string
@@ -274,9 +243,6 @@ const ToastIndicator = ({ children, className, variant }: ToastIndicatorProps) =
   )
 }
 
-/* ------------------------------------------------------------------
- * Toast Title / Description
- * ------------------------------------------------------------------ */
 type ToastTextProps = ComponentPropsWithRef<typeof TextPrimitive>
 
 const ToastTitle = ({ children, className, ...rest }: ToastTextProps) => {
@@ -307,11 +273,6 @@ const ToastDescription = ({ children, className, ...rest }: ToastTextProps) => {
   )
 }
 
-/* ------------------------------------------------------------------
- * Toast Close Button — plain RAC Button styled by toast.css
- * (avoids the shared CloseButton's surface background which made
- *  the X invisible/dark on light themes)
- * ------------------------------------------------------------------ */
 const ToastCloseButton = ({
   className,
   ...rest
@@ -330,9 +291,6 @@ const ToastCloseButton = ({
   )
 }
 
-/* ------------------------------------------------------------------
- * Toast Action Button
- * ------------------------------------------------------------------ */
 const ToastActionButton = ({
   children,
   className,
@@ -356,9 +314,6 @@ const ToastActionButton = ({
   )
 }
 
-/* ------------------------------------------------------------------
- * Toast Provider
- * ------------------------------------------------------------------ */
 interface ToastProviderProps
   extends Omit<ToastRegionProps<ToastContentValue>, "queue" | "children"> {
   children?: ToastRegionProps<ToastContentValue>["children"]
@@ -477,17 +432,6 @@ const ToastProvider = ({
 
 ToastProvider.displayName = "Faktur.ToastProvider"
 
-/* ------------------------------------------------------------------
- * Legacy useToast() — backward-compatible API for existing call sites
- * ------------------------------------------------------------------
- *
- * Old API: const { toast } = useToast(); toast('msg', 'error' | 'success' | 'info')
- *
- * Maps to:
- *   - 'error' → toast.danger(msg)
- *   - 'success' → toast.success(msg)
- *   - 'info' (default) → toast(msg)
- */
 
 type LegacyToastType = "success" | "error" | "info"
 
@@ -524,9 +468,6 @@ export function useToast() {
 
 export { DEV_DETAILS_EVENT }
 
-/* ------------------------------------------------------------------
- * Exports
- * ------------------------------------------------------------------ */
 export {
   Toast,
   ToastProvider,

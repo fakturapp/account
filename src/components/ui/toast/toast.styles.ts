@@ -1,4 +1,3 @@
-// Literal copy from heroui/packages/styles/src/components/toast/toast.styles.ts
 import { tv, type VariantProps } from "tailwind-variants"
 
 export const toastVariants = tv({
