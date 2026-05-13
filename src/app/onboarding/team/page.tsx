@@ -11,6 +11,11 @@ import { Field, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field
 import { Spinner } from '@/components/ui/spinner'
 import { useAuth } from '@/lib/auth'
 import { api } from '@/lib/api'
+import {
+  EncryptionModeChooser,
+  type EncryptionMode,
+  type EncryptionAcks,
+} from '@/components/team/encryption-mode-chooser'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -25,6 +30,8 @@ export default function OnboardingTeamPage() {
   const router = useRouter()
   const { user, refreshUser } = useAuth()
   const [name, setName] = useState('')
+  const [encryptionMode, setEncryptionMode] = useState<EncryptionMode>('standard')
+  const [acks, setAcks] = useState<EncryptionAcks>({ dataLoss: false, notResponsible: false })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -35,12 +42,23 @@ export default function OnboardingTeamPage() {
     }
   }, [user, router])
 
+  const acksValid = encryptionMode === 'standard' || (acks.dataLoss && acks.notResponsible)
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    if (!acksValid) {
+      setError('Veuillez accepter les avertissements pour activer le Mode Privé.')
+      return
+    }
     setLoading(true)
 
-    const { data, error: err } = await api.post<{ recoveryKey?: string }>('/onboarding/team', { name })
+    const { data, error: err } = await api.post<{ recoveryKey?: string }>('/onboarding/team', {
+      name,
+      encryptionMode,
+      ackDataLoss: acks.dataLoss,
+      ackNotResponsible: acks.notResponsible,
+    })
     setLoading(false)
 
     if (err) return setError(err)
@@ -95,7 +113,16 @@ export default function OnboardingTeamPage() {
               </motion.div>
 
               <motion.div variants={fadeUp} custom={3}>
-                <Button type="submit" className="w-full" disabled={loading || !name.trim()}>
+                <EncryptionModeChooser
+                  value={encryptionMode}
+                  onChange={setEncryptionMode}
+                  acks={acks}
+                  onAcksChange={setAcks}
+                />
+              </motion.div>
+
+              <motion.div variants={fadeUp} custom={4}>
+                <Button type="submit" className="w-full" disabled={loading || !name.trim() || !acksValid}>
                   {loading ? (
                     <><Spinner /> Creation...</>
                   ) : (
@@ -104,7 +131,7 @@ export default function OnboardingTeamPage() {
                 </Button>
               </motion.div>
 
-              <motion.div variants={fadeUp} custom={4}>
+              <motion.div variants={fadeUp} custom={5}>
                 <Button
                   type="button"
                   variant="outline"
