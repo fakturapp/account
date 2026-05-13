@@ -9,6 +9,7 @@ import { FormSelect } from '@/components/ui/dropdown'
 import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/ui/spinner'
 import { PhoneInput } from '@/components/ui/phone-input'
+import { toast } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import { useTrackFeature } from '@/hooks/use-analytics'
 import {
@@ -178,14 +179,29 @@ export function ClientCreatePanel({ open, onClose, onCreated }: ClientCreatePane
       notes: form.notes || null,
     }
 
+    const loadingId = toast('Création du client en cours…', {
+      isLoading: true,
+      timeout: 0,
+    })
+
     const { error: apiError } = await api.post('/clients', payload)
     setSaving(false)
+    toast.close(loadingId)
 
     if (apiError) {
       setError(apiError)
+      toast.danger("Impossible de créer le client", { description: apiError })
       return
     }
 
+    const displayedName =
+      form.type === 'company'
+        ? form.companyName
+        : [form.firstName, form.lastName].filter(Boolean).join(' ') || 'le client'
+
+    toast.success('Client créé', {
+      description: `« ${displayedName} » a été ajouté à votre carnet d’adresses.`,
+    })
     trackFeature('client.create')
     handleClose()
     onCreated()

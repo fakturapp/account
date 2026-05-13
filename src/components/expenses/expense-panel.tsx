@@ -9,7 +9,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { FormSelect } from '@/components/ui/dropdown'
 import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/ui/spinner'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import { X, Wallet, Plus } from 'lucide-react'
 
@@ -154,13 +154,23 @@ export function ExpensePanel({ open, expense, onClose, onSaved }: ExpensePanelPr
       categoryId: categoryId || undefined,
     }
 
+    const loadingId = t(isEditing ? 'Enregistrement de la dépense…' : 'Création de la dépense…', {
+      isLoading: true,
+      timeout: 0,
+    })
+
     const { error } = isEditing
       ? await api.put(`/expenses/${expense.id}`, body)
       : await api.post('/expenses', body)
 
     setSaving(false)
-    if (error) { toast(error, 'error'); return }
-    toast(isEditing ? 'Depense modifiee' : 'Depense creee')
+    t.close(loadingId)
+    if (error) { t.danger('Erreur', { description: error }); return }
+    t.success(isEditing ? 'Dépense modifiée' : 'Dépense enregistrée', {
+      description: body.supplier
+        ? `${body.amount.toLocaleString('fr-FR')} ${currency} — ${body.supplier}`
+        : `${body.amount.toLocaleString('fr-FR')} ${currency}`,
+    })
     onSaved()
   }
 

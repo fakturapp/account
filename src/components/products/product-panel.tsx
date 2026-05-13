@@ -10,7 +10,7 @@ import { Field, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { SelectRoot, SelectTrigger, SelectValue, SelectIndicator, SelectPopover } from '@/components/ui/select'
 import { ListBoxRoot as ListBox, ListBoxItemRoot as ListBoxItem } from '@/components/ui/list-box'
 import { Spinner } from '@/components/ui/spinner'
-import { useToast } from '@/components/ui/toast'
+import { useToast, toast as t } from '@/components/ui/toast'
 import { api } from '@/lib/api'
 import { X, Package } from 'lucide-react'
 import { useTrackFeature } from '@/hooks/use-analytics'
@@ -83,23 +83,34 @@ export function ProductPanel({ open, product, onClose, onSaved }: ProductPanelPr
       reference: reference.trim() || null,
     }
 
+    const loadingId = t(isEditing ? 'Enregistrement du produit…' : 'Création du produit…', {
+      isLoading: true,
+      timeout: 0,
+    })
+
     if (isEditing) {
       const { error } = await api.put(`/products/${product!.id}`, body)
       setSaving(false)
+      t.close(loadingId)
       if (error) {
-        toast(error, 'error')
+        t.danger('Impossible d’enregistrer le produit', { description: error })
         return
       }
-      toast('Produit mis à jour')
+      t.success('Produit mis à jour', {
+        description: `« ${body.name} » a été modifié.`,
+      })
     } else {
       const { error } = await api.post('/products', body)
       setSaving(false)
+      t.close(loadingId)
       if (error) {
-        toast(error, 'error')
+        t.danger('Impossible de créer le produit', { description: error })
         return
       }
       trackFeature('product.create')
-      toast('Produit créé')
+      t.success('Produit créé', {
+        description: `« ${body.name} » est désormais disponible dans votre catalogue.`,
+      })
     }
 
     onSaved()
