@@ -20,6 +20,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { startRegistration } from '@simplewebauthn/browser'
 import { User, Shield, Monitor, Trash2, Smartphone, Copy, Check, Camera, Globe, MapPin, Download, Lock, AlertTriangle, Calendar, Link2, Unlink, Eye, EyeOff, Fingerprint, KeyRound, Plus, ShieldCheck, Bug } from 'lucide-react'
 import { Switch } from '@/components/ui/switch'
+import { Tooltip } from '@/components/ui/tooltip'
 import { useDevMode } from '@/lib/dev-mode'
 
 const tabs = [
@@ -871,14 +872,17 @@ export default function AccountPage() {
                           </div>
                         </div>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
-                        onClick={() => setPasskeyDeleteConfirm(passkey.id)}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </Button>
+                      <Tooltip content="Supprimer cette clé d'accès" side="left">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          aria-label="Supprimer cette clé d'accès"
+                          className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
+                          onClick={() => setPasskeyDeleteConfirm(passkey.id)}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </Tooltip>
                     </div>
                   ))}
                 </div>
@@ -1423,27 +1427,33 @@ export default function AccountPage() {
             <FieldLabel htmlFor="currentPassword">Mot de passe actuel</FieldLabel>
             <div className="relative">
               <Input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required autoFocus className="pr-10" />
-              <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
-                {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              <Tooltip content={showCurrentPassword ? 'Masquer' : 'Afficher'} side="left">
+                <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} aria-label={showCurrentPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
+                  {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </Tooltip>
             </div>
           </Field>
           <Field>
             <FieldLabel htmlFor="newPassword">Nouveau mot de passe</FieldLabel>
             <div className="relative">
               <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required className="pr-10" />
-              <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
-                {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              <Tooltip content={showNewPassword ? 'Masquer' : 'Afficher'} side="left">
+                <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} aria-label={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
+                  {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </Tooltip>
             </div>
           </Field>
           <Field>
             <FieldLabel htmlFor="confirmPassword">Confirmer le mot de passe</FieldLabel>
             <div className="relative">
               <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="pr-10" />
-              <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
-                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
+              <Tooltip content={showConfirmPassword ? 'Masquer' : 'Afficher'} side="left">
+                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
+                  {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </Tooltip>
             </div>
           </Field>
           <DialogFooter>
