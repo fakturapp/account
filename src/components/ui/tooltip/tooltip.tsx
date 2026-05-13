@@ -1,7 +1,9 @@
 "use client";
 
 /**
- * Tooltip — simplified from HeroUI v3
+ * Tooltip — adapted pixel-perfect from HeroUI v3
+ *
+ * Source: heroui/packages/react/src/components/tooltip/tooltip.tsx
  *
  * Uses react-aria-components TooltipTrigger which auto-attaches to
  * its focusable child. Tooltip.Trigger is a transparent wrapper
@@ -49,10 +51,6 @@ const TooltipRoot = ({ children, ...props }: TooltipRootProps) => {
 
 /* ------------------------------------------------------------------
  * Trigger — transparent pass-through wrapper
- *
- * react-aria-components' TooltipTrigger auto-attaches to the first
- * focusable child. We don't need to wrap anything — just render
- * the children as-is so they get the correct parent context.
  * ------------------------------------------------------------------ */
 interface TooltipTriggerProps {
   children: ReactNode;
@@ -80,7 +78,7 @@ const TooltipContent = ({
   ...props
 }: TooltipContentProps) => {
   const { slots } = useContext(TooltipContext);
-  const offset = offsetProp ? offsetProp : showArrow ? 7 : 4;
+  const offset = offsetProp ? offsetProp : showArrow ? 7 : 3;
 
   return (
     <TooltipPrimitive
@@ -94,7 +92,7 @@ const TooltipContent = ({
 };
 
 /* ------------------------------------------------------------------
- * Arrow
+ * Arrow — same SVG path as HeroUI v3
  * ------------------------------------------------------------------ */
 type TooltipArrowProps = Omit<
   ComponentPropsWithRef<typeof OverlayArrow>,
@@ -130,19 +128,36 @@ const TooltipArrow = ({ children, className, ...props }: TooltipArrowProps) => {
   );
 };
 
-/* Legacy Tooltip — simple wrapper for backward compatibility */
+/* ------------------------------------------------------------------
+ * Legacy Tooltip — simple wrapper for backward compatibility
+ *
+ * Keeps the `<Tooltip content="..." />` API used across the codebase.
+ * Now includes the arrow by default to match HeroUI v3 stories.
+ * ------------------------------------------------------------------ */
 interface LegacyTooltipProps {
-  content: string;
+  content: ReactNode;
   children: ReactNode;
   side?: "top" | "bottom" | "left" | "right";
+  showArrow?: boolean;
   className?: string;
 }
 
-function Tooltip({ content, children, side, className }: LegacyTooltipProps) {
+function Tooltip({
+  content,
+  children,
+  side,
+  showArrow = true,
+  className,
+}: LegacyTooltipProps) {
   return (
     <TooltipRoot delay={300}>
       <TooltipTrigger>{children}</TooltipTrigger>
-      <TooltipContent placement={side} className={className}>
+      <TooltipContent
+        placement={side}
+        showArrow={showArrow}
+        className={className}
+      >
+        {showArrow && <TooltipArrow />}
         {content}
       </TooltipContent>
     </TooltipRoot>
