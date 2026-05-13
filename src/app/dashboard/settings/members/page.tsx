@@ -414,38 +414,41 @@ export default function TeamPage() {
                   )}
                 </button>
                 <div className="mb-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h1 className="text-xl font-bold text-foreground">{team?.name}</h1>
-                    {team?.encryptionMode === 'private' && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/30 bg-amber-400/10 px-2 py-0.5 text-[11px] font-medium text-amber-400">
-                        <Lock className="h-3 w-3" /> Mode Privé
-                      </span>
-                    )}
-                    {team?.encryptionMode === 'standard' && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-accent/30 bg-accent-soft px-2 py-0.5 text-[11px] font-medium text-accent">
-                        <Cloud className="h-3 w-3" /> Mode Standard
-                      </span>
-                    )}
-                  </div>
+                  <h1 className="text-xl font-bold text-foreground">{team?.name}</h1>
                   <p className="text-sm text-muted-foreground">
                     {totalMembers} membre{totalMembers > 1 ? 's' : ''}
                     {pendingMembers.length > 0 && (
                       <span className="text-amber-400/80"> &middot; {pendingMembers.length} en attente</span>
                     )}
-                    {isSuperAdmin && team?.encryptionMode === 'private' && (
-                      <>
-                        {' '}
-                        &middot;{' '}
-                        <button
-                          type="button"
-                          onClick={() => setEncryptionMigrationOpen(true)}
-                          className="underline-offset-2 hover:underline text-accent"
-                        >
-                          Passer en Mode Standard
-                        </button>
-                      </>
-                    )}
                   </p>
+                  {team?.encryptionMode && (
+                    <p className="mt-1 text-xs text-muted-foreground inline-flex items-center gap-1.5">
+                      {team.encryptionMode === 'private' ? (
+                        <Lock className="h-3.5 w-3.5 text-amber-400" />
+                      ) : (
+                        <Cloud className="h-3.5 w-3.5 text-accent" />
+                      )}
+                      <span>
+                        Mode de chiffrement&nbsp;:{' '}
+                        <span className="font-medium text-foreground">
+                          {team.encryptionMode === 'private' ? 'Privé' : 'Standard'}
+                        </span>
+                      </span>
+                      {isSuperAdmin && team.encryptionMode === 'private' && (
+                        <>
+                          {' '}
+                          &middot;{' '}
+                          <button
+                            type="button"
+                            onClick={() => setEncryptionMigrationOpen(true)}
+                            className="underline-offset-2 hover:underline text-accent"
+                          >
+                            Passer en Standard
+                          </button>
+                        </>
+                      )}
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -459,27 +462,31 @@ export default function TeamPage() {
                     >
                       <Settings className="h-4 w-4 mr-2" /> Paramètres
                     </Button>
-                    {team?.recoveryKeyAvailable ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleOpenRecoveryKey}
-                        disabled={loadingRecoveryKey}
-                      >
-                        {loadingRecoveryKey ? (
-                          <><Spinner /> Chargement...</>
-                        ) : (
-                          <><KeyRound className="h-4 w-4 mr-2" /> Clef de secours</>
-                        )}
-                      </Button>
-                    ) : (
-                      <Tooltip content="Cette équipe a été créée avant le stockage chiffré serveur de la clef de secours. Générez-en une nouvelle pour la rendre consultable ici.">
-                        <span className="inline-flex">
-                          <Button variant="outline" size="sm" disabled>
-                            <KeyRound className="h-4 w-4 mr-2" /> Clef de secours
+                    {team?.encryptionMode !== 'standard' && (
+                      <>
+                        {team?.recoveryKeyAvailable ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={handleOpenRecoveryKey}
+                            disabled={loadingRecoveryKey}
+                          >
+                            {loadingRecoveryKey ? (
+                              <><Spinner /> Chargement...</>
+                            ) : (
+                              <><KeyRound className="h-4 w-4 mr-2" /> Clef de secours</>
+                            )}
                           </Button>
-                        </span>
-                      </Tooltip>
+                        ) : (
+                          <Tooltip content="Cette équipe a été créée avant le stockage chiffré serveur de la clef de secours. Générez-en une nouvelle pour la rendre consultable ici.">
+                            <span className="inline-flex">
+                              <Button variant="outline" size="sm" disabled>
+                                <KeyRound className="h-4 w-4 mr-2" /> Clef de secours
+                              </Button>
+                            </span>
+                          </Tooltip>
+                        )}
+                      </>
                     )}
                     <Button size="sm" onClick={() => setInviteOpen(true)}>
                       <UserPlus className="h-4 w-4 mr-2" /> Inviter
