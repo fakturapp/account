@@ -1,7 +1,10 @@
 'use client'
 
-import { useState } from 'react'
-import { Cloud, Lock, AlertTriangle } from 'lucide-react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Cloud, Lock, AlertTriangle, ChevronDown } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { Dialog, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,13 +28,66 @@ interface Props {
   onAcksChange: (acks: EncryptionAcks) => void
 }
 
+const MODES: Record<EncryptionMode, { label: string; description: string; icon: typeof Cloud }> = {
+  standard: {
+    label: 'Mode Standard',
+    description:
+      'Vos données sont chiffrées sur nos serveurs. Aucun mot de passe supplémentaire, aucun verrouillage. Les administrateurs Faktur peuvent techniquement accéder à vos données.',
+    icon: Cloud,
+  },
+  private: {
+    label: 'Mode Privé',
+    description:
+      'Chiffrement de bout en bout avec votre mot de passe. Seuls vous (et votre clef de secours) pouvez déchiffrer vos données. Si vous perdez les deux, c’est perdu.',
+    icon: Lock,
+  },
+}
+
 export function EncryptionModeChooser({ value, onChange, acks, onAcksChange }: Props) {
+  const [open, setOpen] = useState(false)
   const [warnOpen, setWarnOpen] = useState(false)
   const [pendingAcks, setPendingAcks] = useState<EncryptionAcks>(acks)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const popupRef = useRef<HTMLDivElement>(null)
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 320 })
 
-  function openPrivateConfirm() {
-    setPendingAcks(acks)
-    setWarnOpen(true)
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      const target = e.target as Node
+      if (
+        triggerRef.current && !triggerRef.current.contains(target) &&
+        popupRef.current && !popupRef.current.contains(target)
+      ) {
+        setOpen(false)
+      }
+    }
+    function handleEscape(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleEscape)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleEscape)
+    }
+  }, [open])
+
+  useLayoutEffect(() => {
+    if (!open || !triggerRef.current) return
+    const rect = triggerRef.current.getBoundingClientRect()
+    setPos({ top: rect.bottom + 4, left: rect.left, width: Math.max(320, rect.width) })
+  }, [open])
+
+  function selectMode(mode: EncryptionMode) {
+    setOpen(false)
+    if (mode === 'private') {
+      setPendingAcks(acks)
+      setWarnOpen(true)
+    } else {
+      onChange('standard')
+      onAcksChange({ dataLoss: false, notResponsible: false })
+    }
   }
 
   function confirmPrivate() {
@@ -45,67 +101,90 @@ export function EncryptionModeChooser({ value, onChange, acks, onAcksChange }: P
     setWarnOpen(false)
   }
 
+  const Selected = MODES[value]
+  const SelectedIcon = Selected.icon
+
+  const popup = (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          ref={popupRef}
+          initial={{ opacity: 0, y: -4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+          className="fixed z-[9999] rounded-xl bg-overlay shadow-overlay overflow-hidden border border-border/10"
+          style={{ top: pos.top, left: pos.left, width: pos.width }}
+        >
+          <div className="p-1.5">
+            {(['standard', 'private'] as const).map((mode) => {
+              const m = MODES[mode]
+              const Icon = m.icon
+              const isSelected = value === mode
+              return (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => selectMode(mode)}
+                  className={cn(
+                    'flex w-full items-start gap-3 rounded-lg px-3 py-2.5 text-left transition-colors',
+                    isSelected
+                      ? 'bg-foreground/[0.06] text-foreground'
+                      : 'text-foreground/90 hover:bg-foreground/[0.06] hover:text-foreground'
+                  )}
+                >
+                  <span
+                    className={cn(
+                      'mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg',
+                      isSelected ? 'bg-primary/15 text-primary' : 'bg-surface-hover text-muted-foreground'
+                    )}
+                  >
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-medium">{m.label}</span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground leading-relaxed">
+                      {m.description}
+                    </span>
+                  </span>
+                </button>
+              )
+            })}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+
   return (
-    <div className="space-y-3">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         Chiffrement de l&apos;équipe
-      </p>
+      </label>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <button
-          type="button"
-          onClick={() => onChange('standard')}
-          className={`flex flex-col items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-            value === 'standard'
-              ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-primary/40'
-          }`}
-        >
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-              value === 'standard' ? 'bg-primary/20' : 'bg-surface-hover'
-            }`}
-          >
-            <Cloud
-              className={`h-5 w-5 ${value === 'standard' ? 'text-primary' : 'text-muted-foreground'}`}
-            />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">Mode Standard</p>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Vos données sont chiffrées sur nos serveurs. Aucun mot de passe supplémentaire, aucun
-              verrouillage. Les administrateurs Faktur peuvent techniquement accéder à vos données.
-            </p>
-          </div>
-        </button>
+      <button
+        ref={triggerRef}
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="input w-full flex items-center gap-3 text-left"
+      >
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-surface-hover text-muted-foreground">
+          <SelectedIcon className="h-4 w-4" />
+        </span>
+        <span className="flex-1 min-w-0">
+          <span className="block text-sm font-medium text-foreground truncate">
+            {Selected.label}
+          </span>
+          <span className="block text-xs text-muted-foreground truncate">
+            {Selected.description.split('.')[0]}.
+          </span>
+        </span>
+        <ChevronDown
+          className={cn('h-4 w-4 shrink-0 text-muted-foreground transition-transform', open && 'rotate-180')}
+        />
+      </button>
 
-        <button
-          type="button"
-          onClick={openPrivateConfirm}
-          className={`flex flex-col items-start gap-3 rounded-xl border-2 p-4 text-left transition-all ${
-            value === 'private'
-              ? 'border-primary bg-primary/5'
-              : 'border-border hover:border-primary/40'
-          }`}
-        >
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-lg ${
-              value === 'private' ? 'bg-primary/20' : 'bg-surface-hover'
-            }`}
-          >
-            <Lock
-              className={`h-5 w-5 ${value === 'private' ? 'text-primary' : 'text-muted-foreground'}`}
-            />
-          </div>
-          <div>
-            <p className="text-sm font-medium text-foreground">Mode Privé</p>
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
-              Chiffrement de bout en bout avec votre mot de passe. Seuls vous (et votre clef de
-              secours) pouvez déchiffrer vos données. Si vous perdez les deux, c&apos;est perdu.
-            </p>
-          </div>
-        </button>
-      </div>
+      {typeof document !== 'undefined' && createPortal(popup, document.body)}
 
       <Dialog open={warnOpen} onClose={cancelPrivate}>
         <DialogHeader
