@@ -194,7 +194,7 @@ interface LegacyTooltipProps {
 function Tooltip({
   content,
   children,
-  side,
+  side = "top",
   showArrow = true,
   className,
   delay = 300,

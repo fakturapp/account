@@ -626,7 +626,7 @@ export default function TeamPage() {
                       {canManage && (
                         <Dropdown
                           trigger={
-                            <Tooltip content="Actions sur ce membre" side="left">
+                            <Tooltip content="Actions sur ce membre">
                               <div
                                 role="button"
                                 aria-label="Actions sur ce membre"
@@ -725,7 +725,7 @@ export default function TeamPage() {
                         {roleLabels[member.role]}
                       </div>
                       {isAdmin && (
-                        <Tooltip content="Révoquer l'invitation" side="left">
+                        <Tooltip content="Révoquer l'invitation">
                           <button
                             onClick={() => handleRevokeInvite(member.id)}
                             aria-label="Révoquer l'invitation"

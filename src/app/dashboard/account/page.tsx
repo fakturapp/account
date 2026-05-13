@@ -887,7 +887,7 @@ export default function AccountPage() {
                           </div>
                         </div>
                       </div>
-                      <Tooltip content="Supprimer cette clé d'accès" side="left">
+                      <Tooltip content="Supprimer cette clé d'accès">
                         <Button
                           variant="outline"
                           size="sm"
@@ -1442,7 +1442,7 @@ export default function AccountPage() {
             <FieldLabel htmlFor="currentPassword">Mot de passe actuel</FieldLabel>
             <div className="relative">
               <Input id="currentPassword" type={showCurrentPassword ? 'text' : 'password'} value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} required autoFocus className="pr-10" />
-              <Tooltip content={showCurrentPassword ? 'Masquer' : 'Afficher'} side="left">
+              <Tooltip content={showCurrentPassword ? 'Masquer' : 'Afficher'}>
                 <button type="button" onClick={() => setShowCurrentPassword(!showCurrentPassword)} aria-label={showCurrentPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                   {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -1453,7 +1453,7 @@ export default function AccountPage() {
             <FieldLabel htmlFor="newPassword">Nouveau mot de passe</FieldLabel>
             <div className="relative">
               <Input id="newPassword" type={showNewPassword ? 'text' : 'password'} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required className="pr-10" />
-              <Tooltip content={showNewPassword ? 'Masquer' : 'Afficher'} side="left">
+              <Tooltip content={showNewPassword ? 'Masquer' : 'Afficher'}>
                 <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} aria-label={showNewPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                   {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -1464,7 +1464,7 @@ export default function AccountPage() {
             <FieldLabel htmlFor="confirmPassword">Confirmer le mot de passe</FieldLabel>
             <div className="relative">
               <Input id="confirmPassword" type={showConfirmPassword ? 'text' : 'password'} value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required className="pr-10" />
-              <Tooltip content={showConfirmPassword ? 'Masquer' : 'Afficher'} side="left">
+              <Tooltip content={showConfirmPassword ? 'Masquer' : 'Afficher'}>
                 <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} aria-label={showConfirmPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors" tabIndex={-1}>
                   {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

@@ -54,7 +54,7 @@ export function TeamEncryptionBanner() {
         <Button size="sm" onClick={() => setOpenTeam(pendingTeam)}>
           Configurer
         </Button>
-        <Tooltip content="Plus tard — la bannière réapparaîtra à la prochaine connexion" side="bottom">
+        <Tooltip content="Plus tard — la bannière réapparaîtra à la prochaine connexion">
           <button
             type="button"
             onClick={() => {

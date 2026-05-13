@@ -25,7 +25,12 @@ export function ApiErrorDetailsDialog() {
   }
 
   return (
-    <Dialog open={!!data} onClose={() => setData(null)} className="max-w-2xl">
+    <Dialog
+      open={!!data}
+      onClose={() => setData(null)}
+      className="max-w-2xl"
+      zIndex="z-[10020]"
+    >
       <DialogHeader onClose={() => setData(null)} icon={<Bug className="h-5 w-5 text-danger" />}>
         <DialogTitle>Détails de l&apos;erreur</DialogTitle>
         <DialogDescription>

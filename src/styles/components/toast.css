@@ -54,8 +54,9 @@
 
 /* Base toast styles
  *
- * Arrondi: rounded-2xl (20px) — moins agressif que rounded-3xl (modales),
- * plus chaleureux qu'un rounded-xl (cards). Aligné avec le popover Faktur.
+ * Arrondi: rounded-2xl (20px) — moins agressif que rounded-3xl (modales).
+ * Fond identique (overlay) pour tous les variants — heroui style.
+ * Seuls le titre + l'icône changent de couleur par variant.
  */
 .toast {
   position: absolute;
@@ -120,18 +121,29 @@
   @apply flex h-full grow flex-col items-start self-center;
 }
 
-/* Toast indicator */
+/* Toast indicator
+ *
+ * Fixed 20px x 20px box → aligns the icon's vertical center with the
+ * 20px line-height of the title. Icon itself stays size-4 (16px) and
+ * is centered both axes.
+ */
 .toast__indicator {
-  @apply flex shrink-0 items-center justify-center p-1 select-none;
+  @apply flex shrink-0 items-center justify-center select-none;
+  width: 1.25rem;
+  height: 1.25rem;
   color: var(--color-overlay-foreground);
 }
 
 .toast__indicator [data-slot="toast-default-icon"] {
-  @apply box-content size-4;
+  @apply size-4;
 }
 
 .toast__indicator [data-slot="spinner"],
 .toast__indicator [data-slot="spinner-icon"] {
+  @apply size-4;
+}
+
+.toast__indicator > svg {
   @apply size-4;
 }
 
@@ -192,24 +204,12 @@
   @apply mt-2 sm:mt-0;
 }
 
-/* Variant modifiers
- *
- * Chaque variant teinte l'icône + ajoute un bord gauche coloré (4px)
- * + un soupçon de bg-tint pour différencier sans dénaturer.
+/* Variant modifiers — heroui style: only title + icon are colorized.
+ * Toast background stays neutral overlay for all variants.
  */
-.toast--accent {
-  border-left: 3px solid var(--color-accent);
-  background-color: color-mix(in srgb, var(--color-accent) 6%, var(--color-overlay));
-}
-
 .toast--accent .toast__indicator,
 .toast--accent .toast__title {
   color: var(--color-accent);
-}
-
-.toast--success {
-  border-left: 3px solid var(--color-success);
-  background-color: color-mix(in srgb, var(--color-success) 6%, var(--color-overlay));
 }
 
 .toast--success .toast__indicator,
@@ -217,19 +217,9 @@
   color: var(--color-success);
 }
 
-.toast--warning {
-  border-left: 3px solid var(--color-warning);
-  background-color: color-mix(in srgb, var(--color-warning) 6%, var(--color-overlay));
-}
-
 .toast--warning .toast__indicator,
 .toast--warning .toast__title {
   color: var(--color-warning);
-}
-
-.toast--danger {
-  border-left: 3px solid var(--color-danger);
-  background-color: color-mix(in srgb, var(--color-danger) 6%, var(--color-overlay));
 }
 
 .toast--danger .toast__indicator,

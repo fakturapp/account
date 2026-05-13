@@ -373,7 +373,7 @@ export function CreditNoteDetailOverlay({ creditNoteId, onClose, onStatusChange,
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-border">
                   <h3 className="text-lg font-bold text-foreground">{creditNote.creditNoteNumber}</h3>
-                  <Tooltip content="Fermer" side="left">
+                  <Tooltip content="Fermer">
                     <button
                       onClick={onClose}
                       aria-label="Fermer"

@@ -417,7 +417,7 @@ export function QuoteDetailOverlay({ quoteId, onClose, onStatusChange, onDelete 
                 {/* Header */}
                 <div className="flex items-center justify-between px-5 py-4 border-b border-separator">
                   <h3 className="text-lg font-bold text-foreground">{quote.quoteNumber}</h3>
-                  <Tooltip content="Fermer" side="left">
+                  <Tooltip content="Fermer">
                     <button
                       onClick={onClose}
                       aria-label="Fermer"
