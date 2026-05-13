@@ -21,6 +21,7 @@ import {
   type EncryptionMode,
   type EncryptionAcks,
 } from '@/components/team/encryption-mode-chooser'
+import { ConfirmPasswordModal } from '@/components/team/confirm-password-modal'
 
 interface TeamActionResponse {
   team: { id: string; name: string }
@@ -52,6 +53,8 @@ export default function CreateTeamPage() {
     successMessage: string
     redirectTo?: string
   } | null>(null)
+  const [confirmPasswordOpen, setConfirmPasswordOpen] = useState(false)
+  const [confirmPasswordSubmitting, setConfirmPasswordSubmitting] = useState(false)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -72,6 +75,55 @@ export default function CreateTeamPage() {
   const importAcksValid =
     importEncryptionMode === 'standard' || (importAcks.dataLoss && importAcks.notResponsible)
 
+  async function submitCreate(confirmPassword?: string) {
+    const { data, error, errorCode } = await api.post<TeamActionResponse>('/team/create', {
+      name,
+      encryptionMode,
+      ackDataLoss: acks.dataLoss,
+      ackNotResponsible: acks.notResponsible,
+      confirmPassword,
+    })
+
+    if (error) {
+      if (errorCode === 'KEK_REQUIRED') {
+        setLoading(false)
+        setConfirmPasswordOpen(true)
+        return null
+      }
+      if (errorCode === 'INVALID_PASSWORD') {
+        setConfirmPasswordSubmitting(false)
+        toast('Mot de passe incorrect.', 'error')
+        return null
+      }
+      setLoading(false)
+      setConfirmPasswordSubmitting(false)
+      toast(error, 'error')
+      return null
+    }
+
+    setLoading(false)
+    setConfirmPasswordSubmitting(false)
+    setConfirmPasswordOpen(false)
+    return data
+  }
+
+  async function handleConfirmPassword(password: string) {
+    setConfirmPasswordSubmitting(true)
+    const data = await submitCreate(password)
+    if (!data) return
+    await refreshUser()
+    if (data?.recoveryKey) {
+      setRecoveryKeyModal({
+        recoveryKey: data.recoveryKey,
+        successMessage: `Equipe "${data.team.name}" creee`,
+      })
+      return
+    }
+    t.success(`Équipe « ${data?.team.name} » créée`, {
+      description: 'Vous pouvez désormais inviter des membres et créer des factures.',
+    })
+  }
+
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     if (!createAcksValid) {
@@ -79,16 +131,8 @@ export default function CreateTeamPage() {
       return
     }
     setLoading(true)
-
-    const { data, error } = await api.post<TeamActionResponse>('/team/create', {
-      name,
-      encryptionMode,
-      ackDataLoss: acks.dataLoss,
-      ackNotResponsible: acks.notResponsible,
-    })
-    setLoading(false)
-
-    if (error) return toast(error, 'error')
+    const data = await submitCreate()
+    if (!data) return
 
     await refreshUser()
 
@@ -435,6 +479,17 @@ export default function CreateTeamPage() {
           minVisibleSeconds={12}
         />
       )}
+
+      <ConfirmPasswordModal
+        open={confirmPasswordOpen}
+        onClose={() => {
+          if (!confirmPasswordSubmitting) {
+            setConfirmPasswordOpen(false)
+          }
+        }}
+        onConfirm={handleConfirmPassword}
+        submitting={confirmPasswordSubmitting}
+      />
     </motion.div>
   )
 }
