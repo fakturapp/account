@@ -18,8 +18,6 @@ interface Step {
   label: string
   path: string
   icon: React.ElementType
-  /** When true, this step is only relevant for end-to-end encrypted teams
-   *  (Mode Privé). It is hidden when the user's current team is Standard. */
   privateOnly?: boolean
 }
 
@@ -37,12 +35,9 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const pathname = usePathname()
   const router = useRouter()
 
-  // Filter steps: drop the security step for Standard-mode users.
   const isStandardTeam = user?.currentTeamEncryptionMode === 'standard'
   const steps = ALL_STEPS.filter((s) => !s.privateOnly || !isStandardTeam)
 
-  // Page transition overlay: hide the new page's empty state during nav,
-  // showing a spinner instead until the new path is committed.
   const [navigating, setNavigating] = useState(false)
   const prevPathRef = useRef(pathname)
   useEffect(() => {
@@ -52,7 +47,6 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
     }
   }, [pathname])
   useEffect(() => {
-    // Listen for global transition signals from step pages (router.push)
     function onStart() { setNavigating(true) }
     window.addEventListener('faktur:onboarding-navigate', onStart)
     return () => window.removeEventListener('faktur:onboarding-navigate', onStart)
@@ -252,9 +246,6 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
         </div>
       </main>
 
-      {/* Navigation overlay — masque le flash de l'ancienne page pendant
-       *  que Next.js prépare la suivante. Déclenché via l'event global
-       *  `faktur:onboarding-navigate` posé par les pages d'onboarding. */}
       <AnimatePresence>
         {navigating && (
           <motion.div
