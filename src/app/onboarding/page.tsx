@@ -22,6 +22,16 @@ export default function OnboardingRootPage() {
   useEffect(() => {
     if (loading || !user) return
 
+    // A pending recovery key for the current team always wins: the user must
+    // see and acknowledge it before anything else (survives team switching).
+    if (
+      user.currentTeamId &&
+      sessionStorage.getItem(`faktur_recovery_key_${user.currentTeamId}`)
+    ) {
+      router.replace('/onboarding/recovery-key')
+      return
+    }
+
     // Step detection — walks the onboarding tree from earliest to latest,
     // landing on the first one the user hasn't completed yet.
     const target = resolveNextStep(user)

@@ -162,8 +162,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // onboardingCompletedAt. A currentTeamId pointing to a team absent from the
   // list is treated as "no onboarding needed" to avoid trapping the user.
   const currentTeam = user?.teams?.find((t) => t.id === user.currentTeamId) ?? null
+  // A freshly created private team keeps its recovery key in sessionStorage
+  // until the user acknowledges it on the recovery-key step. While it is
+  // pending, the user must stay in the onboarding flow.
+  const hasPendingRecoveryKey =
+    typeof window !== 'undefined' &&
+    !!user?.currentTeamId &&
+    !!sessionStorage.getItem(`faktur_recovery_key_${user.currentTeamId}`)
   const needsOnboarding =
-    !!user && (!user.currentTeamId || (currentTeam != null && !currentTeam.onboardingCompletedAt))
+    !!user &&
+    (!user.currentTeamId ||
+      (currentTeam != null && !currentTeam.onboardingCompletedAt) ||
+      hasPendingRecoveryKey)
 
   useEffect(() => {
     if (loading) return
