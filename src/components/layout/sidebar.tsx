@@ -2,11 +2,12 @@
 
 import * as React from 'react'
 import { useState } from 'react'
-import Link from 'next/link'
+import Link, { useLinkStatus } from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Avatar } from '@/components/ui/avatar'
+import { Spinner } from '@/components/ui/spinner'
 import { Dropdown, DropdownItem, DropdownLabel, DropdownSeparator, DropdownSub } from '@/components/ui/dropdown'
 import { CreateInvoiceModal } from '@/components/invoices/create-invoice-modal'
 import { useTheme } from '@/lib/theme'
@@ -221,6 +222,19 @@ function storeExpanded(expanded: string[]) {
   localStorage.setItem(SETTINGS_EXPANDED_KEY, JSON.stringify(expanded))
 }
 
+// Rendered inside a <Link>: shows a spinner while that link's navigation is
+// pending, and notifies the top progress bar that a route change started.
+function LinkStatusIndicator({ className }: { className?: string }) {
+  const { pending } = useLinkStatus()
+  React.useEffect(() => {
+    if (pending && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('faktur:route-pending'))
+    }
+  }, [pending])
+  if (!pending) return null
+  return <Spinner size="sm" color="accent" className={cn('shrink-0', className)} />
+}
+
 function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavItem; pathname: string; badges?: Record<string, number>; persistKey?: string; collapsed?: boolean }) {
   const isActive = item.href === '/dashboard'
     ? pathname === '/dashboard'
@@ -275,6 +289,7 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
             {item.label}
           </motion.span>
         )}
+        {!collapsed && <LinkStatusIndicator className="ml-auto" />}
       </Link>
     )
     return collapsed ? (
@@ -343,6 +358,7 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
                     <span className="flex items-center gap-2">
                       {ChildIcon && <ChildIcon className={cn('h-4 w-4 shrink-0', childActive && 'text-primary')} />}
                       {child.label}
+                      <LinkStatusIndicator className="ml-1" />
                     </span>
                     {badgeCount != null && badgeCount > 0 && (
                       <span className="flex h-4.5 min-w-4.5 items-center justify-center rounded-full bg-primary/15 px-1 text-[9px] font-semibold text-primary">
@@ -554,6 +570,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     Retour au dashboard
                   </motion.span>
                 )}
+                {!collapsed && <LinkStatusIndicator className="ml-auto" />}
               </Link>
             </div>
 
@@ -610,6 +627,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     Retour au dashboard
                   </motion.span>
                 )}
+                {!collapsed && <LinkStatusIndicator className="ml-auto" />}
               </Link>
             </div>
 
@@ -644,6 +662,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     Retour au dashboard
                   </motion.span>
                 )}
+                {!collapsed && <LinkStatusIndicator className="ml-auto" />}
               </Link>
             </div>
 

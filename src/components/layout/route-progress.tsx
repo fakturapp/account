@@ -1,34 +1,59 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence, type Variants } from 'framer-motion'
 
+// Navigation progress bar. It starts as soon as a link reports a pending
+// navigation (faktur:route-pending), creeps forward while the route resolves,
+// then snaps to 100% and fades out when the pathname actually changes.
+// A pathname change without a tracked start still produces a quick flash so
+// programmatic navigations stay visible too.
 export function RouteProgressBar() {
   const pathname = usePathname()
-  const [show, setShow] = useState(false)
+  const [progress, setProgress] = useState(0)
+  const [visible, setVisible] = useState(false)
   const prevPathname = useRef(pathname)
+  const tickRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined)
+  const hideRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
 
   useEffect(() => {
-    if (pathname !== prevPathname.current) {
-      prevPathname.current = pathname
-      setShow(true)
-      const timer = setTimeout(() => setShow(false), 500)
-      return () => clearTimeout(timer)
+    function start() {
+      clearTimeout(hideRef.current)
+      clearInterval(tickRef.current)
+      setVisible(true)
+      setProgress(12)
+      tickRef.current = setInterval(() => {
+        setProgress((p) => (p < 90 ? p + (94 - p) * 0.1 : p))
+      }, 200)
     }
+    window.addEventListener('faktur:route-pending', start)
+    return () => {
+      window.removeEventListener('faktur:route-pending', start)
+      clearInterval(tickRef.current)
+      clearTimeout(hideRef.current)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (pathname === prevPathname.current) return
+    prevPathname.current = pathname
+    clearInterval(tickRef.current)
+    setVisible(true)
+    setProgress(100)
+    hideRef.current = setTimeout(() => {
+      setVisible(false)
+      setProgress(0)
+    }, 280)
   }, [pathname])
 
+  if (!visible) return null
+
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          className="h-0.5 bg-primary origin-left"
-          initial={{ scaleX: 0, opacity: 1 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-        />
-      )}
-    </AnimatePresence>
+    <div className="absolute inset-x-0 top-0 z-50 h-[3px] pointer-events-none">
+      <div
+        className="h-full rounded-r-full bg-primary shadow-[0_0_8px_1px_var(--color-primary)] transition-[width,opacity] duration-200 ease-out"
+        style={{ width: `${progress}%`, opacity: progress >= 100 ? 0 : 1 }}
+      />
+    </div>
   )
 }
