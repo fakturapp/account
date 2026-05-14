@@ -119,16 +119,17 @@ export default function CreateTeamPage() {
     setConfirmPasswordSubmitting(true)
     const data = await submitCreate(password)
     if (!data) return
-    await refreshUser()
-    const redirectTo = configureNow ? '/onboarding' : '/dashboard'
-    if (data?.recoveryKey) {
-      setRecoveryKeyModal({
-        recoveryKey: data.recoveryKey,
-        successMessage: `Equipe "${data.team.name}" creee`,
-        redirectTo,
-      })
+
+    // Private team: the recovery key must be shown on the dedicated, persistent
+    // onboarding page — never as a transient modal that can be redirected away.
+    if (data.recoveryKey) {
+      sessionStorage.setItem(`faktur_recovery_key_${data.team.id}`, data.recoveryKey)
+      window.location.href = '/onboarding/recovery-key'
       return
     }
+
+    await refreshUser()
+    const redirectTo = configureNow ? '/onboarding' : '/dashboard'
     t.success(`Équipe « ${data?.team.name} » créée`, {
       description: 'Vous pouvez désormais inviter des membres et créer des factures.',
     })
@@ -145,18 +146,15 @@ export default function CreateTeamPage() {
     const data = await submitCreate()
     if (!data) return
 
-    await refreshUser()
-
-    const redirectTo = configureNow ? '/onboarding' : '/dashboard'
-
-    if (data?.recoveryKey) {
-      setRecoveryKeyModal({
-        recoveryKey: data.recoveryKey,
-        successMessage: `Equipe "${data.team.name}" creee`,
-        redirectTo,
-      })
+    // Private team: the recovery key must be shown on the dedicated, persistent
+    // onboarding page — never as a transient modal that can be redirected away.
+    if (data.recoveryKey) {
+      sessionStorage.setItem(`faktur_recovery_key_${data.team.id}`, data.recoveryKey)
+      window.location.href = '/onboarding/recovery-key'
       return
     }
+
+    await refreshUser()
 
     if (configureNow) {
       t.success(`Équipe « ${data?.team.name} » créée`, {
