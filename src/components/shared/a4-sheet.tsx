@@ -1042,7 +1042,10 @@ export function A4Sheet({
     <div className="flex justify-center">
       {}
       <div
-        className="w-full max-w-[960px] rounded-xl relative overflow-hidden"
+        className={cn(
+          'w-full max-w-[960px] rounded-xl relative overflow-hidden',
+          overflowData.overflows && 'ring-2 ring-amber-500/60'
+        )}
         style={{
           aspectRatio: '210 / 297',
           background: isClassique
@@ -1056,7 +1059,7 @@ export function A4Sheet({
           colorScheme: darkMode ? 'dark' : 'light',
         }}
       >
-        {overflowData.overflows && !isPreview && (
+        {overflowData.overflows && (
           <div className="absolute top-2 right-2 z-20">
             <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/15 border border-amber-500/30 backdrop-blur-sm">
               <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
