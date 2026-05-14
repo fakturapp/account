@@ -248,8 +248,8 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
 
   const rowClass = cn(
     'flex items-center rounded-lg transition-all duration-200 relative',
-    collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-2.5 py-[7px] w-full',
-    'text-[13px] font-medium',
+    collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-3 px-3 py-[10px] w-full',
+    'text-[15px] font-medium',
     isActive
       ? 'bg-muted/60 dark:bg-white/[0.06] shadow-sm text-foreground'
       : 'text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground'
@@ -257,7 +257,7 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
 
   const iconClass = cn(
     'shrink-0 transition-all duration-200',
-    collapsed ? 'h-5 w-5' : 'h-[15px] w-[15px]',
+    collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]',
     isActive ? 'text-primary' : 'opacity-70'
   )
 
@@ -334,14 +334,14 @@ function NavLink({ item, pathname, badges, persistKey, collapsed }: { item: NavI
                     key={child.href}
                     href={child.href}
                     className={cn(
-                      'flex items-center justify-between rounded-md px-2.5 py-[5px] text-[12px] transition-all duration-200',
+                      'flex items-center justify-between rounded-md px-2.5 py-[7px] text-[13.5px] transition-all duration-200',
                       childActive
                         ? 'bg-muted/60 dark:bg-white/[0.06] shadow-sm text-foreground font-medium'
                         : 'text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground'
                     )}
                   >
                     <span className="flex items-center gap-2">
-                      {ChildIcon && <ChildIcon className={cn('h-3 w-3 shrink-0', childActive && 'text-primary')} />}
+                      {ChildIcon && <ChildIcon className={cn('h-4 w-4 shrink-0', childActive && 'text-primary')} />}
                       {child.label}
                     </span>
                     {badgeCount != null && badgeCount > 0 && (
@@ -427,11 +427,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               )}
             >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-500/15 text-indigo-400">
-                <ShieldCheck className="h-3.5 w-3.5" />
+                <ShieldCheck className="h-4 w-4" />
               </div>
               {!collapsed && (
                 <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">
+                  <p className="text-[15px] font-semibold text-foreground leading-tight whitespace-nowrap">
                     Administration
                   </p>
                 </motion.div>
@@ -462,7 +462,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               </div>
               {!collapsed && (
                 <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">Mon compte</p>
+                  <p className="text-[15px] font-semibold text-foreground leading-tight whitespace-nowrap">Mon compte</p>
                 </motion.div>
               )}
             </div>
@@ -483,11 +483,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               )}
             >
               <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/15 text-primary">
-                <Settings className="h-3.5 w-3.5" />
+                <Settings className="h-4 w-4" />
               </div>
               {!collapsed && (
                 <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
-                  <p className="text-[13px] font-semibold text-foreground leading-tight whitespace-nowrap">Paramètres</p>
+                  <p className="text-[15px] font-semibold text-foreground leading-tight whitespace-nowrap">Paramètres</p>
                 </motion.div>
               )}
             </div>
@@ -544,11 +544,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <Link
                 href="/dashboard"
                 className={cn(
-                  'flex items-center rounded-lg text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
-                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2 px-2.5 py-2'
+                  'flex items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
                 )}
               >
-                <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
+                <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} />
                 {!collapsed && (
                   <motion.span {...labelFade} className="whitespace-nowrap">
                     Retour au dashboard
@@ -600,11 +600,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <Link
                 href="/dashboard"
                 className={cn(
-                  'flex items-center rounded-lg text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
-                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2 px-2.5 py-2'
+                  'flex items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
                 )}
               >
-                <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
+                <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} />
                 {!collapsed && (
                   <motion.span {...labelFade} className="whitespace-nowrap">
                     Retour au dashboard
@@ -634,11 +634,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               <Link
                 href="/dashboard"
                 className={cn(
-                  'flex items-center rounded-lg text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
-                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2 px-2.5 py-2'
+                  'flex items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+                  collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
                 )}
               >
-                <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
+                <ArrowLeft className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} />
                 {!collapsed && (
                   <motion.span {...labelFade} className="whitespace-nowrap">
                     Retour au dashboard
@@ -671,11 +671,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                   <div
                     data-tutorial="create-button"
                     className={cn(
-                      'flex items-center justify-center rounded-lg text-[13px] font-semibold hover:bg-muted/40 dark:hover:bg-white/[0.04] transition-all cursor-pointer',
-                      collapsed ? 'h-10 w-10 mx-auto' : 'gap-2 px-2.5 py-2'
+                      'flex items-center justify-center rounded-lg text-[15px] font-semibold hover:bg-muted/40 dark:hover:bg-white/[0.04] transition-all cursor-pointer',
+                      collapsed ? 'h-10 w-10 mx-auto' : 'gap-2.5 px-3 py-2.5'
                     )}
                   >
-                    <CirclePlus className={cn('text-primary shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
+                    <CirclePlus className={cn('text-primary shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} />
                     {!collapsed && (
                       <motion.span {...labelFade} className="text-primary whitespace-nowrap">
                         Créer
@@ -728,12 +728,12 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           type="button"
           onClick={() => setWhatsNewOpen(true)}
           className={cn(
-            'flex w-full items-center rounded-lg text-[13px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
-            collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2 px-2.5 py-2'
+            'flex w-full items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
+            collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
           )}
           title="Quoi de neuf"
         >
-          <Gift className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-3.5 w-3.5')} />
+          <Gift className={cn('shrink-0 transition-all duration-200', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]')} />
           {!collapsed && (
             <motion.span {...labelFade} className="whitespace-nowrap">
               Quoi de neuf ?
@@ -771,10 +771,10 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               {!collapsed && (
                 <>
                   <motion.div {...labelFade} className="flex-1 min-w-0 text-left">
-                    <p className="text-[13px] font-medium text-foreground truncate leading-tight">
+                    <p className="text-[14px] font-medium text-foreground truncate leading-tight">
                       {user.fullName || user.email}
                     </p>
-                    <p className="text-[11px] text-muted-foreground truncate">{user.email}</p>
+                    <p className="text-[12px] text-muted-foreground truncate">{user.email}</p>
                   </motion.div>
 
                   <motion.button
@@ -789,11 +789,11 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     title={theme === 'system' ? 'Systeme' : theme === 'dark' ? 'Sombre' : 'Clair'}
                   >
                     {theme === 'system' ? (
-                      <Monitor className="h-3.5 w-3.5" />
+                      <Monitor className="h-4 w-4" />
                     ) : theme === 'dark' ? (
-                      <Moon className="h-3.5 w-3.5" />
+                      <Moon className="h-4 w-4" />
                     ) : (
-                      <Sun className="h-3.5 w-3.5" />
+                      <Sun className="h-4 w-4" />
                     )}
                   </motion.button>
 
