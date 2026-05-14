@@ -802,6 +802,12 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                 expiresAt: link.expiresAt,
               })
               setPaymentLinkUrl(link.url)
+              // The backend promotes a draft invoice to "sent" once a payment
+              // link exists — mirror that locally so the UI stays in sync.
+              if (invoice.status === 'draft') {
+                setInvoice({ ...invoice, status: 'sent' })
+                onStatusChange(invoice.id, 'sent')
+              }
             }}
           />
         )}
