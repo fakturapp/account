@@ -48,8 +48,8 @@ export default function OnboardingRootPage() {
 interface UserShape {
   currentTeamId: string | null
   hasRecoveryKey: boolean
-  onboardingCompleted: boolean
   currentTeamEncryptionMode?: 'private' | 'standard' | null
+  teams?: { id: string; onboardingCompletedAt: string | null }[]
 }
 
 function resolveNextStep(user: UserShape): string {
@@ -60,8 +60,9 @@ function resolveNextStep(user: UserShape): string {
   const isPrivate = (user.currentTeamEncryptionMode ?? 'private') === 'private'
   if (isPrivate && !user.hasRecoveryKey) return '/onboarding/recovery-key'
 
-  // 3. Onboarding already completed → dashboard
-  if (user.onboardingCompleted) return '/dashboard'
+  // 3. Current team already configured → dashboard
+  const currentTeam = user.teams?.find((t) => t.id === user.currentTeamId) ?? null
+  if (currentTeam && currentTeam.onboardingCompletedAt) return '/dashboard'
 
   // 4. Default next step in the flow
   return '/onboarding/company'

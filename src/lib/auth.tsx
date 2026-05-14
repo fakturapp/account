@@ -12,6 +12,7 @@ export interface TeamSummary {
   name: string
   encryptionMode: 'private' | 'standard'
   encryptionModeConfirmedAt: string | null
+  onboardingCompletedAt: string | null
 }
 
 interface User {
@@ -156,6 +157,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser()
   }, [refreshUser])
 
+  // Onboarding is tracked per-team: the current team needs the wizard when it
+  // has no currentTeamId at all, or its currentTeam row has no
+  // onboardingCompletedAt. A currentTeamId pointing to a team absent from the
+  // list is treated as "no onboarding needed" to avoid trapping the user.
+  const currentTeam = user?.teams?.find((t) => t.id === user.currentTeamId) ?? null
+  const needsOnboarding =
+    !!user && (!user.currentTeamId || (currentTeam != null && !currentTeam.onboardingCompletedAt))
+
   useEffect(() => {
     if (loading) return
 
@@ -187,8 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       ) {
         return
       }
-      if (!user.onboardingCompleted) {
-        router.replace('/onboarding/team')
+      if (needsOnboarding) {
+        router.replace('/onboarding')
       } else {
         router.replace('/dashboard')
       }
@@ -197,16 +206,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (user && !isPublicPath) {
       const isOnboarding = pathname.startsWith('/onboarding')
-      if (!user.onboardingCompleted && !isOnboarding) {
-        router.replace('/onboarding/team')
+      if (needsOnboarding && !isOnboarding) {
+        router.replace('/onboarding')
         return
       }
-      if (user.onboardingCompleted && isOnboarding) {
+      if (!needsOnboarding && isOnboarding) {
         router.replace('/dashboard')
         return
       }
     }
-  }, [user, loading, pathname, isPublicPath, router])
+  }, [user, loading, pathname, isPublicPath, router, needsOnboarding])
 
   function login(token: string, userData: User, vaultKey?: string) {
     localStorage.setItem('faktur_token', token)
