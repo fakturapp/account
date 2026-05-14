@@ -46,7 +46,9 @@ export default function OnboardingTeamPage() {
 
   useEffect(() => {
     if (user?.currentTeamId) {
-      const hasKey = sessionStorage.getItem('zenvoice_recovery_key')
+      const hasKey =
+        sessionStorage.getItem(`faktur_recovery_key_${user.currentTeamId}`) ??
+        sessionStorage.getItem('zenvoice_recovery_key')
       startNav()
       router.replace(hasKey ? '/onboarding/recovery-key' : '/onboarding/company')
     }
@@ -55,7 +57,10 @@ export default function OnboardingTeamPage() {
   const acksValid = encryptionMode === 'standard' || (acks.dataLoss && acks.notResponsible)
 
   async function submitTeam(confirmPassword?: string) {
-    const { data, error: err, errorCode } = await api.post<{ recoveryKey?: string }>(
+    const { data, error: err, errorCode } = await api.post<{
+      recoveryKey?: string
+      team?: { id: string }
+    }>(
       '/onboarding/team',
       {
         name,
@@ -93,8 +98,8 @@ export default function OnboardingTeamPage() {
     setConfirmPasswordSubmitting(true)
     const data = await submitTeam(password)
     if (!data) return
-    if (data.recoveryKey) {
-      sessionStorage.setItem('zenvoice_recovery_key', data.recoveryKey)
+    if (data.recoveryKey && data.team) {
+      sessionStorage.setItem(`faktur_recovery_key_${data.team.id}`, data.recoveryKey)
     }
     await refreshUser()
     startNav()
@@ -112,8 +117,8 @@ export default function OnboardingTeamPage() {
     const data = await submitTeam()
     if (!data) return
 
-    if (data.recoveryKey) {
-      sessionStorage.setItem('zenvoice_recovery_key', data.recoveryKey)
+    if (data.recoveryKey && data.team) {
+      sessionStorage.setItem(`faktur_recovery_key_${data.team.id}`, data.recoveryKey)
     }
 
     await refreshUser()
