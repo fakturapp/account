@@ -581,6 +581,8 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                       onStatusChange={handleStatusUpdate}
                       fullWidth
                       readOnlyStatuses={['paid_unconfirmed']}
+                      lockedStatuses={paymentLinkInfo?.isActive ? ['draft'] : []}
+                      lockedReason="Supprimez le lien de paiement pour repasser la facture en brouillon."
                     />
                   </div>
 

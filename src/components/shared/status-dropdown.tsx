@@ -34,9 +34,11 @@ interface StatusDropdownProps {
   onStatusChange: (id: string, newStatus: string) => void
   fullWidth?: boolean
   readOnlyStatuses?: string[]
+  lockedStatuses?: string[]
+  lockedReason?: string
 }
 
-export function StatusDropdown({ id, currentStatus, options, endpoint, onStatusChange, fullWidth, readOnlyStatuses = [] }: StatusDropdownProps) {
+export function StatusDropdown({ id, currentStatus, options, endpoint, onStatusChange, fullWidth, readOnlyStatuses = [], lockedStatuses = [], lockedReason }: StatusDropdownProps) {
   const { toast } = useToast()
   const [loading, setLoading] = useState(false)
   const current = options.find((o) => o.value === currentStatus) || options[0]
@@ -85,16 +87,25 @@ export function StatusDropdown({ id, currentStatus, options, endpoint, onStatusC
       >
         {options
           .filter((opt) => !readOnlyStatuses.includes(opt.value))
-          .map((opt) => (
-            <DropdownItem
-              key={opt.value}
-              onClick={() => handleChange(opt.value)}
-              className={opt.value === currentStatus ? 'opacity-50' : ''}
-            >
-              {opt.icon}
-              <span>{opt.label}</span>
-            </DropdownItem>
-          ))}
+          .map((opt) => {
+            const locked = lockedStatuses.includes(opt.value)
+            return (
+              <DropdownItem
+                key={opt.value}
+                onClick={() => {
+                  if (locked) {
+                    if (lockedReason) t.warning(lockedReason)
+                    return
+                  }
+                  handleChange(opt.value)
+                }}
+                className={`${opt.value === currentStatus ? 'opacity-50' : ''} ${locked ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                {opt.icon}
+                <span>{opt.label}</span>
+              </DropdownItem>
+            )
+          })}
       </Dropdown>
     </div>
   )
