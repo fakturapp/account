@@ -19,10 +19,11 @@ interface Step {
   path: string
   icon: React.ElementType
   privateOnly?: boolean
+  requiresNoTeam?: boolean
 }
 
 const ALL_STEPS: Step[] = [
-  { id: 'team', label: 'Équipe', path: '/onboarding/team', icon: Users },
+  { id: 'team', label: 'Équipe', path: '/onboarding/team', icon: Users, requiresNoTeam: true },
   { id: 'recovery-key', label: 'Sécurité', path: '/onboarding/recovery-key', icon: Shield, privateOnly: true },
   { id: 'company', label: 'Entreprise', path: '/onboarding/company', icon: Building2 },
   { id: 'personalization', label: 'Apparence', path: '/onboarding/personalization', icon: Palette },
@@ -36,7 +37,12 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   const router = useRouter()
 
   const isStandardTeam = user?.currentTeamEncryptionMode === 'standard'
-  const steps = ALL_STEPS.filter((s) => !s.privateOnly || !isStandardTeam)
+  const hasTeam = !!user?.currentTeamId
+  const steps = ALL_STEPS.filter((s) => {
+    if (s.privateOnly && isStandardTeam) return false
+    if (s.requiresNoTeam && hasTeam) return false
+    return true
+  })
 
   const [navigating, setNavigating] = useState(false)
   const prevPathRef = useRef(pathname)
