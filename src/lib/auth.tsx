@@ -178,6 +178,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (loading) return
 
+    // A logged-in user whose teams[] hasn't loaded yet (light login payload,
+    // /auth/me still in flight) — wait before deciding any onboarding redirect.
+    if (user && user.teams === undefined) return
+
     if (!user && !isPublicPath) {
       let target = '/login'
       if (typeof window !== 'undefined') {
@@ -248,6 +252,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {}
 
     setUser(userData)
+    // The login/passkey/oauth payloads are lighter than /auth/me and may omit
+    // teams[] — pull the full profile so the team switcher and the per-team
+    // onboarding guard have the data they need.
+    void refreshUser()
   }
 
   async function logout(options: LogoutOptions = {}) {
