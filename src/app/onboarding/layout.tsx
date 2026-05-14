@@ -10,6 +10,7 @@ import { CheckCircle2, Users, Shield, Building2, Palette, Mail, Receipt, LogOut 
 import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { OnboardingTeamSwitcher } from '@/components/team/onboarding-team-switcher'
 
 const Iridescence = dynamic(() => import('@/components/ui/iridescence'), { ssr: false })
 
@@ -132,6 +133,8 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
             Étape {currentStepIndex + 1} sur {steps.length}
           </p>
         </div>
+
+        <OnboardingTeamSwitcher />
 
         {/* Progress bar */}
         <div className="mx-5 mb-4">
