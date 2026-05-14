@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   Trash2, Search, X, Building2, UserRound,
   RefreshCw, MousePointerClick, FileText, Plus, Type, ChevronDown, Package, ImagePlus, Upload,
-  AlertTriangle, GripVertical,
+  AlertTriangle, GripVertical, ChevronLeft, ChevronRight,
 } from 'lucide-react'
 import { api } from '@/lib/api'
 import { RichTextarea, mdToHtml } from '@/components/ui/rich-textarea'
@@ -960,6 +960,35 @@ export function A4Sheet({
     billingType,
   })
 
+  // Preview pagination: when the content spills past one A4 page, the preview
+  // shows page-switcher controls instead of an inner scrollbar.
+  const pageBoxRef = useRef<HTMLDivElement>(null)
+  const [pageCount, setPageCount] = useState(1)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [pageHeightPx, setPageHeightPx] = useState(0)
+
+  useEffect(() => {
+    if (!isPreview) return
+    function measure() {
+      const el = pageBoxRef.current
+      if (!el) return
+      const ph = el.clientHeight
+      if (ph <= 0) return
+      setPageHeightPx(ph)
+      const pages = Math.max(1, Math.ceil((el.scrollHeight - 6) / ph))
+      setPageCount(pages)
+      setCurrentPage((p) => Math.min(p, pages - 1))
+    }
+    const raf = requestAnimationFrame(measure)
+    const el = pageBoxRef.current
+    const ro = el ? new ResizeObserver(measure) : null
+    if (el && ro) ro.observe(el)
+    return () => {
+      cancelAnimationFrame(raf)
+      ro?.disconnect()
+    }
+  }, [isPreview, overflowData.totalHeight, billingType, effectiveFont])
+
   // Dynamically load document font from Google Fonts
   useEffect(() => {
     if (!effectiveFont || effectiveFont === 'Lexend') return // Lexend already loaded via next/font
@@ -1070,11 +1099,27 @@ export function A4Sheet({
           </div>
         )}
 
-        {/* Scrollable content — flex column so bottom sticks */}
-        <div className="absolute inset-0 overflow-y-auto">
+        {/* Scrollable content — flex column so bottom sticks.
+            In preview the inner scrollbar is replaced by page switching. */}
+        <div
+          ref={pageBoxRef}
+          className={cn('absolute inset-0', isPreview ? 'overflow-hidden' : 'overflow-y-auto')}
+        >
           <div
             className="flex flex-col min-h-full px-10 py-8"
-            style={{ fontFamily: `'${effectiveFont}', 'Segoe UI', sans-serif`, color: T.text, letterSpacing: isClassique ? '0.5px' : undefined }}
+            style={{
+              fontFamily: `'${effectiveFont}', 'Segoe UI', sans-serif`,
+              color: T.text,
+              letterSpacing: isClassique ? '0.5px' : undefined,
+              transform:
+                isPreview && pageCount > 1
+                  ? `translateY(-${currentPage * pageHeightPx}px)`
+                  : undefined,
+              transition:
+                isPreview && pageCount > 1
+                  ? 'transform 0.35s cubic-bezier(0.32, 0.72, 0, 1)'
+                  : undefined,
+            }}
           >
 
             {/* ═══════════════════════════════════════════
@@ -1843,6 +1888,32 @@ export function A4Sheet({
 
           </div>
         </div>
+
+        {isPreview && pageCount > 1 && (
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-foreground/85 px-1.5 py-1 shadow-lg backdrop-blur-sm">
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+              disabled={currentPage === 0}
+              className="flex h-6 w-6 items-center justify-center rounded-full text-background/90 transition-colors hover:bg-background/15 disabled:opacity-30 disabled:hover:bg-transparent"
+              aria-label={lang === 'en' ? 'Previous page' : 'Page précédente'}
+            >
+              <ChevronLeft className="h-3.5 w-3.5" />
+            </button>
+            <span className="px-1.5 text-[11px] font-medium tabular-nums text-background">
+              {currentPage + 1} / {pageCount}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCurrentPage((p) => Math.min(pageCount - 1, p + 1))}
+              disabled={currentPage === pageCount - 1}
+              className="flex h-6 w-6 items-center justify-center rounded-full text-background/90 transition-colors hover:bg-background/15 disabled:opacity-30 disabled:hover:bg-transparent"
+              aria-label={lang === 'en' ? 'Next page' : 'Page suivante'}
+            >
+              <ChevronRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   )
