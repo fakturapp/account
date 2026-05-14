@@ -9,6 +9,12 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Field, FieldGroup, FieldLabel, FieldDescription } from '@/components/ui/field'
+import {
+  CheckboxRoot,
+  CheckboxControl,
+  CheckboxIndicator,
+  CheckboxContent,
+} from '@/components/ui/checkbox'
 import { Separator } from '@/components/ui/separator'
 import { Spinner } from '@/components/ui/spinner'
 import { useToast } from '@/components/ui/toast'
@@ -39,6 +45,7 @@ export default function CreateTeamPage() {
   const [loading, setLoading] = useState(false)
   const [encryptionMode, setEncryptionMode] = useState<EncryptionMode>('standard')
   const [acks, setAcks] = useState<EncryptionAcks>({ dataLoss: false, notResponsible: false })
+  const [configureNow, setConfigureNow] = useState(true)
 
   const [importFile, setImportFile] = useState<File | null>(null)
   const [importName, setImportName] = useState('')
@@ -82,6 +89,7 @@ export default function CreateTeamPage() {
       ackDataLoss: acks.dataLoss,
       ackNotResponsible: acks.notResponsible,
       confirmPassword,
+      skipOnboarding: !configureNow,
     })
 
     if (error) {
@@ -112,16 +120,19 @@ export default function CreateTeamPage() {
     const data = await submitCreate(password)
     if (!data) return
     await refreshUser()
+    const redirectTo = configureNow ? '/onboarding' : '/dashboard'
     if (data?.recoveryKey) {
       setRecoveryKeyModal({
         recoveryKey: data.recoveryKey,
         successMessage: `Equipe "${data.team.name}" creee`,
+        redirectTo,
       })
       return
     }
     t.success(`Équipe « ${data?.team.name} » créée`, {
       description: 'Vous pouvez désormais inviter des membres et créer des factures.',
     })
+    router.push(redirectTo)
   }
 
   async function handleCreate(e: React.FormEvent) {
@@ -136,11 +147,22 @@ export default function CreateTeamPage() {
 
     await refreshUser()
 
+    const redirectTo = configureNow ? '/onboarding' : '/dashboard'
+
     if (data?.recoveryKey) {
       setRecoveryKeyModal({
         recoveryKey: data.recoveryKey,
         successMessage: `Equipe "${data.team.name}" creee`,
+        redirectTo,
       })
+      return
+    }
+
+    if (configureNow) {
+      t.success(`Équipe « ${data?.team.name} » créée`, {
+        description: 'Configurons votre nouvelle équipe.',
+      })
+      router.push('/onboarding')
       return
     }
 
@@ -152,6 +174,7 @@ export default function CreateTeamPage() {
         onPress: () => router.push('/dashboard/settings/members'),
       },
     })
+    router.push('/dashboard')
   }
 
   const handleFileSelect = useCallback((file: File) => {
@@ -321,6 +344,23 @@ export default function CreateTeamPage() {
                       acks={acks}
                       onAcksChange={setAcks}
                     />
+
+                    <CheckboxRoot
+                      isSelected={configureNow}
+                      onChange={(checked) => setConfigureNow(!!checked)}
+                      className="flex items-start gap-3 cursor-pointer rounded-lg border border-border p-3"
+                    >
+                      <CheckboxControl className="mt-0.5">
+                        <CheckboxIndicator />
+                      </CheckboxControl>
+                      <CheckboxContent className="text-sm text-foreground leading-tight">
+                        Configurer l&apos;equipe maintenant
+                        <span className="block text-xs text-muted-foreground mt-0.5">
+                          Lance l&apos;assistant de configuration (entreprise, apparence,
+                          facturation). Sinon, vous configurerez tout depuis les reglages.
+                        </span>
+                      </CheckboxContent>
+                    </CheckboxRoot>
 
                     <Button
                       type="submit"
