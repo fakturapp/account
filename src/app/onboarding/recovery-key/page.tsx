@@ -5,8 +5,15 @@ import { useRouter } from 'next/navigation'
 import { motion, type Variants } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import {
+  CheckboxRoot,
+  CheckboxControl,
+  CheckboxIndicator,
+  CheckboxContent,
+} from '@/components/ui/checkbox'
 import { RecoveryKeyDisplay } from '@/components/shared/recovery-key-display'
 import { useOnboardingNav } from '@/lib/onboarding-nav'
+import { useAuth } from '@/lib/auth'
 import { KeyRound } from 'lucide-react'
 
 const fadeUp = {
@@ -18,21 +25,41 @@ const fadeUp = {
   }),
 } satisfies Variants
 
+function readRecoveryKey(
+  teamId: string | null | undefined
+): { key: string; storageKey: string } | null {
+  if (typeof window === 'undefined') return null
+  if (teamId) {
+    const scoped = sessionStorage.getItem(`faktur_recovery_key_${teamId}`)
+    if (scoped) return { key: scoped, storageKey: `faktur_recovery_key_${teamId}` }
+  }
+  const legacy = sessionStorage.getItem('zenvoice_recovery_key')
+  if (legacy) return { key: legacy, storageKey: 'zenvoice_recovery_key' }
+  return null
+}
+
 export default function OnboardingRecoveryKeyPage() {
   const router = useRouter()
   const nav = useOnboardingNav()
+  const { user, loading } = useAuth()
   const [recoveryKey, setRecoveryKey] = useState<string | null>(null)
+  const [storageKey, setStorageKey] = useState<string | null>(null)
+  const [ackSaved, setAckSaved] = useState(false)
 
   useEffect(() => {
-    const key = sessionStorage.getItem('zenvoice_recovery_key')
-    if (!key) {
-      router.replace('/onboarding/company')
+    if (loading) return
+    const found = readRecoveryKey(user?.currentTeamId)
+    if (!found) {
+      router.replace('/onboarding')
       return
     }
-    setRecoveryKey(key)
-  }, [router])
+    setRecoveryKey(found.key)
+    setStorageKey(found.storageKey)
+  }, [router, user, loading])
 
   function handleContinue() {
+    if (!ackSaved) return
+    if (storageKey) sessionStorage.removeItem(storageKey)
     sessionStorage.removeItem('zenvoice_recovery_key')
     nav('/onboarding/company')
   }
@@ -62,8 +89,23 @@ export default function OnboardingRecoveryKeyPage() {
             </motion.div>
 
             <motion.div variants={fadeUp} custom={2}>
-              <Button onClick={handleContinue} className="w-full">
-                J&apos;ai sauvegardé ma clef — Continuer
+              <CheckboxRoot
+                isSelected={ackSaved}
+                onChange={(checked) => setAckSaved(!!checked)}
+                className="flex items-start gap-3 cursor-pointer rounded-lg border border-border p-3"
+              >
+                <CheckboxControl className="mt-0.5">
+                  <CheckboxIndicator />
+                </CheckboxControl>
+                <CheckboxContent className="text-sm text-foreground leading-tight">
+                  Je confirme avoir sauvegardé ma clef de secours dans un endroit sûr.
+                </CheckboxContent>
+              </CheckboxRoot>
+            </motion.div>
+
+            <motion.div variants={fadeUp} custom={3}>
+              <Button onClick={handleContinue} className="w-full" disabled={!ackSaved}>
+                Continuer
               </Button>
             </motion.div>
           </div>
