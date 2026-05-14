@@ -1890,7 +1890,7 @@ export function A4Sheet({
         </div>
 
         {isPreview && pageCount > 1 && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 rounded-full bg-foreground/85 px-1.5 py-1 shadow-lg backdrop-blur-sm">
+          <div className="absolute bottom-3 right-3 z-20 flex items-center gap-1 rounded-full bg-foreground/85 px-1.5 py-1 shadow-lg backdrop-blur-sm">
             <button
               type="button"
               onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
