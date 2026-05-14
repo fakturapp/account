@@ -79,7 +79,8 @@ export function MarkPaidInfoModal({ open, onClose, onSubmit, onSkip }: MarkPaidI
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               }
-              className="w-full min-w-[200px]"
+              align="left"
+              className="min-w-[200px]"
             >
               <DropdownItem selected={paymentMethod === ''} onClick={() => setPaymentMethod('')}>
                 Non spécifié

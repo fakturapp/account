@@ -203,7 +203,8 @@ export default function OnboardingBillingPage() {
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               }
-              className="w-full min-w-[300px]"
+              align="left"
+              className="min-w-[300px]"
             >
               {vatExemptOptions.map((opt) => (
                 <DropdownItem
@@ -233,7 +234,8 @@ export default function OnboardingBillingPage() {
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </button>
                 }
-                className="w-full"
+                align="left"
+                className="min-w-[220px]"
               >
                 {currencies.map((c) => (
                   <DropdownItem
@@ -257,7 +259,8 @@ export default function OnboardingBillingPage() {
                     <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </button>
                 }
-                className="w-full"
+                align="left"
+                className="min-w-[220px]"
               >
                 {languages.map((l) => (
                   <DropdownItem
