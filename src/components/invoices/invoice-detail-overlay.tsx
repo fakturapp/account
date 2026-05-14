@@ -548,7 +548,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                   </Tooltip>
                 </div>
 
-                <div className="flex-1 overflow-auto">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden">
                   {/* Prominent Edit button */}
                   <div className="px-5 pt-4 pb-2 relative group/edit">
                     <Button
