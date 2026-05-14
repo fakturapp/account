@@ -431,14 +431,14 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-            className="flex-1 flex justify-center overflow-auto py-6 px-4"
+            className="flex-1 flex justify-center overflow-hidden py-6 px-4"
           >
             {loading ? (
-              <div className="w-full max-w-[700px] aspect-[210/297] bg-white rounded-xl shadow-xl flex items-center justify-center my-auto">
+              <div className="h-full max-w-full aspect-[210/297] bg-white rounded-xl shadow-xl flex items-center justify-center">
                 <Spinner size="lg" />
               </div>
             ) : invoice ? (
-              <div className="w-full max-w-[700px] my-auto">
+              <div className="h-full max-w-full aspect-[210/297]">
                 <A4Sheet
                   mode="preview"
                   logoUrl={effectiveLogoUrl}
