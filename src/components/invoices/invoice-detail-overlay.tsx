@@ -14,6 +14,7 @@ import { useToast } from '@/components/ui/toast'
 import { useInvoiceSettings } from '@/lib/invoice-settings-context'
 import { api } from '@/lib/api'
 import { A4Sheet, type DocumentLine, type ClientInfo, type CompanyInfo } from '@/components/shared/a4-sheet'
+import { AutoFitDocument } from '@/components/shared/auto-fit-document'
 import { SendEmailModal } from '@/components/shared/send-email-modal'
 import { EmailHistoryModal } from '@/components/shared/email-history-modal'
 import { useTrackFeature } from '@/hooks/use-analytics'
@@ -431,14 +432,20 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
-            className="flex-1 flex justify-center overflow-hidden py-6 px-4"
+            className="flex-1 flex flex-col items-center overflow-hidden py-6 px-4"
           >
             {loading ? (
-              <div className="h-full max-w-full aspect-[210/297] bg-white rounded-xl shadow-xl flex items-center justify-center">
-                <Spinner size="lg" />
+              <div className="flex-1 min-h-0 w-full">
+                <AutoFitDocument baseWidth={960}>
+                  <div className="w-[960px] aspect-[210/297] bg-white rounded-xl shadow-xl flex items-center justify-center">
+                    <Spinner size="lg" />
+                  </div>
+                </AutoFitDocument>
               </div>
             ) : invoice ? (
-              <div className="h-full max-w-full aspect-[210/297]">
+              <>
+              <div className="flex-1 min-h-0 w-full">
+                <AutoFitDocument baseWidth={960}>
                 <A4Sheet
                   mode="preview"
                   logoUrl={effectiveLogoUrl}
@@ -497,8 +504,10 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                   documentFont={invoiceSettings.documentFont}
                   vatExemptReason={invoice.vatExemptReason || 'none'}
                 />
+                </AutoFitDocument>
+              </div>
                 {/* Download & Print buttons */}
-                <div className="flex justify-center gap-2 mt-3">
+                <div className="flex justify-center gap-2 mt-3 shrink-0">
                   <button
                     onClick={handleDownloadPdf}
                     disabled={downloading}
@@ -516,7 +525,7 @@ export function InvoiceDetailOverlay({ invoiceId, onClose, onStatusChange, onDel
                     <span className="text-foreground">{printing ? 'Préparation...' : 'Imprimer'}</span>
                   </button>
                 </div>
-              </div>
+              </>
             ) : null}
           </motion.div>
 
