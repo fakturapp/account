@@ -70,7 +70,7 @@ export default function VaultLockedPage() {
   useEffect(() => {
     if (!user) return
     if (!user.vaultLocked || user.currentTeamEncryptionMode !== 'private') {
-      router.replace('/dashboard')
+      router.replace('/account')
     }
   }, [user, router])
 
@@ -101,10 +101,10 @@ export default function VaultLockedPage() {
         localStorage.setItem('faktur_vault_key', data.vaultKey)
       }
       if (data?.requiresCryptoRecovery) {
-        router.push('/dashboard')
+        router.push('/account')
         return
       }
-      window.location.href = '/dashboard'
+      window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/'
     }
   }
 
@@ -117,7 +117,7 @@ export default function VaultLockedPage() {
       return setError(err)
     }
     await refreshUser()
-    window.location.href = '/dashboard'
+    window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/'
   }
 
   function switchMode(newMode: UnlockMode) {
@@ -181,7 +181,7 @@ export default function VaultLockedPage() {
                   variant="outline"
                   className="flex-1"
                   onClick={() => {
-                    const url = `${window.location.origin}/dashboard/account/security`
+                    const url = `${window.location.origin}/account/security`
                     if (typeof window !== 'undefined' && (window as unknown as { fakturDesktop?: { openExternal?: (u: string) => void } }).fakturDesktop?.openExternal) {
                       ;(window as unknown as { fakturDesktop: { openExternal: (u: string) => void } }).fakturDesktop.openExternal(url)
                     } else {
@@ -363,7 +363,7 @@ export default function VaultLockedPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/dashboard/account/security')}
+                onClick={() => router.push('/account/security')}
               >
                 Page sécurité
               </Button>
