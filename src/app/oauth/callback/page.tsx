@@ -25,9 +25,9 @@ function OAuthCallbackContent() {
 
     try { sessionStorage.removeItem('faktur_google_link_pending') } catch {}
     if (success) {
-      window.location.href = '/dashboard/account/google-linked'
+      window.location.href = '/account/google-linked'
     } else {
-      window.location.href = `/dashboard/account?error=${error || 'unknown'}`
+      window.location.href = `/account?error=${error || 'unknown'}`
     }
   }, [searchParams])
 

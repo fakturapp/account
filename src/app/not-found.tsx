@@ -18,12 +18,12 @@ export default function NotFound() {
           >
             Page d&apos;accueil
           </Link>
-          <Link
-            href="/dashboard"
+          <a
+            href={process.env.NEXT_PUBLIC_DASH_URL || '/'}
             className="inline-flex items-center justify-center rounded-xl bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
           >
-            Retour au dashboard
-          </Link>
+            Retour à Faktur
+          </a>
         </div>
       </div>
     </div>

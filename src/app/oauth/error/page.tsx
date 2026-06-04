@@ -1,7 +1,7 @@
 'use client'
 
 import { Suspense } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { X } from '@/components/ui/icons'
 import { Button } from '@/components/ui/button'
@@ -21,7 +21,6 @@ const KNOWN_ERRORS: Record<string, string> = {
 }
 
 function ErrorContent() {
-  const router = useRouter()
   const searchParams = useSearchParams()
   const errorCode = searchParams.get('error') ?? 'unknown'
   const errorDescription =
@@ -53,7 +52,7 @@ function ErrorContent() {
               variant="outline"
               size="sm"
               className="flex-1"
-              onClick={() => router.push('/dashboard')}
+              onClick={() => { window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/' }}
             >
               Tableau de bord
             </Button>

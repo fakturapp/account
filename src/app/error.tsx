@@ -15,10 +15,10 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
         </p>
         <div className="flex gap-3 justify-center mt-8">
           <a
-            href="/dashboard"
+            href={process.env.NEXT_PUBLIC_DASH_URL || '/'}
             className="inline-flex items-center justify-center rounded-xl border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted transition-colors"
           >
-            Retour au dashboard
+            Retour à Faktur
           </a>
           <button
             onClick={reset}
