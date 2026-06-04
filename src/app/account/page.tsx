@@ -65,8 +65,8 @@ export default function AccountPage() {
     : 'profile'
 
   const setActiveTab = (tab: string) => {
-    if (tab === 'profile') router.push('/dashboard/account')
-    else router.push(`/dashboard/account/${tab}`)
+    if (tab === 'profile') router.push('/account')
+    else router.push(`/account/${tab}`)
   }
 
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -501,7 +501,7 @@ export default function AccountPage() {
       if (event.data.success) {
         loadProviders()
         refreshUser()
-        router.push('/dashboard/account/google-linked')
+        router.push('/account/google-linked')
       } else {
         const errors: Record<string, string> = {
           already_linked: 'Ce compte Google est déjà lié à un autre utilisateur.',
@@ -1243,7 +1243,7 @@ export default function AccountPage() {
           <Button
             variant="outline"
             className="border-destructive/30 text-destructive hover:bg-destructive/10"
-            onClick={() => router.push('/dashboard/account/delete')}
+            onClick={() => router.push('/account/delete')}
           >
             Continuer
           </Button>

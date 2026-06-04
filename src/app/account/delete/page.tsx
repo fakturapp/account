@@ -273,7 +273,8 @@ export default function DeleteAccountPage() {
       return toast('Impossible de basculer sur cette équipe', 'error')
     }
     const params = new URLSearchParams({ action, from: 'account-delete' })
-    router.push(`/dashboard/settings/members?${params.toString()}`)
+    const dashUrl = process.env.NEXT_PUBLIC_DASH_URL || ''
+    window.location.href = `${dashUrl}/dashboard/settings/members?${params.toString()}`
   }
 
   async function handleVerifyName(e: React.FormEvent) {
@@ -350,7 +351,7 @@ export default function DeleteAccountPage() {
           variant="outline"
           size="sm"
           className="h-9 gap-1.5 rounded-full bg-background/80 backdrop-blur shadow-surface"
-          onClick={() => router.push('/dashboard/account')}
+          onClick={() => router.push('/account')}
         >
           <ArrowLeft className="h-4 w-4" /> Retour
         </Button>

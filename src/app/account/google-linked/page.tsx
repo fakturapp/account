@@ -11,7 +11,7 @@ export default function GoogleLinkedPage() {
 
   useEffect(() => {
     const t = setTimeout(() => {
-      router.prefetch?.('/dashboard')
+      router.prefetch?.('/account')
     }, 1500)
     return () => clearTimeout(t)
   }, [router])
@@ -24,7 +24,7 @@ export default function GoogleLinkedPage() {
             variant="ghost"
             size="sm"
             className="h-9 -ml-2 gap-1.5"
-            onClick={() => router.push('/dashboard/account')}
+            onClick={() => router.push('/account')}
           >
             <ArrowLeft className="h-4 w-4" /> Retour
           </Button>
@@ -90,10 +90,10 @@ export default function GoogleLinkedPage() {
             transition={{ delay: 1.4, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col sm:flex-row items-center justify-center gap-3"
           >
-            <Button onClick={() => router.push('/dashboard')} className="gap-2 min-w-[200px]">
-              Retour au dashboard <ArrowRight className="h-4 w-4" />
+            <Button onClick={() => { window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/' }} className="gap-2 min-w-[200px]">
+              Retour à Faktur <ArrowRight className="h-4 w-4" />
             </Button>
-            <Button variant="outline" onClick={() => router.push('/dashboard/account')}>
+            <Button variant="outline" onClick={() => router.push('/account')}>
               Voir mon compte
             </Button>
           </motion.div>
