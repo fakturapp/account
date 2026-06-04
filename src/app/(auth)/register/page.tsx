@@ -17,6 +17,16 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Check, Mail, Lock, Shield, User, ArrowRight, Activity, ArrowLeft, Eye, EyeOff, AlertTriangle, MailX, UserPlus } from '@/components/ui/icons'
 import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 
+const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
+
+function goAfterAuth(explicitRedirect?: string | null): void {
+  if (explicitRedirect && explicitRedirect.startsWith('/') && !explicitRedirect.startsWith('//')) {
+    window.location.href = explicitRedirect
+    return
+  }
+  window.location.href = DASH_URL || '/'
+}
+
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
@@ -66,11 +76,7 @@ function RegisterContent() {
     const rawRedirect = searchParams.get('redirect')
     const safeRedirect =
       rawRedirect && rawRedirect.startsWith('/') ? rawRedirect : null
-    if (safeRedirect) {
-      router.replace(safeRedirect)
-    } else {
-      router.replace(user.onboardingCompleted ? '/dashboard' : '/onboarding/team')
-    }
+    goAfterAuth(safeRedirect)
   }, [user, authLoading, searchParams, router])
 
   const [step, setStep] = useState(0)
@@ -248,7 +254,7 @@ function RegisterContent() {
       if (err) return setError(err)
       if (data?.token && data?.user) {
         login(data.token, data.user)
-        router.push(safeRedirect ?? '/onboarding/team')
+        goAfterAuth(safeRedirect)
       }
       return
     }

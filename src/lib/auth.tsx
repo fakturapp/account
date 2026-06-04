@@ -98,14 +98,17 @@ const publicPaths = [
   '/verify-email',
   '/2fa',
   '/invite',
-  '/legal',
-  '/oauth/google',
+  '/oauth/callback',
+  '/oauth/authorize',
   '/oauth/error',
-  '/share',
-  '/checkout',
 ]
 
-const SHORT_CHECKOUT_PATH = /^\/[a-zA-Z0-9_-]{16,}\/pay\/?$/
+const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
+
+function redirectToDash(): void {
+  if (typeof window === 'undefined') return
+  window.location.href = DASH_URL || '/'
+}
 
 function consumeDesktopSessionHash(): void {
   if (typeof window === 'undefined') return
@@ -146,9 +149,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const pathname = usePathname()
 
-  const isPublicPath =
-    publicPaths.some((p) => pathname.startsWith(p)) ||
-    SHORT_CHECKOUT_PATH.test(pathname)
+  const isPublicPath = publicPaths.some((p) => pathname.startsWith(p))
 
   const refreshUser = useCallback(async () => {
     consumeDesktopSessionHash()
@@ -190,21 +191,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     refreshUser()
   }, [refreshUser])
 
-  const currentTeam = user?.teams?.find((t) => t.id === user.currentTeamId) ?? null
-  const hasPendingRecoveryKey =
-    typeof window !== 'undefined' &&
-    !!user?.currentTeamId &&
-    !!sessionStorage.getItem(`faktur_recovery_key_${user.currentTeamId}`)
-  const needsOnboarding =
-    !!user &&
-    (!user.currentTeamId ||
-      (currentTeam != null && !currentTeam.onboardingCompletedAt) ||
-      hasPendingRecoveryKey)
-
   useEffect(() => {
     if (loading) return
-
-    if (user && user.teams === undefined) return
 
     if (!user && !isPublicPath) {
       let target = '/login'
@@ -220,52 +208,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (user && isPublicPath) {
       if (
-        pathname === '/login' ||
-        pathname === '/register' ||
         pathname.startsWith('/verify-email') ||
-        pathname.startsWith('/invite') ||
-        pathname.startsWith('/legal') ||
-        pathname.startsWith('/share') ||
-        pathname.startsWith('/checkout') ||
-        SHORT_CHECKOUT_PATH.test(pathname)
+        pathname.startsWith('/invite')
       ) {
         return
       }
-      if (needsOnboarding) {
-        router.replace('/onboarding')
-      } else {
-        router.replace('/dashboard')
-      }
+      redirectToDash()
       return
     }
 
     if (user && !isPublicPath) {
-      const isOnboarding = pathname.startsWith('/onboarding')
-      const isAccountDeletion = pathname.startsWith('/dashboard/account/delete')
-      const isVaultLocked = pathname === '/dashboard/vault-locked'
-      if (needsOnboarding && !isOnboarding && !isAccountDeletion) {
-        router.replace('/onboarding')
-        return
-      }
-      if (!needsOnboarding && isOnboarding) {
-        router.replace('/dashboard')
-        return
-      }
+      const isAccountDeletion = pathname.startsWith('/account/delete')
+      const isVaultLocked = pathname === '/vault-locked'
       const shouldShowVaultPage =
         !!user.vaultLocked &&
         user.currentTeamEncryptionMode === 'private' &&
         !user.cryptoResetNeeded &&
         !forceCryptoReset
       if (shouldShowVaultPage && !isVaultLocked && !isAccountDeletion) {
-        router.replace('/dashboard/vault-locked')
+        router.replace('/vault-locked')
         return
       }
       if (!shouldShowVaultPage && isVaultLocked) {
-        router.replace('/dashboard')
+        router.replace('/account')
         return
       }
     }
-  }, [user, loading, pathname, isPublicPath, router, needsOnboarding])
+  }, [user, loading, pathname, isPublicPath, router])
 
   function login(token: string, userData: User, vaultKey?: string) {
     localStorage.setItem('faktur_token', token)
@@ -342,7 +311,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   async function handleCryptoWiped() {
     setForceCryptoReset(false)
     await refreshUser()
-    router.replace('/onboarding/team')
+    redirectToDash()
   }
 
   async function handleCryptoRefresh() {

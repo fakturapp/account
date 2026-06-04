@@ -69,8 +69,7 @@ export default function InvitePage() {
     }
 
     setAccepted(true)
-    // Hard reload to clear old team cache and switch context
-    setTimeout(() => { window.location.href = '/dashboard' }, 1500)
+    setTimeout(() => { window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/' }, 1500)
   }
 
   if (loading) {

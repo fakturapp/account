@@ -79,9 +79,9 @@ function VerifyEmailContent() {
                   <p className="text-muted-foreground text-sm">
                     Votre adresse email <span className="font-medium text-foreground">{user?.email}</span> est déjà vérifiée.
                   </p>
-                  <Link href="/dashboard">
+                  <a href={process.env.NEXT_PUBLIC_DASH_URL || '/'}>
                     <Button className="mt-2">Aller au Dashboard</Button>
-                  </Link>
+                  </a>
                 </>
               )}
 

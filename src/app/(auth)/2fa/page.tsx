@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import { motion, type Variants } from 'framer-motion'
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -23,7 +23,6 @@ const fadeUp = {
 
 function TwoFactorContent() {
   const searchParams = useSearchParams()
-  const router = useRouter()
   const userId = searchParams.get('userId')
   const [code, setCode] = useState('')
   const [error, setError] = useState('')
@@ -45,7 +44,7 @@ function TwoFactorContent() {
 
     if (data?.token) {
       localStorage.setItem('faktur_token', data.token)
-      router.push('/dashboard')
+      window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/'
     }
   }
 

@@ -40,17 +40,14 @@ const OAUTH_ERRORS: Record<string, string> = {
   account_inactive: 'Ce compte est désactivé.',
 }
 
-function getPostLoginRedirect(onboardingCompleted: boolean, explicitRedirect?: string | null): string {
-  if (!onboardingCompleted) return '/onboarding/team'
-  if (explicitRedirect && explicitRedirect.startsWith('/')) {
-    return explicitRedirect
+const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
+
+function goAfterLogin(_onboardingCompleted: boolean, explicitRedirect?: string | null): void {
+  if (explicitRedirect && explicitRedirect.startsWith('/') && !explicitRedirect.startsWith('//')) {
+    window.location.href = explicitRedirect
+    return
   }
-  const shareRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('faktur_share_redirect') : null
-  if (shareRedirect) {
-    sessionStorage.removeItem('faktur_share_redirect')
-    return shareRedirect
-  }
-  return '/dashboard'
+  window.location.href = DASH_URL || '/'
 }
 
 function LoginContent() {
@@ -98,7 +95,7 @@ function LoginContent() {
         }
         login(token, data.user)
         setRedirecting(true)
-        router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
+        goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
       })
     } else if (oauthError) {
       window.history.replaceState({}, '', '/login')
@@ -216,7 +213,7 @@ function LoginContent() {
       if (data?.token && data?.user) {
         login(data.token, data.user, data.vaultKey)
         setRedirecting(true)
-        router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
+        goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
       }
     } catch (err: any) {
       setPasskeyLoading(false)
@@ -243,7 +240,7 @@ function LoginContent() {
       if (data?.token) {
         login(data.token, data.user)
         setRedirecting(true)
-        router.push(getPostLoginRedirect(data.user.onboardingCompleted, searchParams.get('redirect')))
+        goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
       }
       return
     }
@@ -278,7 +275,7 @@ function LoginContent() {
     if (data?.token && data?.user) {
       login(data.token, data.user, data.vaultKey)
       setRedirecting(true)
-      router.push(getPostLoginRedirect(data.user.onboardingCompleted))
+      goAfterLogin(data.user.onboardingCompleted)
     }
   }
 
@@ -377,14 +374,7 @@ function LoginContent() {
           <motion.div variants={fadeIn} custom={2} className="space-y-3">
             <Button
               className="w-full h-11"
-              onClick={() => {
-                const redirectParam = searchParams.get('redirect')
-                if (redirectParam && redirectParam.startsWith('/')) {
-                  router.push(redirectParam)
-                } else {
-                  router.push('/dashboard')
-                }
-              }}
+              onClick={() => goAfterLogin(true, searchParams.get('redirect'))}
             >
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Aller au Dashboard
