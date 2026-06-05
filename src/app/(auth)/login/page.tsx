@@ -682,7 +682,7 @@ function LoginContent() {
 
                   <div className="relative h-[60px]">
                     <AnimatePresence mode="wait" initial={false}>
-                      {emailStatus === 'exists' && checkData ? (
+                      {(passwordVisible || emailStatus === 'exists') && checkData ? (
                         <motion.div
                           key="indicator"
                           initial={{ opacity: 0, scale: 0.98 }}
@@ -772,7 +772,7 @@ function LoginContent() {
                           Continuer
                         </Button>
                       </motion.div>
-                    ) : emailStatus === 'exists' && passwordVisible ? (
+                    ) : passwordVisible ? (
                       <motion.div
                         key="password"
                         initial={{ opacity: 0, y: 10 }}
