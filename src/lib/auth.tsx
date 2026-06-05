@@ -3,6 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { api } from '@/lib/api'
+import { setVaultCookie, clearVaultCookie } from '@/lib/cross-domain-cookie'
 import { CryptoResetModal } from '@/components/modals/crypto-reset-modal'
 import { VaultUnlockModal } from '@/components/modals/vault-unlock-modal'
 import { RecoveryKeySetupModal } from '@/components/modals/recovery-key-setup-modal'
@@ -240,6 +241,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('faktur_token', token)
     if (vaultKey) {
       localStorage.setItem('faktur_vault_key', vaultKey)
+      setVaultCookie(vaultKey)
     }
 
     try {
@@ -264,6 +266,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const wipeAll = options.wipeAll === true
 
     function clearLocalStorageState() {
+      clearVaultCookie()
       try {
         if (wipeAll) {
           const keys = Object.keys(localStorage)
