@@ -32,6 +32,12 @@ const METHOD_META: Record<TwoFactorMethod, { label: string; icon: typeof Shield 
   recovery: { label: 'Récupération', icon: KeyRound },
 }
 
+const METHOD_SWITCH_LABEL: Record<TwoFactorMethod, string> = {
+  totp: "Utiliser l'application authenticator",
+  email: 'Recevoir un code par email',
+  recovery: 'Utiliser un code de récupération',
+}
+
 const fadeIn = {
   hidden: { opacity: 0, y: 12 },
   visible: (i: number) => ({
@@ -486,28 +492,6 @@ function LoginContent() {
                 </div>
               </div>
 
-              <div className="flex gap-2">
-                {availableMethods.map((m) => {
-                  const Icon = METHOD_META[m].icon
-                  const active = method === m
-                  return (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => changeMethod(m)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border text-xs font-medium transition-all ${
-                        active
-                          ? 'border-accent bg-accent-soft text-accent'
-                          : 'border-border bg-background text-muted-foreground hover:bg-surface-hover'
-                      }`}
-                    >
-                      <Icon className="h-3.5 w-3.5" />
-                      {METHOD_META[m].label}
-                    </button>
-                  )
-                })}
-              </div>
-
               <form onSubmit={handleSubmit} className="space-y-5">
                 {method === 'totp' && (
                   <div className="flex justify-center py-1">
@@ -596,7 +580,28 @@ function LoginContent() {
                   </Button>
                 )}
 
-                <div className="text-center space-y-2">
+                {availableMethods.filter((m) => m !== method).length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    {availableMethods
+                      .filter((m) => m !== method)
+                      .map((m) => {
+                        const Icon = METHOD_META[m].icon
+                        return (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => changeMethod(m)}
+                            className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all hover:bg-surface-hover"
+                          >
+                            <Icon className="h-4 w-4" />
+                            {METHOD_SWITCH_LABEL[m]}
+                          </button>
+                        )
+                      })}
+                  </div>
+                )}
+
+                <div className="text-center space-y-2 pt-1">
                   <button
                     type="button"
                     onClick={lostCode}
