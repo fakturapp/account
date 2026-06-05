@@ -105,7 +105,7 @@ async function request<T = unknown>(
   }
 
   try {
-    const res = await fetch(resolveApiUrl(endpoint), { ...options, headers })
+    const res = await fetch(resolveApiUrl(endpoint), { ...options, headers, credentials: 'include' })
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
@@ -151,6 +151,7 @@ async function uploadRequest<T = unknown>(
       method: 'POST',
       headers,
       body: formData,
+      credentials: 'include',
     })
 
     if (res.status === 423 || res.status === 401) {
@@ -189,7 +190,7 @@ async function blobRequest(endpoint: string): Promise<{ blob?: Blob; filename?: 
   }
 
   try {
-    const res = await fetch(resolveApiUrl(endpoint), { method: 'GET', headers })
+    const res = await fetch(resolveApiUrl(endpoint), { method: 'GET', headers, credentials: 'include' })
 
     if (res.status === 423 || res.status === 401) {
       const data = await res.json().catch(() => ({}))
@@ -234,6 +235,7 @@ async function postBlobRequest(
       method: 'POST',
       headers,
       body: JSON.stringify(body),
+      credentials: 'include',
     })
 
     if (res.status === 423 || res.status === 401) {
@@ -289,7 +291,7 @@ async function publicRequest<T = unknown>(
   }
 
   try {
-    const res = await fetch(resolveApiUrl(endpoint), { ...options, headers })
+    const res = await fetch(resolveApiUrl(endpoint), { ...options, headers, credentials: 'include' })
     const data = await res.json().catch(() => ({}))
 
     if (!res.ok) {
