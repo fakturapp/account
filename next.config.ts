@@ -28,6 +28,27 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: '/:path*', headers: securityHeaders }]
   },
+  async redirects() {
+    const paths = [
+      '/login',
+      '/login/success',
+      '/register',
+      '/forgot-password',
+      '/reset-password',
+      '/verify-email',
+      '/2fa',
+      '/invite/:path*',
+      '/oauth/:path*',
+      '/account/:path*',
+      '/vault-locked',
+    ]
+    return paths.map((source) => ({
+      source,
+      destination: `${basePath}${source}`,
+      basePath: false,
+      permanent: false,
+    }))
+  },
   async rewrites() {
     return [
       { source: '/avatars/:path*', destination: `${backendUrl}/avatars/:path*` },
