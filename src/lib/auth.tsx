@@ -211,7 +211,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (user && isPublicPath) {
       if (
         pathname.startsWith('/verify-email') ||
-        pathname.startsWith('/invite')
+        pathname.startsWith('/invite') ||
+        pathname.startsWith('/login/success')
       ) {
         return
       }
