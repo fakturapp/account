@@ -11,6 +11,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { AccountIndicator } from '@/components/ui/account-indicator/account-indicator'
 import { OtpInput } from '@/components/ui/otp-input'
+import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth'
 import { isFakturDesktop } from '@/lib/is-desktop'
@@ -18,11 +19,18 @@ import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { startAuthentication } from '@simplewebauthn/browser'
-import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock } from '@/components/ui/icons'
+import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock, Mail } from '@/components/ui/icons'
 
 type EmailStatus = 'idle' | 'checking' | 'exists' | 'not-exists'
+type TwoFactorMethod = 'totp' | 'email' | 'recovery'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LAST_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000
+
+const METHOD_META: Record<TwoFactorMethod, { label: string; icon: typeof Shield }> = {
+  totp: { label: 'Authenticator', icon: Shield },
+  email: { label: 'Email', icon: Mail },
+  recovery: { label: 'Récupération', icon: KeyRound },
+}
 
 const fadeIn = {
   hidden: { opacity: 0, y: 12 },
@@ -53,6 +61,13 @@ function LoginContent() {
   const [loading, setLoading] = useState(false)
   const [requires2FA, setRequires2FA] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [twofaToken, setTwofaToken] = useState<string | null>(null)
+  const [availableMethods, setAvailableMethods] = useState<TwoFactorMethod[]>(['totp', 'email', 'recovery'])
+  const [maskedEmail, setMaskedEmail] = useState('')
+  const [method, setMethod] = useState<TwoFactorMethod>('totp')
+  const [trustDevice, setTrustDevice] = useState(false)
+  const [emailCodeSent, setEmailCodeSent] = useState(false)
+  const [sendingCode, setSendingCode] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [passkeyLoading, setPasskeyLoading] = useState(false)
   const [turnstileToken, setTurnstileToken] = useState('')
@@ -60,7 +75,6 @@ function LoginContent() {
   const [isDesktop, setIsDesktop] = useState(false)
   const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle')
   const [passwordVisible, setPasswordVisible] = useState(false)
-  const [useRecovery, setUseRecovery] = useState(false)
   const [checkData, setCheckData] = useState<{ avatarUrl: string | null; initial: string } | null>(null)
   const redirectingRef = useRef(false)
   const turnstileRef = useRef<TurnstileInstance>(null)
@@ -85,10 +99,11 @@ function LoginContent() {
 
   useEffect(() => {
     const token = searchParams.get('token')
+    const twofa = searchParams.get('twofa')
     const oauthError = searchParams.get('error')
 
     if (token) {
-      window.history.replaceState({}, '', '/login')
+      window.history.replaceState({}, '', window.location.pathname)
       localStorage.setItem('faktur_token', token)
       api.get<{ user: any }>('/auth/me').then(({ data, error: err }) => {
         if (err || !data?.user) {
@@ -99,8 +114,14 @@ function LoginContent() {
         login(token, data.user)
         goSuccess(searchParams.get('redirect'))
       })
+    } else if (twofa) {
+      window.history.replaceState({}, '', window.location.pathname)
+      setTwofaToken(twofa)
+      setAvailableMethods(['totp', 'email', 'recovery'])
+      setMethod('totp')
+      setRequires2FA(true)
     } else if (oauthError) {
-      window.history.replaceState({}, '', '/login')
+      window.history.replaceState({}, '', window.location.pathname)
       toast(OAUTH_ERRORS[oauthError] || 'Une erreur est survenue.', 'error')
     }
   }, [])
@@ -108,6 +129,7 @@ function LoginContent() {
   useEffect(() => {
     if (searchParams.get('error')) return
     if (searchParams.get('token')) return
+    if (searchParams.get('twofa')) return
     if (isDesktop) return
 
     try {
@@ -182,6 +204,45 @@ function LoginContent() {
     } catch {}
   }
 
+  function exitTwoFactor() {
+    setRequires2FA(false)
+    setTwofaToken(null)
+    setUserId(null)
+    setCode('')
+    setMethod('totp')
+    setEmailCodeSent(false)
+    setTrustDevice(false)
+    setMaskedEmail('')
+  }
+
+  function changeMethod(next: TwoFactorMethod) {
+    setMethod(next)
+    setCode('')
+    setEmailCodeSent(false)
+  }
+
+  function twoFactorIdentity() {
+    return twofaToken ? { twofaToken } : { userId }
+  }
+
+  async function sendEmailCode() {
+    setSendingCode(true)
+    const { data, error: err } = await api.post<{ ok: boolean; email: string }>(
+      '/auth/login/2fa/send-email',
+      twoFactorIdentity()
+    )
+    setSendingCode(false)
+    if (err) return toast(err, 'error')
+    if (data?.email) setMaskedEmail(data.email)
+    setEmailCodeSent(true)
+    toast('Code envoyé par email.', 'success')
+  }
+
+  async function lostCode() {
+    const { data } = await api.post<{ message: string }>('/auth/login/2fa/lost', twoFactorIdentity())
+    toast(data?.message || 'Un administrateur a été notifié.', 'success')
+  }
+
   async function handleGoogleLogin() {
     setGoogleLoading(true)
     const { data, error: err } = await api.get<{ url: string }>('/auth/oauth/google/url')
@@ -235,28 +296,32 @@ function LoginContent() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setLoading(true)
 
-    if (requires2FA && userId) {
-      const { data, error: err } = await api.post<{ token: string; user: any }>('/auth/login/2fa', {
-        userId,
+    if (requires2FA) {
+      setLoading(true)
+      const { data, error: err } = await api.post<{ token?: string; user?: any }>('/auth/login/2fa', {
+        ...twoFactorIdentity(),
         code,
+        method,
+        trustDevice,
       })
       setLoading(false)
       if (err) return toast(err, 'error')
-      if (data?.token) {
+      if (data?.token && data?.user) {
         login(data.token, data.user)
         goSuccess(searchParams.get('redirect'))
       }
       return
     }
 
+    setLoading(true)
     const { data, error: err } = await api.post<{
       token?: string
       requiresTwoFactor?: boolean
       requiresEmailVerification?: boolean
       email?: string
       userId?: string
+      availableMethods?: TwoFactorMethod[]
       user?: any
       vaultKey?: string
     }>('/auth/login', { email, password, turnstileToken })
@@ -275,6 +340,9 @@ function LoginContent() {
     if (data?.requiresTwoFactor) {
       setRequires2FA(true)
       setUserId(data.userId ?? null)
+      setAvailableMethods(data.availableMethods ?? ['totp', 'email', 'recovery'])
+      setMaskedEmail(data.email ?? '')
+      setMethod('totp')
       return
     }
 
@@ -387,6 +455,15 @@ function LoginContent() {
     return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register'
   })()
 
+  const twoFactorSubtitle =
+    method === 'recovery'
+      ? 'Entrez un de vos codes de récupération'
+      : method === 'email'
+        ? emailCodeSent
+          ? `Code envoyé à ${maskedEmail || 'votre adresse email'}`
+          : `Recevez un code à ${maskedEmail || 'votre adresse email'}`
+        : 'Entrez le code à 6 chiffres de votre application authenticator'
+
   return (
     <motion.div initial="hidden" animate="visible" className="w-full">
       <AnimatePresence mode="wait">
@@ -398,80 +475,138 @@ function LoginContent() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.25 }}
           >
-            <div className="space-y-8">
+            <div className="space-y-7">
               <div className="text-center space-y-3">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
-                  <Shield className="h-6 w-6 text-amber-500" />
+                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft">
+                  <Shield className="h-6 w-6 text-accent" />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-foreground">Vérification 2FA</h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {useRecovery
-                      ? 'Entrez un de vos codes de récupération'
-                      : 'Entrez le code à 6 chiffres de votre application authenticator'}
-                  </p>
+                  <h1 className="text-2xl font-bold text-foreground">Vérification en deux étapes</h1>
+                  <p className="text-sm text-muted-foreground mt-1">{twoFactorSubtitle}</p>
                 </div>
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
-                <Field>
-                  <FieldLabel htmlFor="code" className="text-center justify-center">
-                    {useRecovery ? 'Code de récupération' : 'Code de vérification'}
-                  </FieldLabel>
-                  {useRecovery ? (
-                    <Input
-                      id="code"
-                      type="text"
-                      placeholder="XXXXX-XXXXX"
-                      value={code}
-                      onChange={(e) => setCode(e.target.value)}
-                      className="text-center text-lg tracking-widest font-mono h-12"
-                      maxLength={11}
-                      autoComplete="off"
-                      autoCorrect="off"
-                      autoCapitalize="off"
-                      spellCheck={false}
-                      required
-                      autoFocus
-                    />
-                  ) : (
-                    <div className="flex justify-center py-1">
-                      <OtpInput
-                        id="code"
-                        value={code}
-                        onChange={setCode}
-                        length={6}
-                        groupSize={3}
-                        autoFocus
-                        purpose="totp"
-                        ariaLabel="Code de vérification 2FA"
-                      />
-                    </div>
-                  )}
-                </Field>
+              <div className="flex gap-2">
+                {availableMethods.map((m) => {
+                  const Icon = METHOD_META[m].icon
+                  const active = method === m
+                  return (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => changeMethod(m)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 h-9 rounded-lg border text-xs font-medium transition-all ${
+                        active
+                          ? 'border-accent bg-accent-soft text-accent'
+                          : 'border-border bg-background text-muted-foreground hover:bg-surface-hover'
+                      }`}
+                    >
+                      <Icon className="h-3.5 w-3.5" />
+                      {METHOD_META[m].label}
+                    </button>
+                  )
+                })}
+              </div>
 
-                <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
-                  {loading ? <><Spinner /> Vérification...</> : 'Vérifier'}
-                </Button>
+              <form onSubmit={handleSubmit} className="space-y-5">
+                {method === 'totp' && (
+                  <div className="flex justify-center py-1">
+                    <OtpInput
+                      id="code"
+                      value={code}
+                      onChange={setCode}
+                      length={6}
+                      groupSize={3}
+                      autoFocus
+                      purpose="totp"
+                      ariaLabel="Code de vérification 2FA"
+                    />
+                  </div>
+                )}
+
+                {method === 'recovery' && (
+                  <Input
+                    id="code"
+                    type="text"
+                    placeholder="XXXXX-XXXXX"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                    className="text-center text-lg tracking-widest font-mono h-12"
+                    maxLength={11}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    autoFocus
+                  />
+                )}
+
+                {method === 'email' && (
+                  emailCodeSent ? (
+                    <div className="space-y-3">
+                      <div className="flex justify-center py-1">
+                        <OtpInput
+                          id="code"
+                          value={code}
+                          onChange={setCode}
+                          length={6}
+                          groupSize={3}
+                          autoFocus
+                          purpose="email"
+                          ariaLabel="Code reçu par email"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={sendEmailCode}
+                        disabled={sendingCode}
+                        className="block mx-auto text-sm text-accent hover:text-accent/80 transition-colors disabled:opacity-60"
+                      >
+                        {sendingCode ? 'Envoi...' : 'Renvoyer le code'}
+                      </button>
+                    </div>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={sendEmailCode}
+                      disabled={sendingCode}
+                      className="w-full h-11 font-semibold gap-2"
+                    >
+                      {sendingCode ? <><Spinner /> Envoi...</> : <>Envoyer le code par email <Mail className="h-4 w-4" /></>}
+                    </Button>
+                  )
+                )}
+
+                <CheckboxRoot
+                  isSelected={trustDevice}
+                  onChange={setTrustDevice}
+                  className="flex items-center gap-2.5 cursor-pointer group"
+                >
+                  <CheckboxControl>
+                    <CheckboxIndicator />
+                  </CheckboxControl>
+                  <CheckboxContent className="text-sm text-muted-foreground">
+                    Ne plus demander pendant 30 jours sur cet appareil
+                  </CheckboxContent>
+                </CheckboxRoot>
+
+                {!(method === 'email' && !emailCodeSent) && (
+                  <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || !code}>
+                    {loading ? <><Spinner /> Vérification...</> : 'Vérifier'}
+                  </Button>
+                )}
 
                 <div className="text-center space-y-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      setUseRecovery(!useRecovery)
-                      setCode('')
-                    }}
+                    onClick={lostCode}
                     className="block mx-auto text-sm text-accent underline underline-offset-4 hover:text-accent/80 transition-colors"
                   >
-                    {useRecovery ? 'Utiliser le code authenticator' : 'Utiliser un code de récupération'}
+                    J&apos;ai oublié mon code
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setRequires2FA(false)
-                      setCode('')
-                      setUseRecovery(false)
-                    }}
+                    onClick={exitTwoFactor}
                     className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Retour à la connexion
