@@ -1,6 +1,7 @@
 import type { NextConfig } from 'next'
 
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3333'
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '/v1'
 
 const securityHeaders = [
   { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
@@ -18,6 +19,7 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  basePath,
   reactStrictMode: true,
   experimental: {
     preloadEntriesOnStart: false,
