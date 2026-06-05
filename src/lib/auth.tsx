@@ -4,6 +4,7 @@ import { createContext, useContext, useEffect, useState, useCallback } from 'rea
 import { useRouter, usePathname } from 'next/navigation'
 import { api } from '@/lib/api'
 import { setVaultCookie, clearVaultCookie } from '@/lib/cross-domain-cookie'
+import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 import { CryptoResetModal } from '@/components/modals/crypto-reset-modal'
 import { VaultUnlockModal } from '@/components/modals/vault-unlock-modal'
 import { RecoveryKeySetupModal } from '@/components/modals/recovery-key-setup-modal'
@@ -212,6 +213,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         pathname.startsWith('/verify-email') ||
         pathname.startsWith('/invite')
       ) {
+        return
+      }
+      if (typeof window !== 'undefined') {
+        const redirectParam = new URLSearchParams(window.location.search).get('redirect')
+        window.location.href = resolvePostAuthRedirect(redirectParam)
         return
       }
       redirectToDash()
