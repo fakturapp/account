@@ -3,6 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
+import { asset } from '@/lib/asset'
 import { Button } from '@/components/ui/button'
 import { Check, ArrowLeft, ArrowRight } from '@/components/ui/icons'
 
@@ -57,7 +58,7 @@ export default function GoogleLinkedPage() {
               className="absolute"
             >
               <div className="h-20 w-20 rounded-2xl border border-border bg-card shadow-surface flex items-center justify-center overflow-hidden">
-                <img src="/logo.svg" alt="Faktur" className="h-12 w-12" />
+                <img src={asset('/logo.svg')} alt="Faktur" className="h-12 w-12" />
               </div>
             </motion.div>
 

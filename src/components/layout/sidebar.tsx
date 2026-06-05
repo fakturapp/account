@@ -3,6 +3,7 @@
 import * as React from 'react'
 import { useState } from 'react'
 import Link, { useLinkStatus } from 'next/link'
+import { asset } from '@/lib/asset'
 import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -564,7 +565,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             { }
             <div className="px-3 pt-4 pb-3">
               <div className="flex items-center justify-start gap-2.5">
-                <img src="/logo.svg" alt={brandName} className="h-10 w-10 shrink-0 drop-shadow-sm" />
+                <img src={asset('/logo.svg')} alt={brandName} className="h-10 w-10 shrink-0 drop-shadow-sm" />
                 {!collapsed && (
                   <motion.div {...labelFade} className="flex min-w-0 items-center gap-1.5">
                     <span className="text-[21px] font-bold tracking-tight leading-tight whitespace-nowrap text-foreground">

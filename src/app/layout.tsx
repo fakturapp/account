@@ -8,6 +8,7 @@ import './globals.css'
 import { Providers } from './providers'
 import { PreprodBanner } from '@/components/layout/preprod-banner'
 import { IS_PREPROD } from '@/lib/app-env'
+import { asset } from '@/lib/asset'
 
 
 export const metadata: Metadata = {
@@ -69,10 +70,10 @@ export const metadata: Metadata = {
     },
   },
   icons: {
-    icon: '/favicon.svg',
-    apple: '/apple-touch-icon.png',
+    icon: asset('/favicon.svg'),
+    apple: asset('/apple-touch-icon.png'),
   },
-  manifest: '/site.webmanifest',
+  manifest: asset('/site.webmanifest'),
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

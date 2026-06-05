@@ -2,6 +2,7 @@
 
 import dynamic from 'next/dynamic'
 import { motion } from 'framer-motion'
+import { asset } from '@/lib/asset'
 
 const Ferrofluid = dynamic(() => import('@/components/ui/ferrofluid'), { ssr: false })
 
@@ -16,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="pointer-events-none fixed inset-0 z-[1] bg-background/30" />
 
       <header className="absolute left-6 top-6 z-20 flex items-center gap-2.5">
-        <img src="/logo.svg" alt="Faktur" className="h-8 w-8" />
+        <img src={asset('/logo.svg')} alt="Faktur" className="h-8 w-8" />
         <span className="text-lg font-bold tracking-[-0.03em] text-foreground">Faktur</span>
       </header>
 
