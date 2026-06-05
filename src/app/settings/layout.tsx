@@ -11,7 +11,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { DashboardBackground } from '@/components/layout/dashboard-background'
-import { AccountPreview } from '@/components/settings/settings-preview'
+import { AccountPreview } from '@/components/account/account-preview'
 import { User, Shield, Monitor, Link2, LogOut, ArrowLeft } from '@/components/ui/icons'
 
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || '/'
