@@ -6,9 +6,11 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
+import { Field, FieldLabel } from '@/components/ui/field'
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
+import { AccountIndicator } from '@/components/ui/account-indicator/account-indicator'
+import { OtpInput } from '@/components/ui/otp-input'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth'
 import { isFakturDesktop } from '@/lib/is-desktop'
@@ -16,7 +18,7 @@ import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { startAuthentication } from '@simplewebauthn/browser'
-import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock, X } from '@/components/ui/icons'
+import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock } from '@/components/ui/icons'
 
 type EmailStatus = 'idle' | 'checking' | 'exists' | 'not-exists'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -58,6 +60,7 @@ function LoginContent() {
   const [isDesktop, setIsDesktop] = useState(false)
   const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle')
   const [passwordVisible, setPasswordVisible] = useState(false)
+  const [useRecovery, setUseRecovery] = useState(false)
   const [checkData, setCheckData] = useState<{ avatarUrl: string | null; initial: string } | null>(null)
   const redirectingRef = useRef(false)
   const turnstileRef = useRef<TurnstileInstance>(null)
@@ -403,46 +406,77 @@ function LoginContent() {
                 <div>
                   <h1 className="text-2xl font-bold text-foreground">Vérification 2FA</h1>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Entrez le code de votre application authenticator
+                    {useRecovery
+                      ? 'Entrez un de vos codes de récupération'
+                      : 'Entrez le code à 6 chiffres de votre application authenticator'}
                   </p>
                 </div>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
                 <Field>
-                  <FieldLabel htmlFor="code">Code de vérification</FieldLabel>
-                  <Input
-                    id="code"
-                    type="text"
-                    placeholder="000000"
-                    value={code}
-                    onChange={(e) => setCode(e.target.value)}
-                    className="text-center text-lg tracking-widest font-mono h-12"
-                    maxLength={11}
-                    required
-                    autoFocus
-                  />
-                  <FieldDescription>
-                    Entrez un code TOTP ou un code de récupération
-                  </FieldDescription>
+                  <FieldLabel htmlFor="code" className="text-center justify-center">
+                    {useRecovery ? 'Code de récupération' : 'Code de vérification'}
+                  </FieldLabel>
+                  {useRecovery ? (
+                    <Input
+                      id="code"
+                      type="text"
+                      placeholder="XXXXX-XXXXX"
+                      value={code}
+                      onChange={(e) => setCode(e.target.value)}
+                      className="text-center text-lg tracking-widest font-mono h-12"
+                      maxLength={11}
+                      autoComplete="off"
+                      autoCorrect="off"
+                      autoCapitalize="off"
+                      spellCheck={false}
+                      required
+                      autoFocus
+                    />
+                  ) : (
+                    <div className="flex justify-center py-1">
+                      <OtpInput
+                        id="code"
+                        value={code}
+                        onChange={setCode}
+                        length={6}
+                        groupSize={3}
+                        autoFocus
+                        purpose="totp"
+                        ariaLabel="Code de vérification 2FA"
+                      />
+                    </div>
+                  )}
                 </Field>
 
                 <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
                   {loading ? <><Spinner /> Vérification...</> : 'Vérifier'}
                 </Button>
 
-                <p className="text-center">
+                <div className="text-center space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUseRecovery(!useRecovery)
+                      setCode('')
+                    }}
+                    className="block mx-auto text-sm text-accent underline underline-offset-4 hover:text-accent/80 transition-colors"
+                  >
+                    {useRecovery ? 'Utiliser le code authenticator' : 'Utiliser un code de récupération'}
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
                       setRequires2FA(false)
                       setCode('')
+                      setUseRecovery(false)
                     }}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Retour à la connexion
                   </button>
-                </p>
+                </div>
               </form>
             </div>
           </motion.div>
@@ -521,41 +555,62 @@ function LoginContent() {
                     style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}
                   />
 
-                  <div className="h-[60px] rounded-xl border border-border bg-card shadow-surface px-4 flex items-center">
-                    <div className="flex items-center gap-3 w-full">
-                      <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        placeholder="vous@exemple.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        readOnly={emailStatus === 'exists'}
-                        autoComplete="username"
-                        autoCorrect="off"
-                        autoCapitalize="off"
-                        spellCheck={false}
-                        required
-                        autoFocus
-                        aria-label="Adresse email"
-                        className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0 px-0"
-                      />
-                      {emailStatus === 'checking' && (
-                        <div className="shrink-0">
-                          <Spinner size="sm" />
-                        </div>
-                      )}
-                      {emailStatus === 'exists' && (
-                        <button
-                          type="button"
-                          onClick={resetEmail}
-                          aria-label="Changer d'adresse email"
-                          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                  <div className="relative h-[60px]">
+                    <AnimatePresence mode="wait" initial={false}>
+                      {emailStatus === 'exists' && checkData ? (
+                        <motion.div
+                          key="indicator"
+                          initial={{ opacity: 0, scale: 0.98 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.98 }}
+                          transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                          className="absolute inset-0"
                         >
-                          <X className="h-4 w-4" />
-                        </button>
+                          <AccountIndicator
+                            email={email}
+                            avatarUrl={checkData.avatarUrl}
+                            fallback={checkData.initial}
+                            onClear={resetEmail}
+                            className="h-full !py-0"
+                          />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="input"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="absolute inset-0"
+                        >
+                          <div className="h-full rounded-xl border border-border bg-card shadow-surface px-4 flex items-center">
+                            <div className="flex items-center gap-3 w-full">
+                              <Input
+                                id="email"
+                                name="email"
+                                type="email"
+                                placeholder="vous@exemple.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                autoComplete="username"
+                                autoCorrect="off"
+                                autoCapitalize="off"
+                                spellCheck={false}
+                                required
+                                autoFocus
+                                aria-label="Adresse email"
+                                className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0 px-0"
+                              />
+                              {emailStatus === 'checking' && (
+                                <div className="shrink-0">
+                                  <Spinner size="sm" />
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
                       )}
-                    </div>
+                    </AnimatePresence>
                   </div>
 
                   <AnimatePresence mode="wait" initial={false}>
