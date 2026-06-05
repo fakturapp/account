@@ -26,12 +26,6 @@ type TwoFactorMethod = 'totp' | 'email' | 'recovery'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LAST_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
-const METHOD_META: Record<TwoFactorMethod, { label: string; icon: typeof Shield }> = {
-  totp: { label: 'Authenticator', icon: Shield },
-  email: { label: 'Email', icon: Mail },
-  recovery: { label: 'Récupération', icon: KeyRound },
-}
-
 const METHOD_SWITCH_LABEL: Record<TwoFactorMethod, string> = {
   totp: "Utiliser l'application authenticator",
   email: 'Recevoir un code par email',
@@ -580,39 +574,30 @@ function LoginContent() {
                   </Button>
                 )}
 
-                {availableMethods.filter((m) => m !== method).length > 0 && (
-                  <div className="space-y-2 pt-1">
-                    {availableMethods
-                      .filter((m) => m !== method)
-                      .map((m) => {
-                        const Icon = METHOD_META[m].icon
-                        return (
-                          <button
-                            key={m}
-                            type="button"
-                            onClick={() => changeMethod(m)}
-                            className="w-full flex items-center justify-center gap-2 h-10 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all hover:bg-surface-hover"
-                          >
-                            <Icon className="h-4 w-4" />
-                            {METHOD_SWITCH_LABEL[m]}
-                          </button>
-                        )
-                      })}
-                  </div>
-                )}
-
-                <div className="text-center space-y-2 pt-1">
+                <div className="flex flex-col items-center gap-2 pt-1">
+                  {availableMethods
+                    .filter((m) => m !== method)
+                    .map((m) => (
+                      <button
+                        key={m}
+                        type="button"
+                        onClick={() => changeMethod(m)}
+                        className="text-sm text-accent hover:text-accent/80 transition-colors"
+                      >
+                        {METHOD_SWITCH_LABEL[m]}
+                      </button>
+                    ))}
                   <button
                     type="button"
                     onClick={lostCode}
-                    className="block mx-auto text-sm text-accent underline underline-offset-4 hover:text-accent/80 transition-colors"
+                    className="text-sm text-accent underline underline-offset-4 hover:text-accent/80 transition-colors"
                   >
                     J&apos;ai oublié mon code
                   </button>
                   <button
                     type="button"
                     onClick={exitTwoFactor}
-                    className="block mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Retour à la connexion
                   </button>
