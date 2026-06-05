@@ -6,10 +6,9 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
+import { Field, FieldDescription, FieldLabel } from '@/components/ui/field'
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
-import { AccountIndicator } from '@/components/ui/account-indicator/account-indicator'
 import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth'
 import { isFakturDesktop } from '@/lib/is-desktop'
@@ -17,10 +16,8 @@ import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { startAuthentication } from '@simplewebauthn/browser'
-import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock, Mail } from '@/components/ui/icons'
-import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
+import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock, X } from '@/components/ui/icons'
 
-type LoginStage = 'email' | 'password'
 type EmailStatus = 'idle' | 'checking' | 'exists' | 'not-exists'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LAST_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000
@@ -42,10 +39,6 @@ const OAUTH_ERRORS: Record<string, string> = {
   account_inactive: 'Ce compte est désactivé.',
 }
 
-function goAfterLogin(_onboardingCompleted: boolean, explicitRedirect?: string | null): void {
-  window.location.href = resolvePostAuthRedirect(explicitRedirect)
-}
-
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -63,14 +56,25 @@ function LoginContent() {
   const [turnstileToken, setTurnstileToken] = useState('')
   const [redirecting, setRedirecting] = useState(false)
   const [isDesktop, setIsDesktop] = useState(false)
-  const [stage, setStage] = useState<LoginStage>('email')
   const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle')
+  const [passwordVisible, setPasswordVisible] = useState(false)
   const [checkData, setCheckData] = useState<{ avatarUrl: string | null; initial: string } | null>(null)
+  const redirectingRef = useRef(false)
   const turnstileRef = useRef<TurnstileInstance>(null)
   const resetTurnstile = useCallback(() => {
     setTurnstileToken('')
     turnstileRef.current?.reset()
   }, [])
+
+  const goSuccess = useCallback(
+    (redirect: string | null) => {
+      redirectingRef.current = true
+      setRedirecting(true)
+      const qs = redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''
+      router.push(`/login/success${qs}`)
+    },
+    [router]
+  )
 
   useEffect(() => {
     setIsDesktop(isFakturDesktop())
@@ -90,8 +94,7 @@ function LoginContent() {
           return
         }
         login(token, data.user)
-        setRedirecting(true)
-        goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
+        goSuccess(searchParams.get('redirect'))
       })
     } else if (oauthError) {
       window.history.replaceState({}, '', '/login')
@@ -103,7 +106,6 @@ function LoginContent() {
     if (searchParams.get('error')) return
     if (searchParams.get('token')) return
     if (isDesktop) return
-    if (stage !== 'email') return
 
     try {
       const raw = localStorage.getItem('faktur_last_login')
@@ -124,14 +126,14 @@ function LoginContent() {
         initial: (parsed.initial ?? parsed.email[0] ?? '?').toUpperCase(),
       })
       setEmailStatus('exists')
-      setStage('password')
+      setPasswordVisible(true)
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isDesktop])
 
   useEffect(() => {
-    if (stage !== 'email') return
     if (requires2FA) return
+    if (passwordVisible) return
     if (!email || !EMAIL_REGEX.test(email)) {
       setEmailStatus('idle')
       return
@@ -160,12 +162,22 @@ function LoginContent() {
         initial: (data.initial ?? email[0] ?? '?').toUpperCase(),
       })
       setEmailStatus('exists')
-      setStage('password')
     }, 700)
 
     return () => clearTimeout(timer)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [email, stage, requires2FA])
+  }, [email, requires2FA, passwordVisible])
+
+  function resetEmail() {
+    setEmailStatus('idle')
+    setCheckData(null)
+    setEmail('')
+    setPassword('')
+    setPasswordVisible(false)
+    try {
+      localStorage.removeItem('faktur_last_login')
+    } catch {}
+  }
 
   async function handleGoogleLogin() {
     setGoogleLoading(true)
@@ -206,8 +218,7 @@ function LoginContent() {
 
       if (data?.token && data?.user) {
         login(data.token, data.user, data.vaultKey)
-        setRedirecting(true)
-        goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
+        goSuccess(searchParams.get('redirect'))
       }
     } catch (err: any) {
       setPasskeyLoading(false)
@@ -232,8 +243,7 @@ function LoginContent() {
       if (err) return toast(err, 'error')
       if (data?.token) {
         login(data.token, data.user)
-        setRedirecting(true)
-        goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
+        goSuccess(searchParams.get('redirect'))
       }
       return
     }
@@ -267,22 +277,17 @@ function LoginContent() {
 
     if (data?.token && data?.user) {
       login(data.token, data.user, data.vaultKey)
-      setRedirecting(true)
-      goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
+      goSuccess(searchParams.get('redirect'))
     }
   }
 
   useEffect(() => {
     if (authLoading || !user) return
+    if (redirectingRef.current) return
     const redirectParam = searchParams.get('redirect')
     if (!redirectParam) return
-    if (redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
-      router.replace(redirectParam)
-      return
-    }
-    setRedirecting(true)
-    goAfterLogin(true, redirectParam)
-  }, [authLoading, user, searchParams, router])
+    goSuccess(redirectParam)
+  }, [authLoading, user, searchParams, goSuccess])
 
   if (redirecting) {
     return (
@@ -356,10 +361,7 @@ function LoginContent() {
           </motion.div>
 
           <motion.div variants={fadeIn} custom={2} className="space-y-3">
-            <Button
-              className="w-full h-11"
-              onClick={() => goAfterLogin(true, searchParams.get('redirect'))}
-            >
+            <Button className="w-full h-11" onClick={() => goSuccess(searchParams.get('redirect'))}>
               <LayoutDashboard className="h-4 w-4 mr-2" />
               Aller au Dashboard
             </Button>
@@ -376,6 +378,11 @@ function LoginContent() {
       </motion.div>
     )
   }
+
+  const registerHref = (() => {
+    const r = searchParams.get('redirect')
+    return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register'
+  })()
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full">
@@ -500,209 +507,172 @@ function LoginContent() {
               </motion.div>
 
               <motion.div variants={fadeIn} custom={3}>
-                <AnimatePresence mode="wait" initial={false}>
-                  {stage === 'email' ? (
-                    <motion.div
-                      key="stage-email"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <div className="space-y-4">
-                        {emailStatus === 'exists' && checkData ? (
-                          <AccountIndicator
-                            email={email}
-                            avatarUrl={checkData.avatarUrl}
-                            fallback={checkData.initial}
-                            onClear={() => {
-                              setEmailStatus('idle')
-                              setCheckData(null)
-                              setEmail('')
-                              try {
-                                localStorage.removeItem('faktur_last_login')
-                              } catch {}
-                            }}
-                          />
-                        ) : (
-                          <div className="rounded-xl border border-border bg-card shadow-surface p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="shrink-0 h-8 w-8 rounded-full bg-surface flex items-center justify-center">
-                                <Mail className="h-3.5 w-3.5 text-muted-foreground" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <Input
-                                  id="email"
-                                  name="email"
-                                  type="email"
-                                  placeholder="vous@exemple.com"
-                                  value={email}
-                                  onChange={(e) => setEmail(e.target.value)}
-                                  autoComplete="username"
-                                  autoCorrect="off"
-                                  autoCapitalize="off"
-                                  spellCheck={false}
-                                  required
-                                  autoFocus
-                                  aria-label="Adresse email"
-                                  className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0 px-0"
-                                />
-                              </div>
-                              {emailStatus === 'checking' && (
-                                <div className="shrink-0">
-                                  <Spinner size="sm" />
-                                </div>
-                              )}
-                            </div>
+                <form onSubmit={handleSubmit} autoComplete="on" className="space-y-4">
+                  <input
+                    type="text"
+                    name="username"
+                    id="login-username"
+                    autoComplete="username"
+                    value={email}
+                    readOnly
+                    tabIndex={-1}
+                    aria-hidden="true"
+                    onChange={() => {}}
+                    style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}
+                  />
+
+                  <div className="h-[60px] rounded-xl border border-border bg-card shadow-surface px-4 flex items-center">
+                    <div className="flex items-center gap-3 w-full">
+                      <Input
+                        id="email"
+                        name="email"
+                        type="email"
+                        placeholder="vous@exemple.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        readOnly={emailStatus === 'exists'}
+                        autoComplete="username"
+                        autoCorrect="off"
+                        autoCapitalize="off"
+                        spellCheck={false}
+                        required
+                        autoFocus
+                        aria-label="Adresse email"
+                        className="h-9 border-0 bg-transparent shadow-none focus-visible:ring-0 px-0"
+                      />
+                      {emailStatus === 'checking' && (
+                        <div className="shrink-0">
+                          <Spinner size="sm" />
+                        </div>
+                      )}
+                      {emailStatus === 'exists' && (
+                        <button
+                          type="button"
+                          onClick={resetEmail}
+                          aria-label="Changer d'adresse email"
+                          className="shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <AnimatePresence mode="wait" initial={false}>
+                    {emailStatus === 'not-exists' ? (
+                      <motion.div
+                        key="create"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        <Button
+                          type="button"
+                          className="w-full h-11 font-semibold gap-2"
+                          onClick={() => router.push('/register?email=' + encodeURIComponent(email))}
+                        >
+                          Créer un compte <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    ) : emailStatus === 'exists' && !passwordVisible ? (
+                      <motion.div
+                        key="continue"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                      >
+                        <Button
+                          type="button"
+                          className="w-full h-11 font-semibold gap-2"
+                          onClick={() => setPasswordVisible(true)}
+                          autoFocus
+                        >
+                          Continuer <ArrowRight className="h-4 w-4" />
+                        </Button>
+                      </motion.div>
+                    ) : emailStatus === 'exists' && passwordVisible ? (
+                      <motion.div
+                        key="password"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                        className="space-y-4"
+                      >
+                        <Field>
+                          <div className="flex items-center justify-between">
+                            <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
+                            <Link
+                              href="/forgot-password"
+                              className="text-xs text-accent hover:text-accent/80 transition-colors"
+                            >
+                              Oublié ?
+                            </Link>
+                          </div>
+                          <div className="relative">
+                            <Input
+                              id="password"
+                              name="password"
+                              type={showPassword ? 'text' : 'password'}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              autoComplete="current-password"
+                              required
+                              autoFocus
+                              className="h-11 pr-10"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                              tabIndex={-1}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </Field>
+
+                        {process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && (
+                          <div className="flex justify-center">
+                            <Turnstile
+                              ref={turnstileRef}
+                              siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
+                              onSuccess={setTurnstileToken}
+                              onError={resetTurnstile}
+                              onExpire={resetTurnstile}
+                              options={{ theme: 'dark', language: 'fr' }}
+                            />
                           </div>
                         )}
 
-                        {emailStatus === 'not-exists' && (
-                          <motion.div
-                            initial={{ opacity: 0, y: 14 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                          >
-                            <Button
-                              type="button"
-                              className="w-full h-11 font-semibold gap-2"
-                              onClick={() => {
-                                router.push('/register?email=' + encodeURIComponent(email))
-                              }}
-                            >
-                              Créer un compte <ArrowRight className="h-4 w-4" />
-                            </Button>
-                          </motion.div>
-                        )}
-                      </div>
-
-                      <p className="text-center text-sm text-muted-foreground mt-6">
-                        Pas encore de compte ?{' '}
-                        <Link
-                          href={(() => {
-                            const r = searchParams.get('redirect')
-                            return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register'
-                          })()}
-                          className="text-accent font-medium hover:text-accent/80 transition-colors"
+                        <Button
+                          type="submit"
+                          className="w-full h-11 font-semibold gap-2"
+                          disabled={loading || (process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && !!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
                         >
-                          Créer un compte
-                        </Link>
-                      </p>
-                    </motion.div>
-                  ) : (
-                    <motion.div
-                      key="stage-password"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      transition={{ duration: 0.25 }}
-                    >
-                      <form onSubmit={handleSubmit} autoComplete="on">
-                        <input
-                          type="text"
-                          name="username"
-                          id="login-stage-username"
-                          autoComplete="username"
-                          value={email}
-                          readOnly
-                          tabIndex={-1}
-                          aria-hidden="true"
-                          onChange={() => {}}
-                          style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}
-                        />
-                        <FieldGroup>
-                          <AccountIndicator
-                            email={email}
-                            avatarUrl={checkData?.avatarUrl ?? null}
-                            fallback={checkData?.initial ?? (email[0] ?? '?').toUpperCase()}
-                            onClear={() => {
-                              setStage('email')
-                              setEmailStatus('idle')
-                              setCheckData(null)
-                              setEmail('')
-                              setPassword('')
-                              try {
-                                localStorage.removeItem('faktur_last_login')
-                              } catch {}
-                            }}
-                          />
-
-                          <Field>
-                            <div className="flex items-center justify-between">
-                              <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
-                              <Link
-                                href="/forgot-password"
-                                className="text-xs text-accent hover:text-accent/80 transition-colors"
-                              >
-                                Oublié ?
-                              </Link>
-                            </div>
-                            <div className="relative">
-                              <Input
-                                id="password"
-                                name="password"
-                                type={showPassword ? 'text' : 'password'}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                autoComplete="current-password"
-                                required
-                                autoFocus
-                                className="h-11 pr-10"
-                              />
-                              <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                aria-label={showPassword ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
-                                tabIndex={-1}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                              >
-                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </button>
-                            </div>
-                          </Field>
-
-                          {process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && (
-                            <div className="flex justify-center">
-                              <Turnstile
-                                ref={turnstileRef}
-                                siteKey={process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY}
-                                onSuccess={setTurnstileToken}
-                                onError={resetTurnstile}
-                                onExpire={resetTurnstile}
-                                options={{ theme: 'dark', language: 'fr' }}
-                              />
-                            </div>
+                          {loading ? (
+                            <><Spinner /> Connexion...</>
+                          ) : (
+                            <>Se connecter <ArrowRight className="h-4 w-4" /></>
                           )}
+                        </Button>
+                      </motion.div>
+                    ) : null}
+                  </AnimatePresence>
 
-                          <Button
-                            type="submit"
-                            className="w-full h-11 font-semibold gap-2"
-                            disabled={loading || (process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && !!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
-                          >
-                            {loading ? (
-                              <><Spinner /> Connexion...</>
-                            ) : (
-                              <>Se connecter <ArrowRight className="h-4 w-4" /></>
-                            )}
-                          </Button>
-
-                          <p className="text-center text-sm text-muted-foreground">
-                            Pas encore de compte ?{' '}
-                            <Link
-                              href={(() => {
-                                const r = searchParams.get('redirect')
-                                return r ? `/register?redirect=${encodeURIComponent(r)}` : '/register'
-                              })()}
-                              className="text-accent font-medium hover:text-accent/80 transition-colors"
-                            >
-                              Créer un compte
-                            </Link>
-                          </p>
-                        </FieldGroup>
-                      </form>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                  <p className="text-center text-sm text-muted-foreground">
+                    Pas encore de compte ?{' '}
+                    <Link
+                      href={registerHref}
+                      className="text-accent font-medium hover:text-accent/80 transition-colors"
+                    >
+                      Créer un compte
+                    </Link>
+                  </p>
+                </form>
               </motion.div>
             </div>
           </motion.div>
