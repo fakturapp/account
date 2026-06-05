@@ -11,6 +11,7 @@ import { OtpInput } from '@/components/ui/otp-input'
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field'
 import { Spinner } from '@/components/ui/spinner'
 import { api } from '@/lib/api'
+import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -44,7 +45,7 @@ function TwoFactorContent() {
 
     if (data?.token) {
       localStorage.setItem('faktur_token', data.token)
-      window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/'
+      window.location.href = resolvePostAuthRedirect(searchParams.get('redirect'))
     }
   }
 

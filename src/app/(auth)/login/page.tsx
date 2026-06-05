@@ -40,14 +40,10 @@ const OAUTH_ERRORS: Record<string, string> = {
   account_inactive: 'Ce compte est désactivé.',
 }
 
-const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
+import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 
 function goAfterLogin(_onboardingCompleted: boolean, explicitRedirect?: string | null): void {
-  if (explicitRedirect && explicitRedirect.startsWith('/') && !explicitRedirect.startsWith('//')) {
-    window.location.href = explicitRedirect
-    return
-  }
-  window.location.href = DASH_URL || '/'
+  window.location.href = resolvePostAuthRedirect(explicitRedirect)
 }
 
 function LoginContent() {
@@ -275,20 +271,20 @@ function LoginContent() {
     if (data?.token && data?.user) {
       login(data.token, data.user, data.vaultKey)
       setRedirecting(true)
-      goAfterLogin(data.user.onboardingCompleted)
+      goAfterLogin(data.user.onboardingCompleted, searchParams.get('redirect'))
     }
   }
 
-  // Auto-bounce an already-signed-in user when they arrive with a
-  // ?redirect= param (e.g. coming from the OAuth consent screen).
-  // We don't show the 'Bon retour' card in that case — it would look
-  // like the flow got stuck.
   useEffect(() => {
     if (authLoading || !user) return
     const redirectParam = searchParams.get('redirect')
-    if (redirectParam && redirectParam.startsWith('/')) {
+    if (!redirectParam) return
+    if (redirectParam.startsWith('/') && !redirectParam.startsWith('//')) {
       router.replace(redirectParam)
+      return
     }
+    setRedirecting(true)
+    goAfterLogin(true, redirectParam)
   }, [authLoading, user, searchParams, router])
 
   if (redirecting) {

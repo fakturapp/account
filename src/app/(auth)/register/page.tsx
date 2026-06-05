@@ -17,14 +17,10 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Check, Mail, Lock, Shield, User, ArrowRight, Activity, ArrowLeft, Eye, EyeOff, AlertTriangle, MailX, UserPlus } from '@/components/ui/icons'
 import { CheckboxRoot, CheckboxControl, CheckboxIndicator, CheckboxContent } from '@/components/ui/checkbox'
 
-const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
+import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 
 function goAfterAuth(explicitRedirect?: string | null): void {
-  if (explicitRedirect && explicitRedirect.startsWith('/') && !explicitRedirect.startsWith('//')) {
-    window.location.href = explicitRedirect
-    return
-  }
-  window.location.href = DASH_URL || '/'
+  window.location.href = resolvePostAuthRedirect(explicitRedirect)
 }
 
 const fadeUp: Variants = {
