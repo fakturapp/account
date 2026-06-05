@@ -22,10 +22,10 @@ function SuccessContent() {
 
   useEffect(() => {
     const next = buildNext(searchParams.get('redirect'))
-    const fade = setTimeout(() => setLeaving(true), 1000)
+    const fade = setTimeout(() => setLeaving(true), 1400)
     const go = setTimeout(() => {
       window.location.href = next
-    }, 1400)
+    }, 1800)
     return () => {
       clearTimeout(fade)
       clearTimeout(go)
