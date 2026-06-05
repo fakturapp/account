@@ -15,6 +15,11 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
       <div className="pointer-events-none fixed inset-0 z-[1] bg-background/30" />
 
+      <header className="absolute left-6 top-6 z-20 flex items-center gap-2.5">
+        <img src="/logo.svg" alt="Faktur" className="h-8 w-8" />
+        <span className="text-lg font-bold tracking-[-0.03em] text-foreground">Faktur</span>
+      </header>
+
       <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
@@ -22,11 +27,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="w-full max-w-[420px]"
         >
-          <div className="mb-8 flex items-center gap-2.5">
-            <img src="/logo.svg" alt="Faktur" className="h-8 w-8" />
-            <span className="text-lg font-bold tracking-[-0.03em] text-foreground">Faktur</span>
-          </div>
-
           {children}
         </motion.div>
       </main>
