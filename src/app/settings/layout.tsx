@@ -11,19 +11,19 @@ import { Avatar } from '@/components/ui/avatar'
 import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { DashboardBackground } from '@/components/layout/dashboard-background'
-import { AccountPreview } from '@/components/account/account-preview'
+import { AccountPreview } from '@/components/settings/settings-preview'
 import { User, Shield, Monitor, Link2, LogOut, ArrowLeft } from '@/components/ui/icons'
 
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || '/'
 
 const NAV = [
-  { href: '/account', label: 'Mon compte', icon: User },
-  { href: '/account/security', label: 'Sécurité', icon: Shield },
-  { href: '/account/sessions', label: 'Sessions', icon: Monitor },
-  { href: '/account/oauth', label: 'Connexions', icon: Link2 },
+  { href: '/settings', label: 'Mon compte', icon: User },
+  { href: '/settings/security', label: 'Sécurité', icon: Shield },
+  { href: '/settings/sessions', label: 'Sessions', icon: Monitor },
+  { href: '/settings/oauth', label: 'Connexions', icon: Link2 },
 ]
 
-const PAGES_WITH_PREVIEW = ['/account', '/account/security']
+const PAGES_WITH_PREVIEW = ['/settings', '/settings/security']
 
 export default function AccountLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -33,10 +33,10 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   const [loggingOut, setLoggingOut] = useState(false)
 
   const isFullBleed =
-    pathname === '/account/delete' || pathname === '/account/google-linked'
+    pathname === '/settings/delete' || pathname === '/settings/google-linked'
 
   const showPreview = PAGES_WITH_PREVIEW.some(
-    (p) => pathname === p || (p !== '/account' && pathname.startsWith(p))
+    (p) => pathname === p || (p !== '/settings' && pathname.startsWith(p))
   )
 
   async function confirmLogout() {
@@ -68,7 +68,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
 
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-(--header-height,4rem) max-w-5xl items-center justify-between gap-4 px-4 lg:px-6">
-          <Link href="/account" className="flex items-center gap-2.5">
+          <Link href="/settings" className="flex items-center gap-2.5">
             <img src={asset('/logo.svg')} alt="Faktur" className="h-7 w-7" />
             <span className="text-lg font-bold tracking-[-0.03em] text-foreground">Faktur</span>
           </Link>
@@ -94,8 +94,8 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
           <div className="flex items-center gap-1 overflow-x-auto">
             {NAV.map((item) => {
               const active =
-                item.href === '/account'
-                  ? pathname === '/account'
+                item.href === '/settings'
+                  ? pathname === '/settings'
                   : pathname.startsWith(item.href)
               const Icon = item.icon
               return (

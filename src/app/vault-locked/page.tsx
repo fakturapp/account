@@ -70,7 +70,7 @@ export default function VaultLockedPage() {
   useEffect(() => {
     if (!user) return
     if (!user.vaultLocked || user.currentTeamEncryptionMode !== 'private') {
-      router.replace('/account')
+      router.replace('/settings')
     }
   }, [user, router])
 
@@ -101,7 +101,7 @@ export default function VaultLockedPage() {
         localStorage.setItem('faktur_vault_key', data.vaultKey)
       }
       if (data?.requiresCryptoRecovery) {
-        router.push('/account')
+        router.push('/settings')
         return
       }
       window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/'
@@ -181,7 +181,7 @@ export default function VaultLockedPage() {
                   variant="outline"
                   className="flex-1"
                   onClick={() => {
-                    const url = `${window.location.origin}/account/security`
+                    const url = `${window.location.origin}/settings/security`
                     if (typeof window !== 'undefined' && (window as unknown as { fakturDesktop?: { openExternal?: (u: string) => void } }).fakturDesktop?.openExternal) {
                       ;(window as unknown as { fakturDesktop: { openExternal: (u: string) => void } }).fakturDesktop.openExternal(url)
                     } else {
@@ -363,7 +363,7 @@ export default function VaultLockedPage() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => router.push('/account/security')}
+                onClick={() => router.push('/settings/security')}
               >
                 Page sécurité
               </Button>

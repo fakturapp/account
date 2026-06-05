@@ -351,7 +351,7 @@ export default function DeleteAccountPage() {
           variant="outline"
           size="sm"
           className="h-9 gap-1.5 rounded-full bg-background/80 backdrop-blur shadow-surface"
-          onClick={() => router.push('/account')}
+          onClick={() => router.push('/settings')}
         >
           <ArrowLeft className="h-4 w-4" /> Retour
         </Button>

@@ -29,7 +29,7 @@ const nextConfig: NextConfig = {
     return [{ source: '/:path*', headers: securityHeaders }]
   },
   async redirects() {
-    const paths = [
+    const toV1 = [
       '/login',
       '/login/success',
       '/register',
@@ -39,15 +39,22 @@ const nextConfig: NextConfig = {
       '/2fa',
       '/invite/:path*',
       '/oauth/:path*',
-      '/account/:path*',
+      '/settings/:path*',
       '/vault-locked',
     ]
-    return paths.map((source) => ({
+    const base = toV1.map((source) => ({
       source,
       destination: `${basePath}${source}`,
       basePath: false,
       permanent: false,
     }))
+    const accountCompat = [
+      { source: '/account', destination: `${basePath}/settings`, basePath: false, permanent: false },
+      { source: '/account/:path*', destination: `${basePath}/settings/:path*`, basePath: false, permanent: false },
+      { source: '/account', destination: '/settings', permanent: false },
+      { source: '/account/:path*', destination: '/settings/:path*', permanent: false },
+    ]
+    return [...base, ...accountCompat]
   },
   async rewrites() {
     return [

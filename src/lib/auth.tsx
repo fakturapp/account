@@ -225,7 +225,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (user && !isPublicPath) {
-      const isAccountDeletion = pathname.startsWith('/account/delete')
+      const isAccountDeletion = pathname.startsWith('/settings/delete')
       const isVaultLocked = pathname === '/vault-locked'
       const shouldShowVaultPage =
         !!user.vaultLocked &&
@@ -237,7 +237,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
       if (!shouldShowVaultPage && isVaultLocked) {
-        router.replace('/account')
+        router.replace('/settings')
         return
       }
     }
