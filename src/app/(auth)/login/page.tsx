@@ -775,11 +775,11 @@ function LoginContent() {
                       >
                         <Button
                           type="button"
-                          className="w-full h-11 font-semibold gap-2"
+                          className="w-full h-11 font-semibold"
                           onClick={() => setPasswordVisible(true)}
                           autoFocus
                         >
-                          Continuer <ArrowRight className="h-4 w-4" />
+                          Continuer
                         </Button>
                       </motion.div>
                     ) : emailStatus === 'exists' && passwordVisible ? (
@@ -840,13 +840,13 @@ function LoginContent() {
 
                         <Button
                           type="submit"
-                          className="w-full h-11 font-semibold gap-2"
+                          className="w-full h-11 font-semibold"
                           disabled={loading || (process.env.NEXT_PUBLIC_CAPTCHA_ENABLED === 'true' && !!process.env.NEXT_PUBLIC_CLOUDFLARE_TURNSTILE_SITE_KEY && !turnstileToken)}
                         >
                           {loading ? (
                             <><Spinner /> Connexion...</>
                           ) : (
-                            <>Se connecter <ArrowRight className="h-4 w-4" /></>
+                            'Se connecter'
                           )}
                         </Button>
                       </motion.div>
