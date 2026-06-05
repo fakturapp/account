@@ -6,17 +6,19 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Field, FieldDescription, FieldGroup, FieldLabel, FieldError } from '@/components/ui/field'
+import { Field, FieldDescription, FieldGroup, FieldLabel } from '@/components/ui/field'
 import { Avatar } from '@/components/ui/avatar'
 import { Separator } from '@/components/ui/separator'
 import { AccountIndicator } from '@/components/ui/account-indicator/account-indicator'
+import { useToast } from '@/components/ui/toast'
 import { useAuth } from '@/lib/auth'
 import { isFakturDesktop } from '@/lib/is-desktop'
 import { api } from '@/lib/api'
 import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { startAuthentication } from '@simplewebauthn/browser'
-import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Smartphone, Lock, Mail } from '@/components/ui/icons'
+import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock, Mail } from '@/components/ui/icons'
+import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 
 type LoginStage = 'email' | 'password'
 type EmailStatus = 'idle' | 'checking' | 'exists' | 'not-exists'
@@ -40,8 +42,6 @@ const OAUTH_ERRORS: Record<string, string> = {
   account_inactive: 'Ce compte est désactivé.',
 }
 
-import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
-
 function goAfterLogin(_onboardingCompleted: boolean, explicitRedirect?: string | null): void {
   window.location.href = resolvePostAuthRedirect(explicitRedirect)
 }
@@ -50,11 +50,11 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, login, logout, loading: authLoading } = useAuth()
+  const { toast } = useToast()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [code, setCode] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [requires2FA, setRequires2FA] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
@@ -86,7 +86,7 @@ function LoginContent() {
       api.get<{ user: any }>('/auth/me').then(({ data, error: err }) => {
         if (err || !data?.user) {
           localStorage.removeItem('faktur_token')
-          setError('Erreur lors de la connexion automatique.')
+          toast('Erreur lors de la connexion automatique.', 'error')
           return
         }
         login(token, data.user)
@@ -95,7 +95,7 @@ function LoginContent() {
       })
     } else if (oauthError) {
       window.history.replaceState({}, '', '/login')
-      setError(OAUTH_ERRORS[oauthError] || 'Une erreur est survenue.')
+      toast(OAUTH_ERRORS[oauthError] || 'Une erreur est survenue.', 'error')
     }
   }, [])
 
@@ -168,24 +168,22 @@ function LoginContent() {
   }, [email, stage, requires2FA])
 
   async function handleGoogleLogin() {
-    setError('')
     setGoogleLoading(true)
     const { data, error: err } = await api.get<{ url: string }>('/auth/oauth/google/url')
     if (err || !data?.url) {
       setGoogleLoading(false)
-      return setError(err || 'Impossible de se connecter avec Google.')
+      return toast(err || 'Impossible de se connecter avec Google.', 'error')
     }
     window.location.href = data.url
   }
 
   async function handlePasskeyLogin() {
-    setError('')
     setPasskeyLoading(true)
     try {
       const { data: options, error: optErr } = await api.post<any>('/auth/passkey/login-options', {})
       if (optErr || !options) {
         setPasskeyLoading(false)
-        return setError(optErr || 'Impossible de démarrer l\'authentification passkey.')
+        return toast(optErr || "Impossible de démarrer l'authentification par clé d'accès.", 'error')
       }
 
       const credential = await startAuthentication({ optionsJSON: options })
@@ -199,7 +197,7 @@ function LoginContent() {
       }>('/auth/passkey/login-verify', { credential })
       setPasskeyLoading(false)
 
-      if (verifyErr) return setError(verifyErr)
+      if (verifyErr) return toast(verifyErr, 'error')
 
       if (data?.requiresEmailVerification) {
         router.push(`/verify-email?email=${encodeURIComponent(data.email || '')}`)
@@ -214,16 +212,15 @@ function LoginContent() {
     } catch (err: any) {
       setPasskeyLoading(false)
       if (err.name === 'NotAllowedError') {
-        return // User cancelled
+        return
       }
       console.error('[Passkey]', err)
-      setError(err.message || 'Erreur lors de l\'authentification passkey.')
+      toast(err.message || "Erreur lors de l'authentification par clé d'accès.", 'error')
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    setError('')
     setLoading(true)
 
     if (requires2FA && userId) {
@@ -232,7 +229,7 @@ function LoginContent() {
         code,
       })
       setLoading(false)
-      if (err) return setError(err)
+      if (err) return toast(err, 'error')
       if (data?.token) {
         login(data.token, data.user)
         setRedirecting(true)
@@ -254,7 +251,7 @@ function LoginContent() {
 
     if (err) {
       resetTurnstile()
-      return setError(err)
+      return toast(err, 'error')
     }
 
     if (data?.requiresEmailVerification) {
@@ -295,16 +292,11 @@ function LoginContent() {
         className="w-full max-w-sm mx-auto flex flex-col items-center justify-center py-20"
       >
         <Spinner size="lg" className="text-accent" />
-        <p className="mt-4 text-sm font-medium text-foreground">
-          Connexion en cours...
-        </p>
+        <p className="mt-4 text-sm font-medium text-foreground">Connexion en cours...</p>
       </motion.div>
     )
   }
 
-  // Desktop shell detected — the email/password login form is a
-  // dead end here (no keychain, no 2FA flow, no Turnstile). Show a
-  // blocker card that explains how to connect instead.
   if (isDesktop && !authLoading && !user) {
     return (
       <motion.div initial="hidden" animate="visible" className="w-full max-w-sm mx-auto">
@@ -323,9 +315,6 @@ function LoginContent() {
           <Button
             className="w-full"
             onClick={() => {
-              // Tell the main process to close this webview and bring
-              // back the login window. We post a message the shell
-              // preload can forward via IPC.
               if (typeof window !== 'undefined' && (window as any).fakturDesktop?.logout) {
                 ;(window as any).fakturDesktop.logout()
               }
@@ -338,7 +327,6 @@ function LoginContent() {
     )
   }
 
-  // Already logged in
   if (!authLoading && user) {
     const initials = user.fullName
       ? user.fullName.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase()
@@ -390,7 +378,7 @@ function LoginContent() {
   }
 
   return (
-    <motion.div initial="hidden" animate="visible" className="w-full max-w-sm mx-auto">
+    <motion.div initial="hidden" animate="visible" className="w-full">
       <AnimatePresence mode="wait">
         {requires2FA ? (
           <motion.div
@@ -401,7 +389,6 @@ function LoginContent() {
             transition={{ duration: 0.25 }}
           >
             <div className="space-y-8">
-              {/* 2FA Header */}
               <div className="text-center space-y-3">
                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-500/10">
                   <Shield className="h-6 w-6 text-amber-500" />
@@ -414,14 +401,7 @@ function LoginContent() {
                 </div>
               </div>
 
-              {/* 2FA Form */}
               <form onSubmit={handleSubmit} className="space-y-5">
-                {error && (
-                  <div className="rounded-lg bg-destructive/10 border border-destructive/20 p-3 text-center text-sm text-destructive">
-                    {error}
-                  </div>
-                )}
-
                 <Field>
                   <FieldLabel htmlFor="code">Code de vérification</FieldLabel>
                   <Input
@@ -450,7 +430,6 @@ function LoginContent() {
                     onClick={() => {
                       setRequires2FA(false)
                       setCode('')
-                      setError('')
                     }}
                     className="text-sm text-muted-foreground hover:text-foreground transition-colors"
                   >
@@ -469,18 +448,14 @@ function LoginContent() {
             transition={{ duration: 0.25 }}
           >
             <div className="space-y-8">
-              {/* Header */}
-              <motion.div variants={fadeIn} custom={0} className="flex flex-col items-center text-center space-y-3">
-                <div>
-                  <h1 className="text-xl font-bold text-foreground">Bon retour</h1>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Connectez-vous à votre compte
-                  </p>
-                </div>
+              <motion.div variants={fadeIn} custom={0} className="text-center space-y-2">
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Bienvenue sur Faktur</h1>
+                <p className="text-sm text-muted-foreground">
+                  Connectez-vous ou inscrivez-vous pour démarrer
+                </p>
               </motion.div>
 
-              {/* Google OAuth */}
-              <motion.div variants={fadeIn} custom={1}>
+              <motion.div variants={fadeIn} custom={1} className="space-y-2">
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
@@ -499,38 +474,23 @@ function LoginContent() {
                   )}
                   Continuer avec Google
                 </button>
-              </motion.div>
 
-              {/* Passkey + Mobile App buttons */}
-              <motion.div variants={fadeIn} custom={2} className="flex gap-2">
                 <button
                   type="button"
                   onClick={handlePasskeyLogin}
                   disabled={passkeyLoading}
-                  className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-border bg-background text-xs font-medium text-foreground transition-all hover:bg-surface-hover disabled:opacity-60 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 h-11 rounded-lg border border-border bg-background text-sm font-medium text-foreground transition-all hover:bg-surface-hover disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   {passkeyLoading ? (
                     <Spinner size="sm" />
                   ) : (
-                    <KeyRound className="h-3.5 w-3.5" />
+                    <KeyRound className="h-4 w-4" />
                   )}
-                  Clé d'accès
-                </button>
-                <button
-                  type="button"
-                  disabled
-                  className="flex-1 flex items-center justify-center gap-2 h-9 rounded-lg border border-border/50 bg-surface text-xs font-medium text-muted-foreground cursor-not-allowed relative"
-                >
-                  <Smartphone className="h-3.5 w-3.5" />
-                  App mobile
-                  <span className="absolute -top-2 -right-1 text-[9px] font-semibold uppercase tracking-wider bg-muted border border-border/50 rounded-full px-1.5 py-0 text-muted-foreground">
-                    Bientôt
-                  </span>
+                  Clé d&apos;accès
                 </button>
               </motion.div>
 
-              {/* Separator */}
-              <motion.div variants={fadeIn} custom={3} className="relative">
+              <motion.div variants={fadeIn} custom={2} className="relative">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
                 </div>
@@ -539,7 +499,7 @@ function LoginContent() {
                 </div>
               </motion.div>
 
-              <motion.div variants={fadeIn} custom={4}>
+              <motion.div variants={fadeIn} custom={3}>
                 <AnimatePresence mode="wait" initial={false}>
                   {stage === 'email' ? (
                     <motion.div
@@ -549,18 +509,6 @@ function LoginContent() {
                       exit={{ opacity: 0, y: -8 }}
                       transition={{ duration: 0.25 }}
                     >
-                      {error && (
-                        <motion.div
-                          initial={{ opacity: 0, height: 0 }}
-                          animate={{ opacity: 1, height: 'auto' }}
-                          className="mb-3"
-                        >
-                          <FieldError className="text-center bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                            {error}
-                          </FieldError>
-                        </motion.div>
-                      )}
-
                       <div className="space-y-4">
                         {emailStatus === 'exists' && checkData ? (
                           <AccountIndicator
@@ -663,17 +611,6 @@ function LoginContent() {
                           style={{ position: 'absolute', left: '-10000px', width: '1px', height: '1px', overflow: 'hidden', opacity: 0 }}
                         />
                         <FieldGroup>
-                          {error && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: 'auto' }}
-                            >
-                              <FieldError className="text-center bg-destructive/10 border border-destructive/20 rounded-lg p-3">
-                                {error}
-                              </FieldError>
-                            </motion.div>
-                          )}
-
                           <AccountIndicator
                             email={email}
                             avatarUrl={checkData?.avatarUrl ?? null}
@@ -684,13 +621,11 @@ function LoginContent() {
                               setCheckData(null)
                               setEmail('')
                               setPassword('')
-                              setError('')
                               try {
                                 localStorage.removeItem('faktur_last_login')
                               } catch {}
                             }}
                           />
-
 
                           <Field>
                             <div className="flex items-center justify-between">
@@ -773,19 +708,6 @@ function LoginContent() {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {/* Legal footer */}
-      <motion.p
-        variants={fadeIn}
-        custom={9}
-        initial="hidden"
-        animate="visible"
-        className="text-center mt-8 text-[11px] text-muted-secondary"
-      >
-        En continuant, vous acceptez nos{' '}
-        <a href="/legal/terms" target="_blank" className="hover:text-muted-foreground transition-colors underline underline-offset-2">CGU</a> et notre{' '}
-        <a href="/legal/privacy" target="_blank" className="hover:text-muted-foreground transition-colors underline underline-offset-2">Politique de confidentialité</a>.
-      </motion.p>
     </motion.div>
   )
 }
