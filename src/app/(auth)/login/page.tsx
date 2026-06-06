@@ -127,10 +127,14 @@ function LoginContent() {
   }, [])
 
   useEffect(() => {
-    if (searchParams.get('error')) return
-    if (searchParams.get('token')) return
-    if (searchParams.get('twofa')) return
     if (isDesktop) return
+
+    const emailParam = searchParams.get('email')
+    if (emailParam && EMAIL_REGEX.test(emailParam)) {
+      setEmail(emailParam)
+    }
+
+    if (searchParams.get('token') || searchParams.get('twofa')) return
 
     try {
       const raw = localStorage.getItem('faktur_last_login')
@@ -190,7 +194,7 @@ function LoginContent() {
     }, 700)
 
     return () => clearTimeout(timer)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [email, requires2FA, passwordVisible])
 
   function resetEmail() {
