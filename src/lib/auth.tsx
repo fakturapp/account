@@ -211,7 +211,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (
         pathname.startsWith('/verify-email') ||
         pathname.startsWith('/invite') ||
-        pathname.startsWith('/login')
+        pathname.startsWith('/login') ||
+        pathname.startsWith('/oauth')
       ) {
         return
       }
