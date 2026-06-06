@@ -45,12 +45,12 @@ const nextConfig: NextConfig = {
     const base = toV1.map((source) => ({
       source,
       destination: `${basePath}${source}`,
-      basePath: false,
+      basePath: false as const,
       permanent: false,
     }))
     const accountCompat = [
-      { source: '/account', destination: `${basePath}/settings`, basePath: false, permanent: false },
-      { source: '/account/:path*', destination: `${basePath}/settings/:path*`, basePath: false, permanent: false },
+      { source: '/account', destination: `${basePath}/settings`, basePath: false as const, permanent: false },
+      { source: '/account/:path*', destination: `${basePath}/settings/:path*`, basePath: false as const, permanent: false },
       { source: '/account', destination: '/settings', permanent: false },
       { source: '/account/:path*', destination: '/settings/:path*', permanent: false },
     ]
