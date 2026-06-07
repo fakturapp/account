@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react'
 import { useRouter, usePathname } from 'next/navigation'
 import { api } from '@/lib/api'
-import { setVaultCookie, clearVaultCookie } from '@/lib/cross-domain-cookie'
+import { getVaultCookie, setVaultCookie, clearVaultCookie } from '@/lib/cross-domain-cookie'
 import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 import { CryptoResetModal } from '@/components/modals/crypto-reset-modal'
 import { VaultUnlockModal } from '@/components/modals/vault-unlock-modal'
@@ -155,11 +155,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = useCallback(async () => {
     consumeDesktopSessionHash()
 
-    const token = localStorage.getItem('faktur_token')
-    if (!token) {
-      setUser(null)
-      setLoading(false)
-      return
+    if (typeof window !== 'undefined') {
+      const existingVaultKey = localStorage.getItem('faktur_vault_key')
+      if (!existingVaultKey) {
+        const cookieVaultKey = getVaultCookie()
+        if (cookieVaultKey) {
+          localStorage.setItem('faktur_vault_key', cookieVaultKey)
+        }
+      }
     }
 
     const { data, error } = await api.get<{ user: User }>('/auth/me')
@@ -352,7 +355,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           user.onboardingCompleted &&
           !user.cryptoResetNeeded &&
           !user.vaultLocked &&
-          (user.currentTeamEncryptionMode ?? 'private') === 'private'
+          user.currentTeamEncryptionMode === 'private'
         }
       />
     </AuthContext.Provider>
