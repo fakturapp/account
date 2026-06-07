@@ -76,6 +76,16 @@ function LoginContent() {
   const [emailStatus, setEmailStatus] = useState<EmailStatus>('idle')
   const [passwordVisible, setPasswordVisible] = useState(false)
   const [checkData, setCheckData] = useState<{ avatarUrl: string | null; initial: string } | null>(null)
+  const [shouldAnimate] = useState(() => {
+    if (typeof window === 'undefined') return false
+    try {
+      if (sessionStorage.getItem('faktur_login_animated')) return false
+      sessionStorage.setItem('faktur_login_animated', '1')
+      return true
+    } catch {
+      return true
+    }
+  })
   const redirectingRef = useRef(false)
   const turnstileRef = useRef<TurnstileInstance>(null)
   const resetTurnstile = useCallback(() => {
@@ -93,6 +103,12 @@ function LoginContent() {
     [router]
   )
 
+  const cleanUrl = useCallback(() => {
+    const redirect = searchParams.get('redirect')
+    const qs = redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''
+    window.history.replaceState({}, '', window.location.pathname + qs)
+  }, [searchParams])
+
   useEffect(() => {
     setIsDesktop(isFakturDesktop())
   }, [])
@@ -103,7 +119,7 @@ function LoginContent() {
     const oauthError = searchParams.get('error')
 
     if (token) {
-      window.history.replaceState({}, '', window.location.pathname)
+      cleanUrl()
       localStorage.setItem('faktur_token', token)
       api.get<{ user: any }>('/auth/me').then(({ data, error: err }) => {
         if (err || !data?.user) {
@@ -115,13 +131,13 @@ function LoginContent() {
         goSuccess(searchParams.get('redirect'))
       })
     } else if (twofa) {
-      window.history.replaceState({}, '', window.location.pathname)
+      cleanUrl()
       setTwofaToken(twofa)
       setAvailableMethods(['totp', 'email', 'recovery'])
       setMethod('totp')
       setRequires2FA(true)
     } else if (oauthError) {
-      window.history.replaceState({}, '', window.location.pathname)
+      cleanUrl()
       toast(OAUTH_ERRORS[oauthError] || 'Une erreur est survenue.', 'error')
     }
   }, [])
@@ -379,7 +395,7 @@ function LoginContent() {
 
   if (isDesktop && !authLoading && !user) {
     return (
-      <motion.div initial="hidden" animate="visible" className="w-full max-w-sm mx-auto">
+      <motion.div initial={shouldAnimate ? 'hidden' : false} animate="visible" className="w-full max-w-sm mx-auto">
         <div className="rounded-xl bg-overlay shadow-surface p-6 text-center">
           <div className="h-12 w-12 rounded-2xl bg-accent-soft flex items-center justify-center mx-auto mb-4">
             <Lock className="h-6 w-6 text-accent" />
@@ -413,7 +429,7 @@ function LoginContent() {
       : user.email.slice(0, 2).toUpperCase()
 
     return (
-      <motion.div initial="hidden" animate="visible" className="w-full max-w-sm mx-auto">
+      <motion.div initial={shouldAnimate ? 'hidden' : false} animate="visible" className="w-full max-w-sm mx-auto">
         <div className="space-y-6">
           <motion.div variants={fadeIn} custom={0} className="flex flex-col items-center gap-5 text-center">
             <Avatar
