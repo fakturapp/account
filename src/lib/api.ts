@@ -75,7 +75,11 @@ function handleVaultOrSession(data: any, status: number): { error: string } | nu
   ) {
     localStorage.removeItem('faktur_token')
     localStorage.removeItem('faktur_vault_key')
-    window.location.href = '/login'
+    if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/login')) {
+      const redirect = new URLSearchParams(window.location.search).get('redirect')
+      const qs = redirect ? `?redirect=${encodeURIComponent(redirect)}` : ''
+      window.location.href = `/login${qs}`
+    }
     return { error: message || 'Session expired' }
   }
 
