@@ -19,7 +19,11 @@ function OAuthCallbackContent() {
         { type: 'oauth_callback', success, error: error || null },
         window.location.origin
       )
-      window.close()
+      if (success) {
+        window.location.href = '/settings/google-linked'
+      } else {
+        window.close()
+      }
       return
     }
 

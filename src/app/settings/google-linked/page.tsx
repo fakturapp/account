@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { asset } from '@/lib/asset'
@@ -9,8 +9,19 @@ import { Check, ArrowLeft, ArrowRight } from '@/components/ui/icons'
 
 export default function GoogleLinkedPage() {
   const router = useRouter()
+  const [isPopup, setIsPopup] = useState(false)
 
   useEffect(() => {
+    const popup = typeof window !== 'undefined' && !!window.opener
+    setIsPopup(popup)
+    if (popup) {
+      const t = setTimeout(() => {
+        try {
+          window.close()
+        } catch {}
+      }, 3000)
+      return () => clearTimeout(t)
+    }
     const t = setTimeout(() => {
       router.prefetch?.('/settings')
     }, 1500)
@@ -19,21 +30,23 @@ export default function GoogleLinkedPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
-        <div className="mx-auto max-w-3xl px-4 sm:px-6 h-14 flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-9 -ml-2 gap-1.5"
-            onClick={() => router.push('/settings')}
-          >
-            <ArrowLeft className="h-4 w-4" /> Retour
-          </Button>
-          <div className="ml-auto text-xs font-medium text-muted-foreground">
-            Liaison Google
+      {!isPopup && (
+        <div className="sticky top-0 z-10 bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+          <div className="mx-auto max-w-3xl px-4 sm:px-6 h-14 flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-9 -ml-2 gap-1.5"
+              onClick={() => router.push('/settings')}
+            >
+              <ArrowLeft className="h-4 w-4" /> Retour
+            </Button>
+            <div className="ml-auto text-xs font-medium text-muted-foreground">
+              Liaison Google
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md mx-auto text-center space-y-10">
@@ -85,19 +98,30 @@ export default function GoogleLinkedPage() {
             </p>
           </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.4, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-3"
-          >
-            <Button onClick={() => { window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/' }} className="gap-2 min-w-[200px]">
-              Retour à Faktur <ArrowRight className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" onClick={() => router.push('/settings')}>
-              Voir mon compte
-            </Button>
-          </motion.div>
+          {isPopup ? (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.4, duration: 0.4 }}
+              className="text-xs text-muted-foreground"
+            >
+              Cette fen&ecirc;tre se fermera automatiquement.
+            </motion.p>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.4, duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-3"
+            >
+              <Button onClick={() => { window.location.href = process.env.NEXT_PUBLIC_DASH_URL || '/' }} className="gap-2 min-w-[200px]">
+                Retour à Faktur <ArrowRight className="h-4 w-4" />
+              </Button>
+              <Button variant="outline" onClick={() => router.push('/settings')}>
+                Voir mon compte
+              </Button>
+            </motion.div>
+          )}
         </div>
       </div>
     </div>

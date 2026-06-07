@@ -501,7 +501,7 @@ export default function AccountPage() {
       if (event.data.success) {
         loadProviders()
         refreshUser()
-        router.push('/settings/google-linked')
+        toast('Compte Google lié avec succès', 'success')
       } else {
         const errors: Record<string, string> = {
           already_linked: 'Ce compte Google est déjà lié à un autre utilisateur.',
