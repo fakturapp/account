@@ -49,6 +49,16 @@ const OAUTH_ERRORS: Record<string, string> = {
   account_inactive: 'Ce compte est désactivé.',
 }
 
+function redirectSsoTries(redirect: string): number {
+  try {
+    const url = new URL(redirect, window.location.origin)
+    const n = Number(url.searchParams.get('_sso'))
+    return Number.isFinite(n) && n > 0 ? Math.floor(n) : 0
+  } catch {
+    return 0
+  }
+}
+
 function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -377,6 +387,7 @@ function LoginContent() {
     if (redirectingRef.current) return
     const redirectParam = searchParams.get('redirect')
     if (!redirectParam) return
+    if (redirectSsoTries(redirectParam) >= 3) return
     goSuccess(redirectParam)
   }, [authLoading, user, searchParams, goSuccess])
 

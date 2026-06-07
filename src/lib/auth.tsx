@@ -104,15 +104,6 @@ const publicPaths = [
   '/oauth/error',
 ]
 
-const loggedOutPaths = [
-  '/login',
-  '/register',
-  '/forgot-password',
-  '/reset-password',
-  '/verify-email',
-  '/2fa',
-]
-
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
 
 function redirectToDash(): void {
@@ -174,9 +165,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const hasLocalToken = typeof window !== 'undefined' && !!localStorage.getItem('faktur_token')
-    const path = typeof window !== 'undefined' ? window.location.pathname : ''
-    if (!hasLocalToken && loggedOutPaths.some((p) => path.startsWith(p))) {
+    const token = localStorage.getItem('faktur_token')
+    if (!token) {
       setUser(null)
       setLoading(false)
       return
