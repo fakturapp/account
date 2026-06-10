@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { motion, type Variants } from 'framer-motion'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -35,10 +35,13 @@ function VerifyEmailContent() {
     }
   }, [user, token])
 
+  const verifySentRef = useRef(false)
+
   useEffect(() => {
-    if (token) {
+    if (token && !verifySentRef.current) {
+      verifySentRef.current = true
       setStatus('verifying')
-      api.post('/auth/verify-email', { token }).then(({ data, error }) => {
+      api.post('/auth/verify-email', { token, email }).then(({ data, error }) => {
         if (error) {
           setStatus('error')
           setMessage(error)
@@ -48,7 +51,7 @@ function VerifyEmailContent() {
         }
       })
     }
-  }, [token])
+  }, [token, email])
 
   async function handleResend() {
     if (!email) return
@@ -118,6 +121,16 @@ function VerifyEmailContent() {
                   </div>
                   <h1 className="text-2xl font-bold">Erreur de vérification</h1>
                   <FieldError>{message}</FieldError>
+                  {email && (
+                    <Button
+                      variant="outline"
+                      onClick={handleResend}
+                      disabled={resendLoading}
+                      className="mt-2"
+                    >
+                      {resendLoading ? <><Spinner /> Envoi...</> : 'Renvoyer le lien'}
+                    </Button>
+                  )}
                 </>
               )}
 
