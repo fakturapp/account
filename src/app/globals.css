@@ -693,3 +693,13 @@ body {
 .dark .liquid-separator {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
 }
+
+@keyframes bg-pan {
+  from { background-position: 0 0; }
+  to { background-position: 240px 240px; }
+}
+
+@keyframes bg-pan-y {
+  from { background-position: 0 0; }
+  to { background-position: 0 240px; }
+}
