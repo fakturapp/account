@@ -11,6 +11,7 @@ import { Avatar } from '@/components/ui/avatar'
 import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { DashboardBackground } from '@/components/layout/dashboard-background'
+import { UiThemeSync } from '@/components/layout/ui-theme-sync'
 import { AccountPreview } from '@/components/account/account-preview'
 import { User, Shield, Monitor, Link2, LogOut, ArrowLeft, Palette } from '@/components/ui/icons'
 
@@ -66,6 +67,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   return (
     <div className="relative min-h-screen bg-background">
       <DashboardBackground />
+      <UiThemeSync />
 
       <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-(--header-height,4rem) max-w-5xl items-center justify-between gap-4 px-4 lg:px-6">
