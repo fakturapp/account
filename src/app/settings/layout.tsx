@@ -12,7 +12,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog'
 import { DashboardBackground } from '@/components/layout/dashboard-background'
 import { AccountPreview } from '@/components/account/account-preview'
-import { User, Shield, Monitor, Link2, LogOut, ArrowLeft } from '@/components/ui/icons'
+import { User, Shield, Monitor, Link2, LogOut, ArrowLeft, Palette } from '@/components/ui/icons'
 
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || '/'
 
@@ -21,6 +21,7 @@ const NAV = [
   { href: '/settings/security', label: 'Sécurité', icon: Shield },
   { href: '/settings/sessions', label: 'Sessions', icon: Monitor },
   { href: '/settings/oauth', label: 'Connexions', icon: Link2 },
+  { href: '/settings/interface', label: 'Interface', icon: Palette },
 ]
 
 const PAGES_WITH_PREVIEW = ['/settings', '/settings/security']
