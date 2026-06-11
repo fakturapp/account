@@ -22,7 +22,7 @@ const NAV = [
   { href: '/settings/security', label: 'Sécurité', icon: Shield },
   { href: '/settings/sessions', label: 'Sessions', icon: Monitor },
   { href: '/settings/oauth', label: 'Connexions', icon: Link2 },
-  { href: '/settings/interface', label: 'Interface', icon: Palette },
+  { href: '/settings/ui', label: 'Interface', icon: Palette },
 ]
 
 const PAGES_WITH_PREVIEW = ['/settings', '/settings/security']
