@@ -65,7 +65,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
   }
 
   return (
-    <div className="relative min-h-screen bg-background">
+    <div className="relative min-h-screen">
       <DashboardBackground />
       <UiThemeSync />
 
