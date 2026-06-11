@@ -79,6 +79,7 @@ import {
 } from '@/components/ui/icons'
 import { ProgressBar } from '@/components/ui/progress'
 import { formatBytes } from '@/lib/utils'
+import { dashUrl } from '@/lib/safe-redirect'
 import { useTutorialSafe } from '@/lib/tutorial-context'
 
 interface TeamListItem {
@@ -137,98 +138,98 @@ interface NavItem {
 }
 
 const mainNav: NavItem[] = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+  { href: dashUrl('/dashboard'), label: 'Dashboard', icon: LayoutDashboard },
   {
-    href: '/dashboard/invoices',
+    href: dashUrl('/dashboard/invoices'),
     label: 'Factures',
     icon: FileText,
     children: [
-      { href: '/dashboard/invoices', label: 'Toutes les factures' },
-      { href: '/dashboard/invoices/drafts', label: 'Brouillons' },
+      { href: dashUrl('/dashboard/invoices'), label: 'Toutes les factures' },
+      { href: dashUrl('/dashboard/invoices/drafts'), label: 'Brouillons' },
     ],
   },
   {
-    href: '/dashboard/quotes',
+    href: dashUrl('/dashboard/quotes'),
     label: 'Devis',
     icon: Receipt,
     children: [
-      { href: '/dashboard/quotes', label: 'Tous les devis' },
-      { href: '/dashboard/quotes/drafts', label: 'Brouillons' },
+      { href: dashUrl('/dashboard/quotes'), label: 'Tous les devis' },
+      { href: dashUrl('/dashboard/quotes/drafts'), label: 'Brouillons' },
     ],
   },
-  { href: '/dashboard/credit-notes', label: 'Avoirs', icon: FileMinus2 },
-  { href: '/dashboard/recurring-invoices', label: 'Récurrences', icon: RefreshCw },
-  { href: '/dashboard/clients', label: 'Clients', icon: Users },
-  { href: '/dashboard/products', label: 'Produits', icon: Package },
-  { href: '/dashboard/expenses', label: 'Dépenses', icon: Wallet },
+  { href: dashUrl('/dashboard/credit-notes'), label: 'Avoirs', icon: FileMinus2 },
+  { href: dashUrl('/dashboard/recurring-invoices'), label: 'Récurrences', icon: RefreshCw },
+  { href: dashUrl('/dashboard/clients'), label: 'Clients', icon: Users },
+  { href: dashUrl('/dashboard/products'), label: 'Produits', icon: Package },
+  { href: dashUrl('/dashboard/expenses'), label: 'Dépenses', icon: Wallet },
 ]
 
 const settingsNav: NavItem[] = [
   {
-    href: '/dashboard/settings/company',
+    href: dashUrl('/dashboard/settings/company'),
     label: 'Entreprise',
     icon: Building2,
     children: [
-      { href: '/dashboard/settings/company', label: 'Informations', icon: Building2 },
-      { href: '/dashboard/settings/company/bank', label: 'Banque', icon: CreditCard },
-      { href: '/dashboard/settings/company/payment', label: 'Paiement', icon: Receipt },
+      { href: dashUrl('/dashboard/settings/company'), label: 'Informations', icon: Building2 },
+      { href: dashUrl('/dashboard/settings/company/bank'), label: 'Banque', icon: CreditCard },
+      { href: dashUrl('/dashboard/settings/company/payment'), label: 'Paiement', icon: Receipt },
     ],
   },
-  { href: '/dashboard/settings/members', label: 'Équipe', icon: UsersRound },
-  { href: '/dashboard/settings/plan', label: 'Plan', icon: Layers },
-  { href: '/dashboard/settings/storage', label: 'Stockage', icon: HardDrive },
+  { href: dashUrl('/dashboard/settings/members'), label: 'Équipe', icon: UsersRound },
+  { href: dashUrl('/dashboard/settings/plan'), label: 'Plan', icon: Layers },
+  { href: dashUrl('/dashboard/settings/storage'), label: 'Stockage', icon: HardDrive },
   {
-    href: '/dashboard/settings/documents/invoices',
+    href: dashUrl('/dashboard/settings/documents/invoices'),
     label: 'Facturation',
     icon: CreditCard,
     children: [
-      { href: '/dashboard/settings/documents/invoices', label: 'Apparence', icon: Paintbrush },
-      { href: '/dashboard/settings/documents/invoices/options', label: 'Options', icon: Settings2 },
+      { href: dashUrl('/dashboard/settings/documents/invoices'), label: 'Apparence', icon: Paintbrush },
+      { href: dashUrl('/dashboard/settings/documents/invoices/options'), label: 'Options', icon: Settings2 },
       {
-        href: '/dashboard/settings/documents/invoices/defaults',
+        href: dashUrl('/dashboard/settings/documents/invoices/defaults'),
         label: 'Valeurs par défaut',
         icon: ClipboardList,
       },
       {
-        href: '/dashboard/settings/documents/invoices/naming',
+        href: dashUrl('/dashboard/settings/documents/invoices/naming'),
         label: 'Nommage',
         icon: Hash,
       },
       {
-        href: '/dashboard/settings/documents/invoices/e-invoicing',
+        href: dashUrl('/dashboard/settings/documents/invoices/e-invoicing'),
         label: 'E-Facturation',
         icon: FileCheck,
       },
-      { href: '/dashboard/settings/documents/invoices/ai', label: 'Faktur AI', icon: Sparkles },
-      { href: '/dashboard/settings/documents/invoices/collaboration', label: 'Collaboration', icon: Users },
+      { href: dashUrl('/dashboard/settings/documents/invoices/ai'), label: 'Faktur AI', icon: Sparkles },
+      { href: dashUrl('/dashboard/settings/documents/invoices/collaboration'), label: 'Collaboration', icon: Users },
     ],
   },
   {
-    href: '/dashboard/settings/email',
+    href: dashUrl('/dashboard/settings/email'),
     label: 'Communication',
     icon: Mail,
     children: [
-      { href: '/dashboard/settings/email/accounts', label: 'Comptes email', icon: Mail },
-      { href: '/dashboard/settings/reminders', label: 'Relances', icon: Bell },
+      { href: dashUrl('/dashboard/settings/email/accounts'), label: 'Comptes email', icon: Mail },
+      { href: dashUrl('/dashboard/settings/reminders'), label: 'Relances', icon: Bell },
     ],
   },
 ]
 
 const accountNav: NavItem[] = [
   {
-    href: '/dashboard/account',
+    href: '/settings',
     label: 'Profil',
     icon: User,
     children: [
-      { href: '/dashboard/account', label: 'Informations', icon: User },
-      { href: '/dashboard/account/security', label: 'S\u00e9curit\u00e9', icon: Shield },
+      { href: '/settings', label: 'Informations', icon: User },
+      { href: '/settings/security', label: 'S\u00e9curit\u00e9', icon: Shield },
     ],
   },
-  { href: '/dashboard/account/sessions', label: 'Sessions', icon: Monitor },
-  { href: '/dashboard/account/oauth', label: 'Applications connectées', icon: ShieldCheck },
-  { href: '/dashboard/account/export', label: 'Exportation', icon: Download },
+  { href: '/settings/sessions', label: 'Sessions', icon: Monitor },
+  { href: '/settings/oauth', label: 'Applications connectées', icon: ShieldCheck },
+  { href: '/settings/export', label: 'Exportation', icon: Download },
   {
-    href: '/dashboard/account/delete',
+    href: '/settings/delete',
     label: 'Supprimer le compte',
     icon: Trash2,
     confirmRedirect: {
@@ -326,6 +327,15 @@ function NavLink({ item, pathname, badges, persistKey, collapsed, onConfirmRedir
           </motion.span>
         )}
       </button>
+    ) : item.href.startsWith('http') ? (
+      <a href={item.href} className={rowClass} aria-label={item.label}>
+        <item.icon className={iconClass} />
+        {!collapsed && (
+          <motion.span {...labelFade} className="whitespace-nowrap">
+            {item.label}
+          </motion.span>
+        )}
+      </a>
     ) : (
       <Link href={item.href} className={rowClass} data-tutorial={tutorialMap[item.href]} aria-label={item.label}>
         <item.icon className={iconClass} />
@@ -389,16 +399,27 @@ function NavLink({ item, pathname, badges, persistKey, collapsed, onConfirmRedir
                 const childActive = pathname === child.href
                 const badgeCount = badges?.[child.href]
                 const ChildIcon = child.icon
+                const childClass = cn(
+                  'flex items-center justify-between rounded-md px-2.5 py-[7px] text-[13.5px] transition-all duration-200',
+                  childActive
+                    ? 'bg-muted/60 dark:bg-white/[0.06] shadow-sm text-foreground font-medium'
+                    : 'text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground'
+                )
+                if (child.href.startsWith('http')) {
+                  return (
+                    <a key={child.href} href={child.href} className={childClass}>
+                      <span className="flex items-center gap-2">
+                        {ChildIcon && <ChildIcon className="h-4 w-4 shrink-0" />}
+                        {child.label}
+                      </span>
+                    </a>
+                  )
+                }
                 return (
                   <Link
                     key={child.href}
                     href={child.href}
-                    className={cn(
-                      'flex items-center justify-between rounded-md px-2.5 py-[7px] text-[13.5px] transition-all duration-200',
-                      childActive
-                        ? 'bg-muted/60 dark:bg-white/[0.06] shadow-sm text-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground'
-                    )}
+                    className={childClass}
                   >
                     <span className="flex items-center gap-2">
                       {ChildIcon && <ChildIcon className={cn('h-4 w-4 shrink-0', childActive && 'text-primary')} />}
@@ -608,8 +629,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           >
             { }
             <div className="px-3 pt-2 pb-1">
-              <Link
-                href="/dashboard"
+              <a
+                href={dashUrl('/dashboard')}
                 className={cn(
                   'flex items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
                   collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
@@ -621,44 +642,43 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     Retour au dashboard
                   </motion.span>
                 )}
-                {!collapsed && <LinkStatusIndicator className="ml-auto" />}
-              </Link>
+              </a>
             </div>
 
             { }
             <nav className={cn('flex-1 overflow-y-auto overflow-x-hidden px-3 py-1 space-y-0.5', collapsed && 'scrollbar-hidden')}>
               <NavLink
-                item={{ href: '/dashboard/admin', label: "Vue d'ensemble", icon: LayoutDashboard }}
+                item={{ href: dashUrl('/dashboard/admin'), label: "Vue d'ensemble", icon: LayoutDashboard }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
               <NavLink
-                item={{ href: '/dashboard/admin/users', label: 'Utilisateurs', icon: Users }}
+                item={{ href: dashUrl('/dashboard/admin/users'), label: 'Utilisateurs', icon: Users }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
               <NavLink
-                item={{ href: '/dashboard/admin/teams', label: 'Équipes', icon: UsersRound }}
+                item={{ href: dashUrl('/dashboard/admin/teams'), label: 'Équipes', icon: UsersRound }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
               <NavLink
-                item={{ href: '/dashboard/admin/feedbacks', label: 'Avis', icon: MessageSquare }}
+                item={{ href: dashUrl('/dashboard/admin/feedbacks'), label: 'Avis', icon: MessageSquare }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
               <NavLink
-                item={{ href: '/dashboard/admin/bugs', label: 'Rapports de bugs', icon: Bug }}
+                item={{ href: dashUrl('/dashboard/admin/bugs'), label: 'Rapports de bugs', icon: Bug }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
               <NavLink
-                item={{ href: '/dashboard/admin/analytics', label: 'Analytiques', icon: BarChart3 }}
+                item={{ href: dashUrl('/dashboard/admin/analytics'), label: 'Analytiques', icon: BarChart3 }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
               <NavLink
-                item={{ href: '/dashboard/admin/oauth-apps', label: 'Applications OAuth', icon: ShieldCheck }}
+                item={{ href: dashUrl('/dashboard/admin/oauth-apps'), label: 'Applications OAuth', icon: ShieldCheck }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
@@ -675,8 +695,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           >
             { }
             <div className="px-3 pt-2 pb-1">
-              <Link
-                href="/dashboard"
+              <a
+                href={dashUrl('/dashboard')}
                 className={cn(
                   'flex items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
                   collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
@@ -688,8 +708,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     Retour au dashboard
                   </motion.span>
                 )}
-                {!collapsed && <LinkStatusIndicator className="ml-auto" />}
-              </Link>
+              </a>
             </div>
 
             { }
@@ -717,8 +736,8 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           >
             { }
             <div className="px-3 pt-2 pb-1">
-              <Link
-                href="/dashboard"
+              <a
+                href={dashUrl('/dashboard')}
                 className={cn(
                   'flex items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
                   collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
@@ -730,8 +749,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                     Retour au dashboard
                   </motion.span>
                 )}
-                {!collapsed && <LinkStatusIndicator className="ml-auto" />}
-              </Link>
+              </a>
             </div>
 
             { }
@@ -802,14 +820,14 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
                       </>
                     }
                   >
-                    <DropdownItem onClick={() => router.push('/dashboard/invoices/new')}>
+                    <DropdownItem onClick={() => window.location.assign(dashUrl('/dashboard/invoices/new'))}>
                       <FilePlus className="h-4 w-4 text-blue-500" /> Facture vierge
                     </DropdownItem>
                     <DropdownItem onClick={() => setConvertModalOpen(true)}>
                       <RefreshCw className="h-4 w-4 text-emerald-500" /> Convertir un devis
                     </DropdownItem>
                   </DropdownSub>
-                  <DropdownItem onClick={() => router.push('/dashboard/quotes/new')}>
+                  <DropdownItem onClick={() => window.location.assign(dashUrl('/dashboard/quotes/new'))}>
                     <Receipt className="h-4 w-4 text-orange-500" />
                     <span>Devis</span>
                   </DropdownItem>
@@ -824,7 +842,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
               ))}
               <div className="mx-2 my-2 h-px bg-border" />
               <NavLink
-                item={{ href: '/dashboard/settings', label: 'Paramètres', icon: Settings }}
+                item={{ href: dashUrl('/dashboard/settings'), label: 'Paramètres', icon: Settings }}
                 pathname={pathname}
                 collapsed={collapsed}
               />
@@ -836,7 +854,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
       <div className="px-3 pb-1.5">
         <button
           type="button"
-          onClick={() => router.push('/changelog')}
+          onClick={() => window.location.assign(dashUrl('/changelog'))}
           className={cn(
             'flex w-full items-center rounded-lg text-[15px] font-medium text-muted-foreground hover:bg-muted/40 dark:hover:bg-white/[0.04] hover:text-foreground transition-all duration-200',
             collapsed ? 'justify-center h-10 w-10 mx-auto' : 'justify-start gap-2.5 px-3 py-2.5'
@@ -861,7 +879,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
             >
               <button
                 type="button"
-                onClick={() => router.push('/dashboard/settings/storage')}
+                onClick={() => window.location.assign(dashUrl('/dashboard/settings/storage'))}
                 className={cn(
                   'flex h-10 w-10 items-center justify-center rounded-lg transition-colors hover:bg-muted/40 dark:hover:bg-white/[0.04]',
                   storage.percent >= 80 ? 'text-danger' : 'text-muted-foreground hover:text-foreground'
@@ -875,7 +893,7 @@ export function Sidebar({ teams, currentTeam, teamsLoaded, onSwitchTeam, user, o
           <div className="px-3 pb-2">
             <button
               type="button"
-              onClick={() => router.push('/dashboard/settings/storage')}
+              onClick={() => window.location.assign(dashUrl('/dashboard/settings/storage'))}
               className="w-full rounded-lg px-3 py-2.5 text-left transition-all duration-200 hover:bg-muted/40 dark:hover:bg-white/[0.04]"
             >
               <div className="mb-1.5 flex items-center justify-between gap-2">
@@ -904,7 +922,7 @@ Stockage
             {storage.plan !== 'team' && (
               <button
                 type="button"
-                onClick={() => router.push('/dashboard/settings/plan/upgrade')}
+                onClick={() => window.location.assign(dashUrl('/dashboard/settings/plan/upgrade'))}
                 className="mt-1 w-full rounded-lg px-3 py-1.5 text-left text-[12px] font-medium text-primary transition-colors hover:bg-primary/10"
               >
                 Augmenter l&apos;espace de stockage
@@ -958,7 +976,7 @@ Stockage
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation()
-                        router.push('/dashboard/settings/plan/upgrade')
+                        window.location.assign(dashUrl('/dashboard/settings/plan/upgrade'))
                       }}
                       className="shrink-0 rounded-lg bg-primary/10 px-2.5 py-1 text-[12px] font-semibold text-primary transition-colors hover:bg-primary/20"
                     >
@@ -997,23 +1015,23 @@ Stockage
           </div>
 
           {currentPlan.id !== 'team' && (
-            <DropdownItem onClick={() => router.push('/dashboard/settings/plan')}>
+            <DropdownItem onClick={() => window.location.assign(dashUrl('/dashboard/settings/plan'))}>
               <Crown className="h-4 w-4 text-amber-500" /> Upgrade
             </DropdownItem>
           )}
 
-          <Link href="/dashboard/account">
+          <Link href="/settings">
             <DropdownItem>
               <User className="h-4 w-4 text-violet-500" /> Mon compte
             </DropdownItem>
           </Link>
 
           {isAdmin && (
-            <Link href="/dashboard/admin">
+            <a href={dashUrl('/dashboard/admin')}>
               <DropdownItem>
                 <ShieldCheck className="h-4 w-4 text-amber-500" /> Panel administrateur
               </DropdownItem>
-            </Link>
+            </a>
           )}
 
           <DropdownSeparator />
@@ -1056,11 +1074,11 @@ Stockage
               </DropdownItem>
             ))}
             <DropdownSeparator />
-            <Link href="/dashboard/team/create">
+            <a href={dashUrl('/dashboard/team/create')}>
               <DropdownItem>
                 <Plus className="h-4 w-4" /> Nouvelle équipe
               </DropdownItem>
-            </Link>
+            </a>
           </DropdownSub>
 
           <DropdownSeparator />
@@ -1110,18 +1128,18 @@ Stockage
               <Bug className="h-4 w-4 text-rose-500" /> Signaler un bug
             </DropdownItem>
             <DropdownSeparator />
-            <Link href="/dashboard/about">
+            <a href={dashUrl('/dashboard/about')}>
               <DropdownItem>
                 <Info className="h-4 w-4 text-sky-500" /> A propos
               </DropdownItem>
-            </Link>
-            <Link href="/legal" target="_blank">
+            </a>
+            <a href={dashUrl('/legal')} target="_blank" rel="noreferrer">
               <DropdownItem>
                 <Scale className="h-4 w-4 text-muted-foreground" /> Mentions légales
               </DropdownItem>
-            </Link>
+            </a>
             <DropdownSeparator />
-            <DropdownItem onClick={() => router.push('/download')}>
+            <DropdownItem onClick={() => window.location.assign(dashUrl('/download'))}>
               <Download className="h-4 w-4 text-sky-500" /> Télécharger les applications
             </DropdownItem>
           </DropdownSub>

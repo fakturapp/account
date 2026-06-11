@@ -1,5 +1,11 @@
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || ''
 
+export function dashUrl(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`
+  if (!DASH_URL) return normalized
+  return `${DASH_URL.replace(/\/+$/, '')}${normalized}`
+}
+
 function isAllowedHost(host: string): boolean {
   const lower = host.toLowerCase()
   return (
