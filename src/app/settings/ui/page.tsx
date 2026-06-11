@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion } from 'framer-motion'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/ui/toast'
@@ -8,6 +9,7 @@ import { api } from '@/lib/api'
 import { useTheme } from '@/lib/theme'
 import { Check, Palette } from '@/components/ui/icons'
 import {
+  BACKGROUND_THEMES,
   CUSTOM_BACKGROUND_ID,
   DEFAULT_BACKGROUND_THEME,
   loadBackgroundSettings,
@@ -21,11 +23,16 @@ import {
   DEFAULT_CUSTOM_DIM,
   applyAccent,
   serializeUiTheme,
+  type UiMode,
   type UiTheme,
 } from '@/lib/ui-theme'
 import {
   ThemeStudioModal,
   BackgroundThumb,
+  ModePicker,
+  AccentPicker,
+  RangeField,
+  CustomBackgroundSection,
   findMatchingPreset,
   modeLabel,
   accentLabel,
@@ -33,6 +40,7 @@ import {
   thumbVariant,
   type ThemeDraft,
 } from '@/components/settings/theme-studio-modal'
+import { cn } from '@/lib/utils'
 
 const MAX_UPLOAD_BYTES = 8 * 1024 * 1024
 
@@ -47,6 +55,7 @@ export default function InterfaceSettingsPage() {
   const [customDim, setCustomDim] = useState<number>(DEFAULT_CUSTOM_DIM)
   const [uploading, setUploading] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
+  const persistTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const settings = loadBackgroundSettings()
@@ -59,7 +68,9 @@ export default function InterfaceSettingsPage() {
       const cached = localStorage.getItem(UI_ACCENT_STORAGE_KEY)
       if (cached) setAccent(cached)
     } catch {}
-    return () => {}
+    return () => {
+      if (persistTimer.current) clearTimeout(persistTimer.current)
+    }
   }, [])
 
   const buildTheme = useCallback(
@@ -80,6 +91,10 @@ export default function InterfaceSettingsPage() {
     api.put('/account/ui-theme', { theme: serializeUiTheme(theme) })
   }
 
+  const persistDebounced = (theme: UiTheme) => {
+    if (persistTimer.current) clearTimeout(persistTimer.current)
+    persistTimer.current = setTimeout(() => persist(theme), 500)
+  }
 
   const syncBackground = (theme: UiTheme) => {
     saveBackgroundSettings({
@@ -89,6 +104,45 @@ export default function InterfaceSettingsPage() {
       customBlur: theme.customBlur,
       customDim: theme.customDim,
     })
+  }
+
+  const chooseMode = (next: UiMode) => {
+    setMode(next)
+    persist(buildTheme({ mode: next }))
+  }
+
+  const chooseAccent = (color: string) => {
+    setAccent(color)
+    applyAccent(color)
+    persist(buildTheme({ accent: color }))
+  }
+
+  const chooseBackground = (id: string) => {
+    setBackground(id)
+    const theme = buildTheme({ background: id })
+    syncBackground(theme)
+    persist(theme)
+  }
+
+  const changeIntensity = (value: number) => {
+    setIntensity(value)
+    const theme = buildTheme({ backgroundIntensity: value })
+    syncBackground(theme)
+    persistDebounced(theme)
+  }
+
+  const changeBlur = (value: number) => {
+    setCustomBlur(value)
+    const theme = buildTheme({ customBlur: value })
+    syncBackground(theme)
+    persistDebounced(theme)
+  }
+
+  const changeDim = (value: number) => {
+    setCustomDim(value)
+    const theme = buildTheme({ customDim: value })
+    syncBackground(theme)
+    persistDebounced(theme)
   }
 
   const uploadCustom = async (file: File): Promise<string | null> => {
@@ -214,9 +268,151 @@ export default function InterfaceSettingsPage() {
             </div>
             <Button onClick={() => setWizardOpen(true)} className="shrink-0">
               <Palette className="h-4 w-4" />
-              Modifier le thème
+              Choisir un thème
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="space-y-6 p-6">
+          <div>
+            <h2 className="mb-1 text-sm font-semibold text-foreground">Mode</h2>
+            <p className="mb-4 text-xs text-muted-foreground">Clair, sombre ou selon votre système</p>
+            <ModePicker value={mode} onChange={chooseMode} />
+          </div>
+
+          <div>
+            <h2 className="mb-1 text-sm font-semibold text-foreground">Couleur d&apos;accent</h2>
+            <p className="mb-4 text-xs text-muted-foreground">
+              La couleur des boutons, liens et éléments actifs
+            </p>
+            <AccentPicker value={accent} onChange={chooseAccent} />
+          </div>
+
+          <div>
+            <h2 className="mb-1 text-sm font-semibold text-foreground">Visibilité du fond</h2>
+            <p className="mb-4 text-xs text-muted-foreground">
+              Réglez l&apos;intensité du fond, de discret à bien visible
+            </p>
+            <div className="max-w-md">
+              <RangeField
+                label="Visibilité"
+                value={intensity}
+                unit="%"
+                min={20}
+                max={100}
+                step={5}
+                minLabel="Discret"
+                maxLabel="Intense"
+                onChange={changeIntensity}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="mb-1 text-sm font-semibold text-foreground">Fond</h2>
+          <p className="mb-4 text-xs text-muted-foreground">La texture derrière votre espace</p>
+          <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2">
+            {BACKGROUND_THEMES.map((theme) => {
+              const selected = background === theme.id
+              return (
+                <motion.button
+                  key={theme.id}
+                  type="button"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => chooseBackground(theme.id)}
+                  className="w-28 shrink-0 text-left"
+                >
+                  <div
+                    className={cn(
+                      'relative aspect-[4/3] overflow-hidden rounded-xl transition-all',
+                      selected
+                        ? 'ring-2 ring-accent ring-offset-2 ring-offset-card shadow-lg'
+                        : 'border border-border/60 hover:border-border hover:shadow-md'
+                    )}
+                  >
+                    <BackgroundThumb background={theme.id} className="absolute inset-0" />
+                    {selected && (
+                      <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow">
+                        <Check className="h-3 w-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                  <p
+                    className={cn(
+                      'mt-1.5 truncate px-0.5 text-xs font-medium',
+                      selected ? 'text-accent' : 'text-foreground'
+                    )}
+                  >
+                    {theme.name}
+                  </p>
+                </motion.button>
+              )
+            })}
+            {customUrl && (
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={() => chooseBackground(CUSTOM_BACKGROUND_ID)}
+                className="w-28 shrink-0 text-left"
+              >
+                <div
+                  className={cn(
+                    'relative aspect-[4/3] overflow-hidden rounded-xl transition-all',
+                    background === CUSTOM_BACKGROUND_ID
+                      ? 'ring-2 ring-accent ring-offset-2 ring-offset-card shadow-lg'
+                      : 'border border-border/60 hover:border-border hover:shadow-md'
+                  )}
+                >
+                  <BackgroundThumb
+                    background={CUSTOM_BACKGROUND_ID}
+                    customUrl={customUrl}
+                    customBlur={customBlur}
+                    customDim={customDim}
+                    className="absolute inset-0"
+                  />
+                  {background === CUSTOM_BACKGROUND_ID && (
+                    <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                </div>
+                <p
+                  className={cn(
+                    'mt-1.5 truncate px-0.5 text-xs font-medium',
+                    background === CUSTOM_BACKGROUND_ID ? 'text-accent' : 'text-foreground'
+                  )}
+                >
+                  Personnalisé
+                </p>
+              </motion.button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          <h2 className="mb-1 text-sm font-semibold text-foreground">Fond personnalisé</h2>
+          <p className="mb-4 text-xs text-muted-foreground">
+            Utilisez votre propre image comme fond d&apos;écran
+          </p>
+          <CustomBackgroundSection
+            customUrl={customUrl}
+            customBlur={customBlur}
+            customDim={customDim}
+            uploading={uploading}
+            isActive={background === CUSTOM_BACKGROUND_ID}
+            onUpload={(file) => void uploadCustom(file)}
+            onRemove={() => void removeCustom()}
+            onUse={() => chooseBackground(CUSTOM_BACKGROUND_ID)}
+            onBlurChange={changeBlur}
+            onDimChange={changeDim}
+          />
         </CardContent>
       </Card>
 
