@@ -3,42 +3,75 @@
 import { useState, useEffect } from 'react'
 import {
   getBackgroundTheme,
-  loadBackgroundThemeId,
+  loadBackgroundSettings,
+  BACKGROUND_SETTINGS_EVENT,
   BACKGROUND_THEME_EVENT,
+  CUSTOM_BACKGROUND_ID,
   type BackgroundLayer,
+  type BackgroundSettings,
 } from '@/lib/background-themes'
 
 interface Props {
   className?: string
 }
 
-function layerStyle(layer: BackgroundLayer): React.CSSProperties {
+function layerStyle(layer: BackgroundLayer, intensity: number): React.CSSProperties {
   return {
     background: layer.background,
     backgroundImage: layer.backgroundImage,
     backgroundSize: layer.backgroundSize,
     backgroundPosition: layer.backgroundPosition,
     maskImage: layer.maskImage,
-    opacity: layer.opacity,
+    opacity: (layer.opacity ?? 1) * intensity,
     animation: layer.animation,
     ...(layer.expand ? { top: -160, left: -160, right: -160, bottom: -160 } : {}),
   }
 }
 
 export function DashboardBackground({ className }: Props) {
-  const [themeId, setThemeId] = useState<string | null>(null)
+  const [settings, setSettings] = useState<BackgroundSettings | null>(null)
 
   useEffect(() => {
-    setThemeId(loadBackgroundThemeId())
-    const handler = (e: Event) => {
-      const detail = (e as CustomEvent).detail
-      if (typeof detail === 'string') setThemeId(detail)
+    const refresh = () => setSettings(loadBackgroundSettings())
+    refresh()
+    window.addEventListener(BACKGROUND_SETTINGS_EVENT, refresh)
+    window.addEventListener(BACKGROUND_THEME_EVENT, refresh)
+    return () => {
+      window.removeEventListener(BACKGROUND_SETTINGS_EVENT, refresh)
+      window.removeEventListener(BACKGROUND_THEME_EVENT, refresh)
     }
-    window.addEventListener(BACKGROUND_THEME_EVENT, handler)
-    return () => window.removeEventListener(BACKGROUND_THEME_EVENT, handler)
   }, [])
 
-  const theme = getBackgroundTheme(themeId)
+  const intensity = (settings?.intensity ?? 100) / 100
+
+  if (settings?.themeId === CUSTOM_BACKGROUND_ID && settings.customUrl) {
+    const bleed = -2 * settings.customBlur
+    return (
+      <div
+        aria-hidden="true"
+        className={'pointer-events-none fixed inset-0 -z-20 overflow-hidden ' + (className ?? '')}
+      >
+        <div
+          className="absolute bg-cover bg-center"
+          style={{
+            top: bleed,
+            left: bleed,
+            right: bleed,
+            bottom: bleed,
+            backgroundImage: `url(${settings.customUrl})`,
+            filter: settings.customBlur > 0 ? `blur(${settings.customBlur}px)` : undefined,
+            opacity: intensity,
+          }}
+        />
+        <div
+          className="absolute inset-0"
+          style={{ backgroundColor: `rgba(0, 0, 0, ${settings.customDim / 100})` }}
+        />
+      </div>
+    )
+  }
+
+  const theme = getBackgroundTheme(settings?.themeId)
 
   return (
     <div
@@ -49,14 +82,14 @@ export function DashboardBackground({ className }: Props) {
         <div
           key={`l-${theme.id}-${i}`}
           className="absolute inset-0 dark:hidden"
-          style={layerStyle(layer)}
+          style={layerStyle(layer, intensity)}
         />
       ))}
       {theme.dark.map((layer, i) => (
         <div
           key={`d-${theme.id}-${i}`}
           className="absolute inset-0 hidden dark:block"
-          style={layerStyle(layer)}
+          style={layerStyle(layer, intensity)}
         />
       ))}
     </div>
