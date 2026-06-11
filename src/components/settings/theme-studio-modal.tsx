@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Dialog } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/ui/spinner'
+import { FormSelect } from '@/components/ui/dropdown'
 import {
   Check,
   Sun,
@@ -637,121 +638,80 @@ export function ThemeStudioModal({
                 className="space-y-6"
               >
                 <div>
-                  <h3 className="mb-1 text-sm font-semibold text-foreground">Aperçu</h3>
-                  <BackgroundThumb
-                    background={draft.background}
-                    customUrl={customUrl}
-                    customBlur={draft.customBlur}
-                    customDim={draft.customDim}
-                    intensity={draft.intensity}
-                    forceMode={thumbVariant(draft.mode)}
-                    className="h-24 w-full rounded-xl border border-border/60"
-                  />
-                </div>
-
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-foreground">Mode</h3>
-                  <p className="mb-3 text-xs text-muted-foreground">
-                    Clair, sombre ou selon votre système
-                  </p>
-                  <ModePicker value={draft.mode} onChange={(mode) => update({ mode })} />
-                </div>
-
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-foreground">Couleur d&apos;accent</h3>
-                  <p className="mb-3 text-xs text-muted-foreground">
-                    La couleur des boutons, liens et éléments actifs
-                  </p>
-                  <AccentPicker value={draft.accent} onChange={(accent) => update({ accent })} />
-                </div>
-
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-foreground">Fond</h3>
+                  <h3 className="mb-1 text-sm font-semibold text-foreground">Type de fond</h3>
                   <p className="mb-3 text-xs text-muted-foreground">
                     La texture derrière votre espace
                   </p>
-                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-                    {BACKGROUND_THEMES.map((theme) => {
-                      const selected = draft.background === theme.id
-                      return (
-                        <motion.button
-                          key={theme.id}
-                          type="button"
-                          whileTap={{ scale: 0.97 }}
-                          onClick={() => update({ background: theme.id })}
-                          className="text-left"
-                        >
-                          <div
-                            className={cn(
-                              'relative aspect-[4/3] overflow-hidden rounded-xl transition-all',
-                              selected
-                                ? 'ring-2 ring-accent ring-offset-2 ring-offset-card shadow-lg'
-                                : 'border border-border/60 hover:border-border hover:shadow-md'
-                            )}
+                  <FormSelect
+                    value={draft.background === CUSTOM_BACKGROUND_ID ? 'custom' : 'builtin'}
+                    onChange={(v) => {
+                      if (v === 'custom') update({ background: CUSTOM_BACKGROUND_ID })
+                      else if (draft.background === CUSTOM_BACKGROUND_ID) update({ background: DEFAULT_BACKGROUND_THEME })
+                    }}
+                    options={[
+                      { value: 'builtin', label: 'Fonds intégrés' },
+                      { value: 'custom', label: 'Fond personnalisé' },
+                    ]}
+                  />
+
+                  {draft.background !== CUSTOM_BACKGROUND_ID ? (
+                    <div className="mt-4 grid grid-cols-3 gap-3 sm:grid-cols-4">
+                      {BACKGROUND_THEMES.map((theme) => {
+                        const selected = draft.background === theme.id
+                        return (
+                          <motion.button
+                            key={theme.id}
+                            type="button"
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => update({ background: theme.id })}
+                            className="text-left"
                           >
-                            <BackgroundThumb
-                              background={theme.id}
-                              forceMode={thumbVariant(draft.mode)}
-                              className="absolute inset-0"
-                            />
-                            {selected && (
-                              <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow">
-                                <Check className="h-3 w-3 text-white" />
-                              </div>
-                            )}
-                          </div>
-                          <p
-                            className={cn(
-                              'mt-1.5 px-0.5 text-xs font-medium',
-                              selected ? 'text-accent' : 'text-foreground'
-                            )}
-                          >
-                            {theme.name}
-                          </p>
-                        </motion.button>
-                      )
-                    })}
-                    {customUrl && (
-                      <motion.button
-                        type="button"
-                        whileTap={{ scale: 0.97 }}
-                        onClick={() => update({ background: CUSTOM_BACKGROUND_ID })}
-                        className="text-left"
-                      >
-                        <div
-                          className={cn(
-                            'relative aspect-[4/3] overflow-hidden rounded-xl transition-all',
-                            draft.background === CUSTOM_BACKGROUND_ID
-                              ? 'ring-2 ring-accent ring-offset-2 ring-offset-card shadow-lg'
-                              : 'border border-border/60 hover:border-border hover:shadow-md'
-                          )}
-                        >
-                          <BackgroundThumb
-                            background={CUSTOM_BACKGROUND_ID}
-                            customUrl={customUrl}
-                            customBlur={draft.customBlur}
-                            customDim={draft.customDim}
-                            className="absolute inset-0"
-                          />
-                          {draft.background === CUSTOM_BACKGROUND_ID && (
-                            <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow">
-                              <Check className="h-3 w-3 text-white" />
+                            <div
+                              className={cn(
+                                'relative aspect-[4/3] overflow-hidden rounded-xl transition-all',
+                                selected
+                                  ? 'ring-2 ring-accent ring-offset-2 ring-offset-card shadow-lg'
+                                  : 'border border-border/60 hover:border-border hover:shadow-md'
+                              )}
+                            >
+                              <BackgroundThumb
+                                background={theme.id}
+                                forceMode={thumbVariant(draft.mode)}
+                                className="absolute inset-0"
+                              />
+                              {selected && (
+                                <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-accent shadow">
+                                  <Check className="h-3 w-3 text-white" />
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                        <p
-                          className={cn(
-                            'mt-1.5 px-0.5 text-xs font-medium',
-                            draft.background === CUSTOM_BACKGROUND_ID
-                              ? 'text-accent'
-                              : 'text-foreground'
-                          )}
-                        >
-                          Personnalisé
-                        </p>
-                      </motion.button>
-                    )}
-                  </div>
+                            <p
+                              className={cn(
+                                'mt-1.5 px-0.5 text-xs font-medium',
+                                selected ? 'text-accent' : 'text-foreground'
+                              )}
+                            >
+                              {theme.name}
+                            </p>
+                          </motion.button>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <CustomBackgroundSection
+                        customUrl={customUrl}
+                        customBlur={draft.customBlur}
+                        customDim={draft.customDim}
+                        uploading={uploading}
+                        isActive={draft.background === CUSTOM_BACKGROUND_ID}
+                        onUpload={handleUpload}
+                        onRemove={handleRemoveCustom}
+                        onBlurChange={(customBlur) => update({ customBlur })}
+                        onDimChange={(customDim) => update({ customDim })}
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -773,22 +733,19 @@ export function ThemeStudioModal({
                 </div>
 
                 <div>
-                  <h3 className="mb-1 text-sm font-semibold text-foreground">Fond personnalisé</h3>
+                  <h3 className="mb-1 text-sm font-semibold text-foreground">Couleur d&apos;accent</h3>
                   <p className="mb-3 text-xs text-muted-foreground">
-                    Utilisez votre propre image comme fond d&apos;écran
+                    La couleur des boutons, liens et éléments actifs
                   </p>
-                  <CustomBackgroundSection
-                    customUrl={customUrl}
-                    customBlur={draft.customBlur}
-                    customDim={draft.customDim}
-                    uploading={uploading}
-                    isActive={draft.background === CUSTOM_BACKGROUND_ID}
-                    onUpload={handleUpload}
-                    onRemove={handleRemoveCustom}
-                    onUse={() => update({ background: CUSTOM_BACKGROUND_ID })}
-                    onBlurChange={(customBlur) => update({ customBlur })}
-                    onDimChange={(customDim) => update({ customDim })}
-                  />
+                  <AccentPicker value={draft.accent} onChange={(accent) => update({ accent })} />
+                </div>
+
+                <div>
+                  <h3 className="mb-1 text-sm font-semibold text-foreground">Mode</h3>
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Clair, sombre ou selon votre système
+                  </p>
+                  <ModePicker value={draft.mode} onChange={(mode) => update({ mode })} />
                 </div>
               </motion.div>
             )}
@@ -814,7 +771,7 @@ export function ThemeStudioModal({
               </Button>
               <Button onClick={() => onApply(draft)}>
                 <Check className="h-4 w-4" />
-                Appliquer le thème
+                Terminer
               </Button>
             </>
           )}
