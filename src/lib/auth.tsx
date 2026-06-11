@@ -6,7 +6,6 @@ import { api } from '@/lib/api'
 import { getVaultCookie, setVaultCookie, clearVaultCookie } from '@/lib/cross-domain-cookie'
 import { resolvePostAuthRedirect } from '@/lib/safe-redirect'
 import { CryptoResetModal } from '@/components/modals/crypto-reset-modal'
-import { VaultUnlockModal } from '@/components/modals/vault-unlock-modal'
 import { RecoveryKeySetupModal } from '@/components/modals/recovery-key-setup-modal'
 
 export interface TeamSummary {
@@ -350,10 +349,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         onWiped={handleCryptoWiped}
         onLogout={() => logout()}
         onRefresh={handleCryptoRefresh}
-      />
-      <VaultUnlockModal
-        forceOpen={false}
-        onStartRecovery={() => setForceCryptoReset(true)}
       />
       <RecoveryKeySetupModal
         open={
