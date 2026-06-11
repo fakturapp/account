@@ -234,22 +234,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    if (user && !isPublicPath) {
-      const isAccountDeletion = pathname.startsWith('/settings/delete')
-      const isVaultLocked = pathname === '/vault-locked'
-      const shouldShowVaultPage =
-        !!user.vaultLocked &&
-        user.currentTeamEncryptionMode === 'private' &&
-        !user.cryptoResetNeeded &&
-        !forceCryptoReset
-      if (shouldShowVaultPage && !isVaultLocked && !isAccountDeletion) {
-        router.replace('/vault-locked')
-        return
-      }
-      if (!shouldShowVaultPage && isVaultLocked) {
-        router.replace('/settings')
-        return
-      }
+    if (user && !isPublicPath && pathname === '/vault-locked') {
+      router.replace('/settings')
+      return
     }
   }, [user, loading, pathname, isPublicPath, router])
 
