@@ -22,7 +22,9 @@ import {
   DEFAULT_CUSTOM_BLUR,
   DEFAULT_CUSTOM_DIM,
   applyAccent,
+  readThemeCookie,
   serializeUiTheme,
+  writeThemeCookie,
   type UiMode,
   type UiTheme,
 } from '@/lib/ui-theme'
@@ -64,10 +66,15 @@ export default function InterfaceSettingsPage() {
     setCustomUrl(settings.customUrl)
     setCustomBlur(settings.customBlur)
     setCustomDim(settings.customDim)
-    try {
-      const cached = localStorage.getItem(UI_ACCENT_STORAGE_KEY)
-      if (cached) setAccent(cached)
-    } catch {}
+    const cookieTheme = readThemeCookie()
+    if (cookieTheme) {
+      setAccent(cookieTheme.accent ?? DEFAULT_ACCENT)
+    } else {
+      try {
+        const cached = localStorage.getItem(UI_ACCENT_STORAGE_KEY)
+        if (cached) setAccent(cached)
+      } catch {}
+    }
     return () => {
       if (persistTimer.current) clearTimeout(persistTimer.current)
     }
@@ -88,6 +95,7 @@ export default function InterfaceSettingsPage() {
   )
 
   const persist = (theme: UiTheme) => {
+    writeThemeCookie(theme)
     api.put('/account/ui-theme', { theme: serializeUiTheme(theme) })
   }
 
