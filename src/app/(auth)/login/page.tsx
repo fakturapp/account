@@ -407,7 +407,7 @@ function LoginContent() {
   if (isDesktop && !authLoading && !user) {
     return (
       <motion.div initial={shouldAnimate ? 'hidden' : false} animate="visible" className="w-full max-w-sm mx-auto">
-        <div className="rounded-xl bg-overlay shadow-surface p-6 text-center">
+        <div className="app-surface rounded-xl bg-overlay shadow-surface p-6 text-center">
           <div className="h-12 w-12 rounded-2xl bg-accent-soft flex items-center justify-center mx-auto mb-4">
             <Lock className="h-6 w-6 text-accent" />
           </div>

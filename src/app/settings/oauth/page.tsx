@@ -166,7 +166,7 @@ export default function AccountOauthAppsPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
-            <div key={i} className="rounded-xl bg-overlay shadow-surface p-5">
+            <div key={i} className="app-surface rounded-xl bg-overlay shadow-surface p-5">
               <div className="flex items-center gap-4">
                 <Skeleton className="h-12 w-12 rounded-xl shrink-0" />
                 <div className="flex-1 space-y-2">
@@ -179,7 +179,7 @@ export default function AccountOauthAppsPage() {
           ))}
         </div>
       ) : apps.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border bg-surface shadow-surface p-12 text-center">
+        <div className="app-surface rounded-xl border border-dashed border-border bg-surface shadow-surface p-12 text-center">
           <div className="flex h-14 w-14 mx-auto items-center justify-center rounded-xl bg-accent-soft mb-4">
             <ShieldCheck className="h-7 w-7 text-accent" />
           </div>
@@ -204,7 +204,7 @@ export default function AccountOauthAppsPage() {
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className="rounded-xl bg-overlay shadow-surface overflow-hidden"
+                className="app-surface rounded-xl bg-overlay shadow-surface overflow-hidden"
               >
                 {/* Header row */}
                 <button

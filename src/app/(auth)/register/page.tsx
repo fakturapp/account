@@ -281,7 +281,7 @@ function RegisterContent() {
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full max-w-md">
-      <div className="rounded-xl bg-overlay shadow-surface overflow-hidden">
+      <div className="app-surface rounded-xl bg-overlay shadow-surface overflow-hidden">
         {/* Header with step indicator */}
         <div className="relative px-8 pt-8 pb-5">
           <motion.div variants={fadeUp} custom={0} className="flex flex-col items-center gap-4 text-center">

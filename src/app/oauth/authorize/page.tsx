@@ -215,7 +215,7 @@ function AuthorizeContent() {
           transition={{ duration: 0.25 }}
           className="w-full max-w-[440px]"
         >
-          <div className="rounded-2xl border border-amber-500/20 bg-overlay/90 backdrop-blur-xl shadow-overlay p-7 text-center">
+          <div className="app-surface rounded-2xl border border-amber-500/20 bg-overlay/90 backdrop-blur-xl shadow-overlay p-7 text-center">
             <div className="h-12 w-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-4">
               <Lock className="h-6 w-6 text-amber-500" />
             </div>
@@ -250,7 +250,7 @@ function AuthorizeContent() {
         <motion.div
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="w-full max-w-[440px] rounded-2xl bg-overlay/90 backdrop-blur-xl shadow-overlay p-8 text-center"
+          className="app-surface w-full max-w-[440px] rounded-2xl bg-overlay/90 backdrop-blur-xl shadow-overlay p-8 text-center"
         >
           <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
             <X className="h-6 w-6 text-destructive" />
@@ -300,7 +300,7 @@ function AuthorizeContent() {
           transition={{ duration: 0.25 }}
           className="w-full max-w-[480px]"
         >
-          <div className="rounded-2xl bg-overlay/85 backdrop-blur-xl shadow-overlay p-10">
+          <div className="app-surface rounded-2xl bg-overlay/85 backdrop-blur-xl shadow-overlay p-10">
             <div className="flex items-center gap-4 pb-6 border-b border-border">
               <div className="h-14 w-14 shrink-0 rounded-xl bg-surface flex items-center justify-center overflow-hidden">
                 {data.client.iconUrl ? (

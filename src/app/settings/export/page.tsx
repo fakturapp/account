@@ -158,7 +158,7 @@ export default function ExportPage() {
       </div>
 
       {/* Progress bar */}
-      <div className="rounded-xl bg-overlay shadow-surface p-4">
+      <div className="app-surface rounded-xl bg-overlay shadow-surface p-4">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold text-muted-foreground">
             Étape {visualStep + 1} sur {activeSteps.length}

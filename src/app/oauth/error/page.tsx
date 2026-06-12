@@ -36,7 +36,7 @@ function ErrorContent() {
         transition={{ duration: 0.25 }}
         className="w-full max-w-sm"
       >
-        <div className="rounded-xl bg-overlay shadow-surface p-6 text-center">
+        <div className="app-surface rounded-xl bg-overlay shadow-surface p-6 text-center">
           <div className="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto mb-4">
             <X className="h-6 w-6 text-destructive" />
           </div>
