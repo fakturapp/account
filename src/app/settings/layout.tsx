@@ -69,7 +69,7 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
       <DashboardBackground />
       <UiThemeSync />
 
-      <header className="sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
+      <header className="app-surface sticky top-0 z-30 border-b border-border bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-(--header-height,4rem) max-w-5xl items-center justify-between gap-4 px-4 lg:px-6">
           <Link href="/settings" className="flex items-center gap-2.5">
             <img src={asset('/logo.svg')} alt="Faktur" className="h-7 w-7" />
