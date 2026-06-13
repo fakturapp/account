@@ -185,6 +185,8 @@ export default function AccountPage() {
       executeUnlinkGoogle()
     } else if (securityAction === 'delete_passkey') {
       executeDeletePasskey()
+    } else if (securityAction === 'add_passkey') {
+      executeAddPasskey()
     }
   }
 
@@ -546,7 +548,11 @@ export default function AccountPage() {
     }
   }
 
-  async function handleAddPasskey() {
+  function handleAddPasskey() {
+    requireSecurity('add_passkey')
+  }
+
+  async function executeAddPasskey() {
     setPasskeyAdding(true)
     try {
       const { data: options, error: optErr } = await api.post<any>('/account/passkeys/register-options', {})
