@@ -16,12 +16,12 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </div>
       <div className="pointer-events-none fixed inset-0 z-[1] bg-background/30" />
 
-      <header className="absolute left-6 top-6 z-20 flex items-center gap-2.5">
+      <header className="absolute left-[calc(env(safe-area-inset-left)+1.5rem)] top-[calc(env(safe-area-inset-top)+1.5rem)] z-20 flex items-center gap-2.5">
         <img src={asset('/logo.svg')} alt="Faktur" className="h-8 w-8" />
         <span className="text-lg font-bold tracking-[-0.03em] text-foreground">Faktur</span>
       </header>
 
-      <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-12">
+      <main className="relative z-10 flex flex-1 items-center justify-center px-4 pb-12 pt-[calc(env(safe-area-inset-top)+4.5rem)]">
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
@@ -32,7 +32,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </motion.div>
       </main>
 
-      <footer className="relative z-10 px-4 pb-7">
+      <footer className="relative z-10 px-4 pb-[calc(env(safe-area-inset-bottom)+1.75rem)]">
         <div className="mx-auto flex max-w-[420px] flex-col items-center gap-4">
           <a
             href={HELP_URL}

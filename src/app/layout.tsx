@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import '@fontsource/sn-pro/400.css'
 import '@fontsource/sn-pro/500.css'
 import '@fontsource/sn-pro/600.css'
@@ -75,6 +75,13 @@ export const metadata: Metadata = {
     apple: asset('/apple-touch-icon.png'),
   },
   manifest: asset('/site.webmanifest'),
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: 'cover',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
