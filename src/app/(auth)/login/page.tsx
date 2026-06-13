@@ -20,13 +20,15 @@ import { Spinner } from '@/components/ui/spinner'
 import { Turnstile, type TurnstileInstance } from '@marsidev/react-turnstile'
 import { startAuthentication } from '@simplewebauthn/browser'
 import { LogOut, LayoutDashboard, ArrowRight, Shield, Eye, EyeOff, KeyRound, Lock, Mail } from '@/components/ui/icons'
+import { AppApprovalWaiting } from '@/components/auth/app-approval-waiting'
 
 type EmailStatus = 'idle' | 'checking' | 'exists' | 'not-exists'
-type TwoFactorMethod = 'totp' | 'email' | 'recovery'
+type TwoFactorMethod = 'totp' | 'email' | 'recovery' | 'app'
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const LAST_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000
 
 const METHOD_SWITCH_LABEL: Record<TwoFactorMethod, string> = {
+  app: "Se connecter avec l'application",
   totp: "Utiliser l'application authenticator",
   email: 'Recevoir un code par email',
   recovery: 'Utiliser un code de récupération',
@@ -251,6 +253,11 @@ function LoginContent() {
     setEmailCodeSent(false)
   }
 
+  function handleAppApproved(token: string, approvedUser: unknown) {
+    login(token, approvedUser as any)
+    goSuccess(searchParams.get('redirect'))
+  }
+
   function twoFactorIdentity() {
     return twofaToken ? { twofaToken } : { userId }
   }
@@ -368,11 +375,12 @@ function LoginContent() {
     }
 
     if (data?.requiresTwoFactor) {
+      const methods = data.availableMethods ?? ['totp', 'email', 'recovery']
       setRequires2FA(true)
       setUserId(data.userId ?? null)
-      setAvailableMethods(data.availableMethods ?? ['totp', 'email', 'recovery'])
+      setAvailableMethods(methods)
       setMaskedEmail(data.email ?? '')
-      setMethod('totp')
+      setMethod(methods.includes('app') ? 'app' : 'totp')
       return
     }
 
@@ -487,13 +495,15 @@ function LoginContent() {
   })()
 
   const twoFactorSubtitle =
-    method === 'recovery'
-      ? 'Entrez un de vos codes de récupération'
-      : method === 'email'
-        ? emailCodeSent
-          ? `Code envoyé à ${maskedEmail || 'votre adresse email'}`
-          : `Recevez un code à ${maskedEmail || 'votre adresse email'}`
-        : 'Entrez le code à 6 chiffres de votre application authenticator'
+    method === 'app'
+      ? 'Approuvez la connexion depuis votre téléphone'
+      : method === 'recovery'
+        ? 'Entrez un de vos codes de récupération'
+        : method === 'email'
+          ? emailCodeSent
+            ? `Code envoyé à ${maskedEmail || 'votre adresse email'}`
+            : `Recevez un code à ${maskedEmail || 'votre adresse email'}`
+          : 'Entrez le code à 6 chiffres de votre application authenticator'
 
   return (
     <motion.div initial="hidden" animate="visible" className="w-full">
@@ -518,6 +528,10 @@ function LoginContent() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                {method === 'app' && userId && (
+                  <AppApprovalWaiting userId={userId} onApproved={handleAppApproved} />
+                )}
+
                 {method === 'totp' && (
                   <div className="flex justify-center py-1">
                     <OtpInput
@@ -586,20 +600,22 @@ function LoginContent() {
                   )
                 )}
 
-                <CheckboxRoot
-                  isSelected={trustDevice}
-                  onChange={setTrustDevice}
-                  className="flex items-center gap-2.5 cursor-pointer group"
-                >
-                  <CheckboxControl>
-                    <CheckboxIndicator />
-                  </CheckboxControl>
-                  <CheckboxContent className="text-sm text-muted-foreground">
-                    Ne plus demander pendant 30 jours sur cet appareil
-                  </CheckboxContent>
-                </CheckboxRoot>
+                {method !== 'app' && (
+                  <CheckboxRoot
+                    isSelected={trustDevice}
+                    onChange={setTrustDevice}
+                    className="flex items-center gap-2.5 cursor-pointer group"
+                  >
+                    <CheckboxControl>
+                      <CheckboxIndicator />
+                    </CheckboxControl>
+                    <CheckboxContent className="text-sm text-muted-foreground">
+                      Ne plus demander pendant 30 jours sur cet appareil
+                    </CheckboxContent>
+                  </CheckboxRoot>
+                )}
 
-                {!(method === 'email' && !emailCodeSent) && (
+                {method !== 'app' && !(method === 'email' && !emailCodeSent) && (
                   <Button type="submit" className="w-full h-11 font-semibold" disabled={loading || !code}>
                     {loading ? <><Spinner /> Vérification...</> : 'Vérifier'}
                   </Button>
@@ -618,6 +634,7 @@ function LoginContent() {
                         {METHOD_SWITCH_LABEL[m]}
                       </button>
                     ))}
+                  {method !== 'app' && (
                   <button
                     type="button"
                     onClick={lostCode}
@@ -625,6 +642,7 @@ function LoginContent() {
                   >
                     J&apos;ai oublié mon code
                   </button>
+                  )}
                   <button
                     type="button"
                     onClick={exitTwoFactor}
