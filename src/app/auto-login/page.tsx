@@ -4,12 +4,6 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { api } from '@/lib/api'
 
-/**
- * Auto-login : ouvert par l'app mobile (« Gérer mon compte ») avec un code
- * à usage unique. On échange le code contre un token de session puis on
- * redirige immédiatement vers les réglages, en nettoyant l'URL (le code
- * ne reste jamais dans l'historique).
- */
 function AutoLoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -26,7 +20,6 @@ function AutoLoginContent() {
       return
     }
 
-    // Retire le code de l'URL avant tout (anti-fuite via historique/Referer).
     window.history.replaceState({}, '', '/auto-login')
 
     api
