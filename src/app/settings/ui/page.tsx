@@ -22,6 +22,7 @@ import {
   DEFAULT_SURFACE,
   DEFAULT_SURFACE_OPACITY,
   DEFAULT_SURFACE_BLUR,
+  DEFAULT_SURFACE_TINT,
   applyAccent,
   applySurface,
   readThemeCookie,
@@ -52,6 +53,7 @@ export default function InterfaceSettingsPage() {
   const [surface, setSurface] = useState<SurfaceStyle>(DEFAULT_SURFACE)
   const [surfaceOpacity, setSurfaceOpacity] = useState<number>(DEFAULT_SURFACE_OPACITY)
   const [surfaceBlur, setSurfaceBlur] = useState<number>(DEFAULT_SURFACE_BLUR)
+  const [surfaceTint, setSurfaceTint] = useState<number>(DEFAULT_SURFACE_TINT)
   const [uploading, setUploading] = useState(false)
   const [wizardOpen, setWizardOpen] = useState(false)
 
@@ -68,6 +70,7 @@ export default function InterfaceSettingsPage() {
       setSurface(cookieTheme.surface)
       setSurfaceOpacity(cookieTheme.surfaceOpacity)
       setSurfaceBlur(cookieTheme.surfaceBlur)
+      setSurfaceTint(cookieTheme.surfaceTint)
     } else {
       try {
         const cached = localStorage.getItem(UI_ACCENT_STORAGE_KEY)
@@ -88,6 +91,7 @@ export default function InterfaceSettingsPage() {
       surface,
       surfaceOpacity,
       surfaceBlur,
+      surfaceTint,
       ...patch,
     }),
     [
@@ -101,6 +105,7 @@ export default function InterfaceSettingsPage() {
       surface,
       surfaceOpacity,
       surfaceBlur,
+      surfaceTint,
     ]
   )
 
@@ -173,6 +178,7 @@ export default function InterfaceSettingsPage() {
     setSurface(draft.surface)
     setSurfaceOpacity(draft.surfaceOpacity)
     setSurfaceBlur(draft.surfaceBlur)
+    setSurfaceTint(draft.surfaceTint)
     applySurface(draft)
     const theme: UiTheme = {
       mode: draft.mode,
@@ -185,6 +191,7 @@ export default function InterfaceSettingsPage() {
       surface: draft.surface,
       surfaceOpacity: draft.surfaceOpacity,
       surfaceBlur: draft.surfaceBlur,
+      surfaceTint: draft.surfaceTint,
     }
     syncBackground(theme)
     persist(theme)
@@ -202,6 +209,7 @@ export default function InterfaceSettingsPage() {
     surface,
     surfaceOpacity,
     surfaceBlur,
+    surfaceTint,
   }
 
   const activePreset = findMatchingPreset(currentDraft)
