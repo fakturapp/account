@@ -26,6 +26,7 @@ import { Tooltip } from '@/components/ui/tooltip'
 import { toast as t } from '@/components/ui/toast'
 import { useDevMode } from '@/lib/dev-mode'
 import { ApiUsagePanel } from '@/components/account/api-usage-panel'
+import { cn } from '@/lib/utils'
 
 const tabs = [
   { id: 'profile', label: 'Profil', icon: <User className="h-4 w-4" /> },
@@ -55,7 +56,7 @@ interface Session {
 export default function AccountPage() {
   const router = useRouter()
   const pathname = usePathname()
-  const { user, refreshUser, logout } = useAuth()
+  const { user, refreshUser, logout, loading } = useAuth()
   const { toast } = useToast()
 
   const activeTab = pathname.endsWith('/security') ? 'security'
@@ -664,67 +665,135 @@ export default function AccountPage() {
     >
       {/* Profile tab */}
       {activeTab === 'profile' && (
-        <div className="space-y-4">
-          {/* Display name */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft">
-                    <User className="h-4 w-4 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">Pseudo</h3>
-                    <p className="text-sm text-muted-foreground">{user?.fullName || 'Non d\u00e9fini'}</p>
+        loading || !user ? (
+          <div className="space-y-5">
+            <Card className="overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center">
+                  <Skeleton className="h-20 w-20 rounded-full shrink-0" />
+                  <div className="flex-1 space-y-2.5 text-center sm:text-left">
+                    <Skeleton className="mx-auto h-5 w-40 rounded-md sm:mx-0" />
+                    <Skeleton className="mx-auto h-3.5 w-56 rounded-md sm:mx-0" />
+                    <Skeleton className="mx-auto h-5 w-24 rounded-full sm:mx-0" />
                   </div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => { setFullName(user?.fullName || ''); setNameModalOpen(true) }}>
-                  Modifier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-0">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className={cn('flex items-center gap-3 p-5', i > 0 && 'border-t border-border/60')}>
+                    <Skeleton className="h-9 w-9 shrink-0 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-3.5 w-28 rounded-md" />
+                      <Skeleton className="h-3 w-48 rounded-md" />
+                    </div>
+                    <Skeleton className="h-8 w-20 shrink-0 rounded-lg" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          </div>
+        ) : (
+          <div className="space-y-5">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
 
-          {/* Email */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft">
-                    <Globe className="h-4 w-4 text-accent" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-foreground">Adresse email</h3>
-                    <p className="text-sm text-muted-foreground">{user?.email}</p>
-                  </div>
-                </div>
-                <Button variant="outline" size="sm" onClick={() => setEmailStep('verify_current')}>
-                  Modifier
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}>
+              <Card className="overflow-hidden">
+                <CardContent className="relative p-6">
+                  <div
+                    aria-hidden
+                    className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-accent-soft/60 to-transparent"
+                  />
+                  <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={avatarUploading}
+                      className="group/avatar relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
+                      aria-label="Changer la photo de profil"
+                    >
+                      <Avatar src={user.avatarUrl} fallback={initials} size="lg" className="h-20 w-20 text-2xl ring-2 ring-border/60" />
+                      <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 transition-opacity group-hover/avatar:opacity-100">
+                        {avatarUploading ? <Spinner className="h-5 w-5 text-white" /> : <Camera className="h-5 w-5 text-white" />}
+                      </span>
+                      <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-accent text-accent-foreground shadow-sm ring-2 ring-card">
+                        <Camera className="h-3.5 w-3.5" />
+                      </span>
+                    </button>
 
-          {/* General — Developer mode */}
-          <Card>
-            <CardContent className="p-5">
-              <div className="flex items-start gap-3">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
-                  <Bug className="h-4 w-4 text-accent" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-sm font-semibold text-foreground">Mode développeur</h3>
-                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                    Active des fonctionnalités de diagnostic destinées aux développeurs :
-                    bouton « Détails » sur les notifications d&apos;erreur permettant de voir le
-                    payload brut renvoyé par l&apos;API (status, URL, body).
-                  </p>
-                </div>
-                <Switch checked={devMode} onChange={handleDevModeToggle} className="mt-1" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-center gap-2 sm:justify-start">
+                        <h2 className="truncate text-xl font-bold text-foreground">{user.fullName || 'Non défini'}</h2>
+                        <Badge color={user.currentTeamPlan === 'pro' || user.currentTeamPlan === 'team' ? 'accent' : 'default'} className="shrink-0 text-[10px] uppercase tracking-wide">
+                          {user.currentTeamPlan === 'team' ? 'Team' : user.currentTeamPlan === 'pro' ? 'Pro' : 'Gratuit'}
+                        </Badge>
+                      </div>
+                      <p className="mt-1 truncate text-sm text-muted-foreground">{user.email}</p>
+                      <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/80 sm:justify-start">
+                        <Calendar className="h-3.5 w-3.5" />
+                        Membre depuis {new Date(user.createdAt).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08, duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}>
+              <Card>
+                <CardContent className="p-0">
+                  <div className="flex items-center gap-3 p-5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
+                      <User className="h-4 w-4 text-accent" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-foreground">Pseudo</h3>
+                      <p className="truncate text-sm text-muted-foreground">{user.fullName || 'Non défini'}</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => { setFullName(user.fullName || ''); setNameModalOpen(true) }}>
+                      Modifier
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center gap-3 border-t border-border/60 p-5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
+                      <Globe className="h-4 w-4 text-accent" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-foreground">Adresse email</h3>
+                      <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                    <Button variant="outline" size="sm" onClick={() => setEmailStep('verify_current')}>
+                      Modifier
+                    </Button>
+                  </div>
+
+                  <div className="flex items-start gap-3 border-t border-border/60 p-5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
+                      <Bug className="h-4 w-4 text-accent" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-sm font-semibold text-foreground">Mode développeur</h3>
+                      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                        Active des fonctionnalités de diagnostic destinées aux développeurs :
+                        bouton « Détails » sur les notifications d&apos;erreur permettant de voir le
+                        payload brut renvoyé par l&apos;API (status, URL, body).
+                      </p>
+                    </div>
+                    <Switch checked={devMode} onChange={handleDevModeToggle} className="mt-1" />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+        )
       )}
 
       {/* Security tab */}
