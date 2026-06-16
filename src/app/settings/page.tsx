@@ -32,6 +32,7 @@ const tabs = [
   { id: 'profile', label: 'Profil', icon: <User className="h-4 w-4" /> },
   { id: 'security', label: 'Sécurité', icon: <Shield className="h-4 w-4" /> },
   { id: 'sessions', label: 'Sessions', icon: <Monitor className="h-4 w-4" /> },
+  { id: 'devices', label: 'Appareils', icon: <Smartphone className="h-4 w-4" /> },
   { id: 'api', label: 'API', icon: <Code2 className="h-4 w-4" /> },
   { id: 'export', label: 'Exportation', icon: <Download className="h-4 w-4" /> },
 ]
@@ -53,6 +54,13 @@ interface Session {
   location?: string | null
 }
 
+interface AppLoginDevice {
+  id: string
+  platform: string
+  ip: string | null
+  lastSeenAt: string | null
+}
+
 export default function AccountPage() {
   const router = useRouter()
   const pathname = usePathname()
@@ -61,6 +69,7 @@ export default function AccountPage() {
 
   const activeTab = pathname.endsWith('/security') ? 'security'
     : pathname.endsWith('/sessions') ? 'sessions'
+    : pathname.endsWith('/devices') ? 'devices'
     : pathname.endsWith('/api') ? 'api'
     : pathname.endsWith('/export') ? 'export'
     : 'profile'
@@ -123,6 +132,16 @@ export default function AccountPage() {
   const [sessionsLoaded, setSessionsLoaded] = useState(false)
   const [revokeConfirm, setRevokeConfirm] = useState<string | null>(null)
   const [revoking, setRevoking] = useState(false)
+
+  // App login devices
+  const [appDevices, setAppDevices] = useState<AppLoginDevice[]>([])
+  const [appLoginEnabled, setAppLoginEnabled] = useState(false)
+  const [appRequireMatch, setAppRequireMatch] = useState(false)
+  const [devicesLoaded, setDevicesLoaded] = useState(false)
+  const [requireMatchSaving, setRequireMatchSaving] = useState(false)
+  const [deviceRevokeConfirm, setDeviceRevokeConfirm] = useState<string | null>(null)
+  const [pendingDeviceRevoke, setPendingDeviceRevoke] = useState<string | null>(null)
+  const [deviceRevoking, setDeviceRevoking] = useState(false)
 
   // Delete redirect
   const [deleteRedirectOpen, setDeleteRedirectOpen] = useState(false)
@@ -188,6 +207,8 @@ export default function AccountPage() {
       executeDeletePasskey()
     } else if (securityAction === 'add_passkey') {
       executeAddPasskey()
+    } else if (securityAction === 'revoke_device') {
+      executeRevokeDevice()
     }
   }
 
@@ -611,6 +632,71 @@ export default function AccountPage() {
     toast('Clé d\'accès supprimée', 'success')
   }
 
+  async function loadDevices() {
+    const { data } = await api.get<{ enabled: boolean; requireMatch: boolean; devices: AppLoginDevice[] }>('/account/app-login')
+    if (data) {
+      setAppDevices(data.devices)
+      setAppLoginEnabled(data.enabled)
+      setAppRequireMatch(data.requireMatch)
+    }
+    setDevicesLoaded(true)
+  }
+
+  async function handleToggleRequireMatch(next: boolean) {
+    setRequireMatchSaving(true)
+    const previous = appRequireMatch
+    setAppRequireMatch(next)
+    const { data, error } = await api.put<{ requireMatch: boolean }>('/account/app-login/require-match', { requireMatch: next })
+    setRequireMatchSaving(false)
+    if (error) {
+      setAppRequireMatch(previous)
+      return toast(error, 'error')
+    }
+    if (typeof data?.requireMatch === 'boolean') setAppRequireMatch(data.requireMatch)
+    toast(next ? 'Authentification renforcée activée' : 'Authentification renforcée désactivée', 'success')
+  }
+
+  function handleRevokeDevice() {
+    if (!deviceRevokeConfirm) return
+    setPendingDeviceRevoke(deviceRevokeConfirm)
+    setDeviceRevokeConfirm(null)
+    runRevokeDevice(deviceRevokeConfirm)
+  }
+
+  async function runRevokeDevice(deviceId: string) {
+    setDeviceRevoking(true)
+    const { data, error, errorCode } = await api.delete<{ enabled: boolean; requireMatch: boolean }>(`/account/app-login/devices/${deviceId}`)
+    setDeviceRevoking(false)
+    if (errorCode === 'SECURITY_VERIFICATION_REQUIRED') {
+      requireSecurity('revoke_device')
+      return
+    }
+    if (error) {
+      setPendingDeviceRevoke(null)
+      return toast(error, 'error')
+    }
+    setAppDevices((prev) => prev.filter((d) => d.id !== deviceId))
+    if (data) {
+      setAppLoginEnabled(data.enabled)
+      setAppRequireMatch(data.requireMatch)
+    }
+    setPendingDeviceRevoke(null)
+    setSecurityVerified(false)
+    await refreshUser()
+    toast('Appareil révoqué', 'success')
+  }
+
+  function executeRevokeDevice() {
+    if (!pendingDeviceRevoke) return
+    runRevokeDevice(pendingDeviceRevoke)
+  }
+
+  function appDeviceLabel(device: AppLoginDevice): string {
+    const platform = (device.platform || '').toLowerCase()
+    if (platform.includes('ios') || platform.includes('apple') || platform.includes('iphone')) return 'iPhone'
+    return device.platform || 'Appareil mobile'
+  }
+
   function handleDeleteAccount() {
     setDeleteRedirectOpen(true)
   }
@@ -618,6 +704,10 @@ export default function AccountPage() {
 
   if (activeTab === 'sessions' && !sessionsLoaded) {
     loadSessions()
+  }
+
+  if (activeTab === 'devices' && !devicesLoaded) {
+    loadDevices()
   }
 
   if (activeTab === 'security' && !providersLoaded) {
@@ -1239,6 +1329,115 @@ export default function AccountPage() {
         </div>
       )}
 
+      {/* Devices tab */}
+      {activeTab === 'devices' && (
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-accent-soft">
+                    <ShieldCheck className="h-4.5 w-4.5 text-accent" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-foreground">Authentification renforcée</h3>
+                    <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                      Exige la validation par correspondance de numéros sur votre téléphone à chaque connexion. Sans appareil connecté, cette option reste indisponible.
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={appRequireMatch}
+                  onChange={handleToggleRequireMatch}
+                  disabled={requireMatchSaving || appDevices.length === 0}
+                  className="mt-1"
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="mb-4 flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-soft">
+                  <Smartphone className="h-4.5 w-4.5 text-accent" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-foreground">Appareils connectés</h3>
+                  <p className="text-xs text-muted-foreground">Téléphones autorisés à approuver vos connexions.</p>
+                </div>
+              </div>
+
+              {!devicesLoaded ? (
+                <div className="space-y-3">
+                  {[0, 1].map((i) => (
+                    <div key={i} className="flex items-center justify-between rounded-xl border border-border p-4">
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="h-10 w-10 shrink-0 rounded-xl" />
+                        <div className="space-y-2">
+                          <Skeleton className="h-3.5 w-28" />
+                          <Skeleton className="h-3 w-44" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-8 w-24 shrink-0 rounded-lg" />
+                    </div>
+                  ))}
+                </div>
+              ) : appDevices.length === 0 ? (
+                <div className="flex flex-col items-center gap-3 py-8 text-center">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-surface-hover">
+                    <Smartphone className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <p className="max-w-sm text-sm text-muted-foreground">
+                    Aucun appareil connecté. Installez l&apos;application Faktur sur votre téléphone et activez la connexion par appareil pour le voir ici.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {appDevices.map((device) => (
+                    <div
+                      key={device.id}
+                      className="flex items-start justify-between gap-4 rounded-xl border border-border p-4"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-surface-hover">
+                          <Smartphone className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground">{appDeviceLabel(device)}</p>
+                          <div className="mt-0.5 space-y-0.5">
+                            {device.ip && (
+                              <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <Globe className="h-3 w-3 shrink-0" />
+                                <span className="font-mono tabular-nums">{device.ip}</span>
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground">
+                              {device.lastSeenAt
+                                ? `Dernière activité le ${new Date(device.lastSeenAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
+                                : 'Jamais utilisé'}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 border-destructive/30 text-destructive hover:bg-destructive/10"
+                        onClick={() => setDeviceRevokeConfirm(device.id)}
+                        disabled={deviceRevoking}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" /> Révoquer
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {activeTab === 'api' && <ApiUsagePanel />}
 
       {/* Modals */}
@@ -1280,7 +1479,7 @@ export default function AccountPage() {
       {/* Security Verification Modal */}
       <SecurityVerificationModal
         open={securityOpen}
-        onClose={() => { setSecurityOpen(false); setPendingPasskeyDelete(null) }}
+        onClose={() => { setSecurityOpen(false); setPendingPasskeyDelete(null); setPendingDeviceRevoke(null) }}
         onVerified={handleSecurityVerified}
         twoFactorEnabled={user?.twoFactorEnabled}
       />
@@ -1299,6 +1498,24 @@ export default function AccountPage() {
           </Button>
           <Button variant="destructive" onClick={confirmRevokeSession} disabled={revoking}>
             {revoking ? <><Spinner size="sm" /> Révocation...</> : 'Révoquer'}
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      {/* Revoke device confirmation */}
+      <Dialog open={!!deviceRevokeConfirm} onClose={() => setDeviceRevokeConfirm(null)}>
+        <DialogHeader showClose={false}>
+          <DialogTitle>Révoquer cet appareil ?</DialogTitle>
+          <DialogDescription>
+            Cet appareil ne pourra plus approuver vos connexions. Une vérification de sécurité peut vous être demandée.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setDeviceRevokeConfirm(null)} disabled={deviceRevoking}>
+            Annuler
+          </Button>
+          <Button variant="destructive" onClick={handleRevokeDevice} disabled={deviceRevoking}>
+            {deviceRevoking ? <><Spinner size="sm" /> Révocation...</> : 'Révoquer'}
           </Button>
         </DialogFooter>
       </Dialog>

@@ -13,7 +13,7 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { DashboardBackground } from '@/components/layout/dashboard-background'
 import { UiThemeSync } from '@/components/layout/ui-theme-sync'
 import { AccountPreview } from '@/components/account/account-preview'
-import { User, Shield, Monitor, Link2, LogOut, ArrowLeft, Palette } from '@/components/ui/icons'
+import { User, Shield, Monitor, Smartphone, Link2, LogOut, ArrowLeft, Palette } from '@/components/ui/icons'
 
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || '/'
 
@@ -21,6 +21,7 @@ const NAV = [
   { href: '/settings', label: 'Mon compte', icon: User },
   { href: '/settings/security', label: 'Sécurité', icon: Shield },
   { href: '/settings/sessions', label: 'Sessions', icon: Monitor },
+  { href: '/settings/devices', label: 'Appareils', icon: Smartphone },
   { href: '/settings/oauth', label: 'Connexions', icon: Link2 },
   { href: '/settings/ui', label: 'Interface', icon: Palette },
 ]
