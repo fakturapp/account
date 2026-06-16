@@ -667,7 +667,7 @@ export default function AccountPage() {
     setDeviceRevoking(true)
     const { data, error, errorCode } = await api.delete<{ enabled: boolean; requireMatch: boolean }>(`/account/app-login/devices/${deviceId}`)
     setDeviceRevoking(false)
-    if (errorCode === 'SECURITY_VERIFICATION_REQUIRED') {
+    if (errorCode === 'security_verification_required') {
       requireSecurity('revoke_device')
       return
     }
