@@ -17,13 +17,20 @@ import { User, Shield, Monitor, Smartphone, Link2, LogOut, ArrowLeft, Palette } 
 
 const DASH_URL = process.env.NEXT_PUBLIC_DASH_URL || '/'
 
-const NAV = [
+type NavItem = {
+  href: string
+  label: string
+  icon: typeof User
+  beta?: boolean
+}
+
+const NAV: NavItem[] = [
   { href: '/settings', label: 'Mon compte', icon: User },
   { href: '/settings/security', label: 'Sécurité', icon: Shield },
   { href: '/settings/sessions', label: 'Sessions', icon: Monitor },
   { href: '/settings/devices', label: 'Appareils', icon: Smartphone },
   { href: '/settings/oauth', label: 'Connexions', icon: Link2 },
-  { href: '/settings/ui', label: 'Interface', icon: Palette },
+  { href: '/settings/ui', label: 'Interface', icon: Palette, beta: true },
 ]
 
 const PAGES_WITH_PREVIEW = ['/settings', '/settings/security']
@@ -115,6 +122,11 @@ export default function AccountLayout({ children }: { children: React.ReactNode 
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
+                  {item.beta && (
+                    <span className="rounded-full bg-accent-soft px-1.5 py-px text-[9px] font-semibold uppercase tracking-wide text-accent">
+                      Bêta
+                    </span>
+                  )}
                 </Link>
               )
             })}
