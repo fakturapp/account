@@ -799,9 +799,9 @@ export default function AccountPage() {
                 <CardContent className="relative p-6">
                   <div
                     aria-hidden
-                    className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-accent-soft/60 to-transparent"
+                    className="pointer-events-none absolute inset-x-3 top-3 h-24 rounded-2xl bg-gradient-to-br from-accent-soft/70 via-accent-soft/30 to-transparent"
                   />
-                  <div className="relative flex flex-col items-center gap-4 text-center sm:flex-row sm:items-center sm:text-left">
+                  <div className="relative flex flex-col items-center gap-4 pt-2 text-center sm:flex-row sm:items-center sm:text-left">
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
@@ -809,7 +809,7 @@ export default function AccountPage() {
                       className="group/avatar relative shrink-0 rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent/50"
                       aria-label="Changer la photo de profil"
                     >
-                      <Avatar src={user.avatarUrl} fallback={initials} size="lg" className="h-20 w-20 text-2xl ring-2 ring-border/60" />
+                      <Avatar src={user.avatarUrl} fallback={initials} size="lg" className="h-20 w-20 text-2xl ring-2 ring-card" />
                       <span className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 opacity-0 transition-opacity group-hover/avatar:opacity-100">
                         {avatarUploading ? <Spinner className="h-5 w-5 text-white" /> : <Camera className="h-5 w-5 text-white" />}
                       </span>
@@ -819,12 +819,7 @@ export default function AccountPage() {
                     </button>
 
                     <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-center gap-2 sm:justify-start">
-                        <h2 className="truncate text-xl font-bold text-foreground">{user.fullName || 'Non défini'}</h2>
-                        <Badge color={user.currentTeamPlan === 'pro' || user.currentTeamPlan === 'team' ? 'accent' : 'default'} className="shrink-0 text-[10px] uppercase tracking-wide">
-                          {user.currentTeamPlan === 'team' ? 'Team' : user.currentTeamPlan === 'pro' ? 'Pro' : 'Gratuit'}
-                        </Badge>
-                      </div>
+                      <h2 className="truncate text-xl font-bold text-foreground">{user.fullName || 'Non défini'}</h2>
                       <p className="mt-1 truncate text-sm text-muted-foreground">{user.email}</p>
                       <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-muted-foreground/80 sm:justify-start">
                         <Calendar className="h-3.5 w-3.5" />
